@@ -1,0 +1,2 @@
+﻿id,name,email,status,is_superuser,is_ceo,two_factor_enabled,phone,wechat,department,position,created_at,last_login
+1,许锋,xufeng@meiyueart.cn,active,True,False,True,15029005772,,,,2026-01-27 08:35:01,

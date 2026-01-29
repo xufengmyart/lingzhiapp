@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媄月商业艺术 - 权限管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .login-section {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 12px;
+            width: auto;
+        }
+
+        .dashboard-section {
+            display: none;
+        }
+
+        .dashboard-section.active {
+            display: block;
+        }
+
+        .nav-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: #666;
+        }
+
+        .nav-tab:hover {
+            color: #667eea;
+        }
+
+        .nav-tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .user-info div {
+            color: #333;
+        }
+
+        .user-info .logout {
+            color: #e74c3c;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table th {
+            background: #f8f9fa;
+            color: #333;
+            font-weight: bold;
+        }
+
+        table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-close {
+            cursor: pointer;
+            font-size: 24px;
+            color: #666;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>媄月商业艺术</h1>
+            <p>权限管理系统 v1.0</p>
+        </div>
+
+        <!-- 登录界面 -->
+        <div id="login-section" class="login-section">
+            <div class="alert" id="login-alert"></div>
+            <div class="form-group">
+                <label>邮箱</label>
+                <input type="email" id="login-email" placeholder="请输入邮箱">
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="login-password" placeholder="请输入密码">
+            </div>
+            <button class="btn" onclick="login()">登录</button>
+            <p style="margin-top: 15px; color: #666; font-size: 12px;">
+                初始账号：xufeng@meiyue.com<br>
+                初始密码：Meiyue@2026
+            </p>
+        </div>
+
+        <!-- 主界面 -->
+        <div id="dashboard-section" class="dashboard-section">
+            <div class="user-info">
+                <div>
+                    <strong>当前用户：</strong> <span id="current-user-name"></span> |
+                    <strong>职位：</strong> <span id="current-user-position"></span> |
+                    <strong>邮箱：</strong> <span id="current-user-email"></span>
+                </div>
+                <div class="logout" onclick="logout()">退出登录</div>
+            </div>
+
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="switchTab('users')">用户管理</div>
+                <div class="nav-tab" onclick="switchTab('visitors')">访客管理</div>
+                <div class="nav-tab" onclick="switchTab('roles')">角色管理</div>
+                <div class="nav-tab" onclick="switchTab('permissions')">权限查看</div>
+                <div class="nav-tab" onclick="switchTab('logs')">审计日志</div>
+            </div>
+
+            <!-- 用户管理 -->
+            <div id="users-tab" class="tab-content active">
+                <div style="margin-bottom: 15px;">
+                    <button class="btn btn-small" onclick="showCreateUserModal()">创建用户</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>姓名</th>
+                            <th>邮箱</th>
+                            <th>部门</th>
+                            <th>职位</th>
+                            <th>状态</th>
+                            <th>角色</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body">
+                        <!-- 用户列表 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 角色管理 -->
+            <div id="roles-tab" class="tab-content" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>角色名称</th>
+                            <th>级别</th>
+                            <th>描述</th>
+                            <th>权限数量</th>
+                        </tr>
+                    </thead>
+                    <tbody id="roles-table-body">
+                        <!-- 角色列表 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 权限查看 -->
+            <div id="permissions-tab" class="tab-content" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>权限代码</th>
+                            <th>权限名称</th>
+                            <th>模块</th>
+                            <th>描述</th>
+                        </tr>
+                    </thead>
+                    <tbody id="permissions-table-body">
+                        <!-- 权限列表 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 审计日志 -->
+            <div id="logs-tab" class="tab-content" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>用户</th>
+                            <th>操作</th>
+                            <th>描述</th>
+                            <th>状态</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body">
+                        <!-- 日志列表 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 访客管理 -->
+            <div id="visitors-tab" class="tab-content" style="display: none;">
+                <div style="margin-bottom: 15px; display: flex; gap: 10px;">
+                    <button class="btn btn-small" onclick="window.open('visitor_register.html', '_blank')">访客注册</button>
+                    <button class="btn btn-small" onclick="loadVisitors()">刷新列表</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>姓名</th>
+                            <th>微信</th>
+                            <th>电话</th>
+                            <th>推荐人</th>
+                            <th>是否团队长</th>
+                            <th>团队成员数</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="visitors-table-body">
+                        <!-- 访客列表 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建用户模态框 -->
+    <div id="create-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>创建用户</h2>
+                <span class="modal-close" onclick="hideCreateUserModal()">&times;</span>
+            </div>
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="user-name" placeholder="请输入姓名">
+            </div>
+            <div class="form-group">
+                <label>邮箱</label>
+                <input type="email" id="user-email" placeholder="请输入邮箱">
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="user-password" placeholder="请输入密码（至少8位）">
+            </div>
+            <div class="form-group">
+                <label>部门</label>
+                <input type="text" id="user-department" placeholder="请输入部门">
+            </div>
+            <div class="form-group">
+                <label>职位</label>
+                <input type="text" id="user-position" placeholder="请输入职位">
+            </div>
+            <div class="form-group">
+                <label>角色</label>
+                <div id="roles-checkbox" class="checkbox-group">
+                    <!-- 角色复选框 -->
+                </div>
+            </div>
+            <button class="btn" onclick="createUser()">创建</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8000';
+        let token = localStorage.getItem('token');
+        let currentUser = null;
+
+        // 页面加载时检查登录状态
+        window.onload = function() {
+            if (token) {
+                showDashboard();
+            }
+        };
+
+        // 登录
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                showAlert('login-alert', '请填写邮箱和密码', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('username', email);
+            formData.append('password', password);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    token = data.access_token;
+                    currentUser = data.user;
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    showDashboard();
+                } else {
+                    showAlert('login-alert', data.detail || '登录失败', 'error');
+                }
+            } catch (error) {
+                showAlert('login-alert', '网络错误，请检查后端服务是否启动', 'error');
+            }
+        }
+
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            token = null;
+            currentUser = null;
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('dashboard-section').style.display = 'none';
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+        }
+
+        // 显示主界面
+        async function showDashboard() {
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'block';
+            document.getElementById('dashboard-section').classList.add('active');
+
+            // 更新用户信息
+            document.getElementById('current-user-name').textContent = currentUser.name;
+            document.getElementById('current-user-position').textContent = currentUser.position;
+            document.getElementById('current-user-email').textContent = currentUser.email;
+
+            // 加载数据
+            await loadUsers();
+            await loadRoles();
+            await loadPermissions();
+            await loadLogs();
+        }
+
+        // 切换标签
+        function switchTab(tabName) {
+            // 隐藏所有标签内容
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.style.display = 'none';
+            });
+            // 移除所有标签激活状态
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // 显示选中的标签
+            document.getElementById(`${tabName}-tab`).style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        // 加载用户列表
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/users`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const users = await response.json();
+                    const tbody = document.getElementById('users-table-body');
+                    tbody.innerHTML = '';
+
+                    users.forEach(user => {
+                        const roles = user.roles.map(r => r.name).join(', ');
+                        const statusClass = user.status === 'active' ? 'badge-success' :
+                                          user.status === 'pending' ? 'badge-warning' : 'badge-danger';
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.department}</td>
+                            <td>${user.position}</td>
+                            <td><span class="badge ${statusClass}">${user.status}</span></td>
+                            <td>${roles}</td>
+                            <td>
+                                <button class="btn btn-small btn-danger" onclick="deleteUser(${user.id})">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('加载用户列表失败:', error);
+            }
+        }
+
+        // 加载角色列表
+        async function loadRoles() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/roles`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const roles = await response.json();
+                    const tbody = document.getElementById('roles-table-body');
+                    tbody.innerHTML = '';
+
+                    roles.forEach(role => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${role.id}</td>
+                            <td>${role.name} (${role.name_en})</td>
+                            <td>${role.level}</td>
+                            <td>${role.description || '-'}</td>
+                            <td>${role.permissions.length}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    // 更新角色复选框
+                    const checkboxDiv = document.getElementById('roles-checkbox');
+                    checkboxDiv.innerHTML = '';
+                    roles.forEach(role => {
+                        checkboxDiv.innerHTML += `
+                            <label>
+                                <input type="checkbox" value="${role.id}" name="role">
+                                ${role.name}
+                            </label>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error('加载角色列表失败:', error);
+            }
+        }
+
+        // 加载权限列表
+        async function loadPermissions() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/permissions`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const permissions = await response.json();
+                    const tbody = document.getElementById('permissions-table-body');
+                    tbody.innerHTML = '';
+
+                    permissions.forEach(perm => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${perm.id}</td>
+                            <td><code>${perm.code}</code></td>
+                            <td>${perm.name}</td>
+                            <td>${perm.module}</td>
+                            <td>${perm.description || '-'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('加载权限列表失败:', error);
+            }
+        }
+
+        // 加载审计日志
+        async function loadLogs() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/audit-logs`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const logs = await response.json();
+                    const tbody = document.getElementById('logs-table-body');
+                    tbody.innerHTML = '';
+
+                    logs.forEach(log => {
+                        const statusClass = log.status === 'success' ? 'badge-success' : 'badge-danger';
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${log.id}</td>
+                            <td>${log.user_id}</td>
+                            <td>${log.action}</td>
+                            <td>${log.description || '-'}</td>
+                            <td><span class="badge ${statusClass}">${log.status}</span></td>
+                            <td>${new Date(log.created_at).toLocaleString('zh-CN')}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('加载审计日志失败:', error);
+            }
+        }
+
+        // 加载访客列表
+        async function loadVisitors() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/visitors`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const visitors = await response.json();
+                    const tbody = document.getElementById('visitors-table-body');
+                    tbody.innerHTML = '';
+
+                    visitors.forEach(visitor => {
+                        const isLeaderBadge = visitor.is_team_leader ? 'badge-success' : 'badge-warning';
+                        const isLeaderText = visitor.is_team_leader ? '是' : '否';
+                        const canBeLeader = visitor.can_be_team_leader ? '✅ 可申请' : '⏳ 不足3人';
+                        const statusClass = visitor.status === 'active' ? 'badge-success' :
+                                          visitor.status === 'pending' ? 'badge-warning' : 'badge-danger';
+
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${visitor.id}</td>
+                            <td>${visitor.name}</td>
+                            <td>${visitor.wechat}</td>
+                            <td>${visitor.phone}</td>
+                            <td>${visitor.referrer || '-'}</td>
+                            <td><span class="badge ${isLeaderBadge}">${isLeaderText}</span></td>
+                            <td>${visitor.team_member_count} (${canBeLeader})</td>
+                            <td><span class="badge ${statusClass}">${visitor.status}</span></td>
+                            <td>
+                                ${!visitor.is_team_leader && visitor.can_be_team_leader ?
+                                    `<button class="btn btn-small" onclick="approveTeamLeader(${visitor.id})">批准团队长</button>` : ''}
+                                <button class="btn btn-small btn-danger" onclick="deleteVisitor(${visitor.id})">删除</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error('加载访客列表失败:', error);
+            }
+        }
+
+        // 批准团队长
+        async function approveTeamLeader(visitorId) {
+            if (!confirm('确定要批准这位访客成为团队长吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/visitors/${visitorId}/approve-leader`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    alert(`团队长审批通过！${data.message}`);
+                    loadVisitors();
+                } else {
+                    const data = await response.json();
+                    alert(`审批失败：${data.detail}`);
+                }
+            } catch (error) {
+                alert('网络错误');
+            }
+        }
+
+        // 删除访客
+        async function deleteVisitor(visitorId) {
+            if (!confirm('确定要删除这位访客吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/visitors/${visitorId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('访客删除成功');
+                    loadVisitors();
+                } else {
+                    const data = await response.json();
+                    alert(`删除失败：${data.detail}`);
+                }
+            } catch (error) {
+                alert('网络错误');
+            }
+        }
+
+        // 显示创建用户模态框
+        function showCreateUserModal() {
+            document.getElementById('create-user-modal').classList.add('active');
+        }
+
+        // 隐藏创建用户模态框
+        function hideCreateUserModal() {
+            document.getElementById('create-user-modal').classList.remove('active');
+            // 清空表单
+            document.getElementById('user-name').value = '';
+            document.getElementById('user-email').value = '';
+            document.getElementById('user-password').value = '';
+            document.getElementById('user-department').value = '';
+            document.getElementById('user-position').value = '';
+            document.querySelectorAll('input[name="role"]').forEach(cb => cb.checked = false);
+        }
+
+        // 创建用户
+        async function createUser() {
+            const name = document.getElementById('user-name').value;
+            const email = document.getElementById('user-email').value;
+            const password = document.getElementById('user-password').value;
+            const department = document.getElementById('user-department').value;
+            const position = document.getElementById('user-position').value;
+
+            if (!name || !email || !password || !department || !position) {
+                alert('请填写所有必填字段');
+                return;
+            }
+
+            if (password.length < 8) {
+                alert('密码至少需要8位');
+                return;
+            }
+
+            const roleIds = [];
+            document.querySelectorAll('input[name="role"]:checked').forEach(cb => {
+                roleIds.push(parseInt(cb.value));
+            });
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/users`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password,
+                        department,
+                        position,
+                        role_ids: roleIds
+                    })
+                });
+
+                if (response.ok) {
+                    alert('用户创建成功');
+                    hideCreateUserModal();
+                    loadUsers();
+                } else {
+                    const data = await response.json();
+                    alert(`创建失败：${data.detail}`);
+                }
+            } catch (error) {
+                alert('网络错误');
+            }
+        }
+
+        // 删除用户
+        async function deleteUser(userId) {
+            if (!confirm('确定要删除这个用户吗？')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    alert('用户删除成功');
+                    loadUsers();
+                } else {
+                    const data = await response.json();
+                    alert(`删除失败：${data.detail}`);
+                }
+            } catch (error) {
+                alert('网络错误');
+            }
+        }
+
+        // 显示提示
+        function showAlert(elementId, message, type) {
+            const alertElement = document.getElementById(elementId);
+            alertElement.textContent = message;
+            alertElement.className = `alert alert-${type}`;
+            alertElement.style.display = 'block';
+            setTimeout(() => {
+                alertElement.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

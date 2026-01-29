@@ -1,0 +1,15 @@
+{
+  "name": "灵值生态园",
+  "description": "基于代码的品牌文化转译官智能体，将西安文化转化为现代品牌创意",
+  "avatar": "https://example.com/avatar.png",
+  "tags": [
+    "文化转译",
+    "西安文化",
+    "品牌创意",
+    "贡献值"
+  ],
+  "category": "文化创意",
+  "version": "5.0",
+  "created_at": "2026-01-23",
+  "updated_at": "2026-01-23"
+}

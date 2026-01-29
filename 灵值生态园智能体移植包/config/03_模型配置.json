@@ -1,0 +1,103 @@
+# 灵值生态园 - 模型配置
+
+```json
+{
+  "config": {
+    "model": "doubao-seed-1-6-251015",
+    "temperature": 0.8,
+    "top_p": 0.9,
+    "max_tokens": 4096,
+    "max_completion_tokens": 10000,
+    "timeout": 600,
+    "thinking": "disabled",
+    "frequency_penalty": 0,
+    "presence_penalty": 0,
+    "stream": true
+  },
+  
+  "response_format": {
+    "type": "text",
+    "json_schema": null
+  },
+  
+  "tools": [
+    "知识库搜索",
+    "联网搜索",
+    "文生图"
+  ],
+  
+  "memory_config": {
+    "enable": true,
+    "max_messages": 40,
+    "window_size": 20
+  },
+  
+  "tools_config": {
+    "knowledge_search": {
+      "enabled": true,
+      "priority": 1,
+      "min_score": 0.7,
+      "top_k": 5
+    },
+    "web_search": {
+      "enabled": true,
+      "priority": 2,
+      "count": 5
+    },
+    "image_generation": {
+      "enabled": true,
+      "priority": 3,
+      "size": "2K",
+      "watermark": false
+    }
+  },
+  
+  "workflow_config": {
+    "core_routing": {
+      "enabled": true,
+      "trigger": "conversation_start",
+      "model": "doubao-seed-1-6-251015",
+      "temperature": 0.3
+    },
+    "double_helix_diagnosis": {
+      "enabled": true,
+      "trigger": "keywords",
+      "keywords": ["如何", "怎么", "建议", "规划"]
+    },
+    "contribution_interpretation": {
+      "enabled": true,
+      "trigger": "keywords",
+      "keywords": ["贡献值", "积分", "多少点"]
+    }
+  }
+}
+```
+
+## 配置说明
+
+### 模型参数
+- **model**：doubao-seed-1-6-251015（推荐使用此模型）
+- **temperature**：0.8（平衡创意与准确性）
+- **top_p**：0.9（控制多样性）
+- **max_tokens**：4096（单次回复最大Token数）
+- **max_completion_tokens**：10000（总Token限制）
+
+### 工具配置
+- **知识库搜索**：最高优先级，召回阈值0.7，返回5条结果
+- **联网搜索**：中优先级，返回5条结果
+- **文生图**：低优先级，生成2K图片，无水印
+
+### 记忆配置
+- **启用**：true
+- **最大消息数**：40（保留最近20轮对话）
+- **窗口大小**：20
+
+### 工作流配置
+- **核心路由**：对话开始时自动触发，模型温度0.3（确保分类稳定）
+- **双螺旋诊断**：关键词触发（如何、怎么、建议、规划）
+- **贡献值诠释**：关键词触发（贡献值、积分、多少点）
+
+---
+
+**配置版本**：v3.0
+**最后更新**：2024-12

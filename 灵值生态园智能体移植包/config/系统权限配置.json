@@ -1,0 +1,405 @@
+{
+  "version": "1.0",
+  "company": {
+    "name": "媄月商业艺术",
+    "legal_representative": "许锋",
+    "created_date": "2026-01-23"
+  },
+  "permission_levels": {
+    "super_admin": {
+      "level": 1,
+      "name": "最高管理员",
+      "description": "拥有所有系统权限，可执行任何操作",
+      "users": ["许锋"]
+    },
+    "admin": {
+      "level": 2,
+      "name": "高级管理员",
+      "description": "拥有部门所有权限和跨部门查看权限",
+      "users": ["CTO", "CMO", "COO", "CFO"]
+    },
+    "manager": {
+      "level": 3,
+      "name": "部门经理",
+      "description": "拥有部门内部权限",
+      "users": ["各部门负责人"]
+    },
+    "staff": {
+      "level": 4,
+      "name": "普通员工",
+      "description": "拥有岗位相关权限",
+      "users": ["所有员工"]
+    }
+  },
+  "permission_modules": {
+    "user_management": {
+      "name": "用户管理",
+      "description": "管理系统用户",
+      "permissions": {
+        "create_user": "创建用户",
+        "delete_user": "删除用户",
+        "modify_user": "修改用户信息",
+        "view_user": "查看用户信息",
+        "assign_role": "分配角色",
+        "reset_password": "重置密码"
+      }
+    },
+    "role_management": {
+      "name": "角色管理",
+      "description": "管理系统角色",
+      "permissions": {
+        "create_role": "创建角色",
+        "delete_role": "删除角色",
+        "modify_role": "修改角色",
+        "view_role": "查看角色",
+        "assign_permission": "分配权限"
+      }
+    },
+    "permission_management": {
+      "name": "权限管理",
+      "description": "管理系统权限",
+      "permissions": {
+        "grant_permission": "授予权限",
+        "revoke_permission": "撤销权限",
+        "view_permission": "查看权限",
+        "modify_permission": "修改权限"
+      }
+    },
+    "system_config": {
+      "name": "系统配置",
+      "description": "管理系统配置",
+      "permissions": {
+        "modify_config": "修改系统配置",
+        "view_config": "查看系统配置",
+        "backup_config": "备份配置",
+        "restore_config": "恢复配置"
+      }
+    },
+    "data_management": {
+      "name": "数据管理",
+      "description": "管理系统数据",
+      "permissions": {
+        "view_data": "查看数据",
+        "modify_data": "修改数据",
+        "delete_data": "删除数据",
+        "export_data": "导出数据",
+        "import_data": "导入数据",
+        "backup_data": "备份数据",
+        "restore_data": "恢复数据"
+      }
+    },
+    "approval_management": {
+      "name": "审批管理",
+      "description": "管理系统审批",
+      "permissions": {
+        "submit_approval": "提交审批",
+        "approve_approval": "审批通过",
+        "reject_approval": "审批拒绝",
+        "view_approval": "查看审批",
+        "assign_approval": "分配审批"
+      }
+    },
+    "financial_management": {
+      "name": "财务管理",
+      "description": "管理财务相关",
+      "permissions": {
+        "view_financial": "查看财务",
+        "modify_financial": "修改财务",
+        "approve_budget": "审批预算",
+        "manage_funds": "管理资金",
+        "view_report": "查看报表"
+      }
+    },
+    "contract_management": {
+      "name": "合同管理",
+      "description": "管理系统合同",
+      "permissions": {
+        "create_contract": "创建合同",
+        "modify_contract": "修改合同",
+        "delete_contract": "删除合同",
+        "view_contract": "查看合同",
+        "sign_contract": "签署合同",
+        "archive_contract": "归档合同"
+      }
+    },
+    "product_management": {
+      "name": "产品管理",
+      "description": "管理产品相关",
+      "permissions": {
+        "create_product": "创建产品",
+        "modify_product": "修改产品",
+        "delete_product": "删除产品",
+        "view_product": "查看产品",
+        "publish_product": "发布产品",
+        "archive_product": "归档产品"
+      }
+    },
+    "marketing_management": {
+      "name": "营销管理",
+      "description": "管理营销相关",
+      "permissions": {
+        "create_campaign": "创建营销活动",
+        "modify_campaign": "修改营销活动",
+        "delete_campaign": "删除营销活动",
+        "view_campaign": "查看营销活动",
+        "publish_campaign": "发布营销活动",
+        "manage_content": "管理内容",
+        "manage_brand": "管理品牌"
+      }
+    },
+    "operation_management": {
+      "name": "运营管理",
+      "description": "管理运营相关",
+      "permissions": {
+        "manage_users": "管理用户",
+        "manage_community": "管理社区",
+        "manage_customer_service": "管理客服",
+        "view_analytics": "查看分析",
+        "export_report": "导出报告"
+      }
+    },
+    "document_management": {
+      "name": "文档管理",
+      "description": "管理文档相关",
+      "permissions": {
+        "create_document": "创建文档",
+        "modify_document": "修改文档",
+        "delete_document": "删除文档",
+        "view_document": "查看文档",
+        "share_document": "分享文档",
+        "archive_document": "归档文档"
+      }
+    },
+    "log_management": {
+      "name": "日志管理",
+      "description": "管理系统日志",
+      "permissions": {
+        "view_log": "查看日志",
+        "export_log": "导出日志",
+        "analyze_log": "分析日志",
+        "delete_log": "删除日志"
+      }
+    }
+  },
+  "role_permissions": {
+    "super_admin": {
+      "user_management": ["create_user", "delete_user", "modify_user", "view_user", "assign_role", "reset_password"],
+      "role_management": ["create_role", "delete_role", "modify_role", "view_role", "assign_permission"],
+      "permission_management": ["grant_permission", "revoke_permission", "view_permission", "modify_permission"],
+      "system_config": ["modify_config", "view_config", "backup_config", "restore_config"],
+      "data_management": ["view_data", "modify_data", "delete_data", "export_data", "import_data", "backup_data", "restore_data"],
+      "approval_management": ["submit_approval", "approve_approval", "reject_approval", "view_approval", "assign_approval"],
+      "financial_management": ["view_financial", "modify_financial", "approve_budget", "manage_funds", "view_report"],
+      "contract_management": ["create_contract", "modify_contract", "delete_contract", "view_contract", "sign_contract", "archive_contract"],
+      "product_management": ["create_product", "modify_product", "delete_product", "view_product", "publish_product", "archive_product"],
+      "marketing_management": ["create_campaign", "modify_campaign", "delete_campaign", "view_campaign", "publish_campaign", "manage_content", "manage_brand"],
+      "operation_management": ["manage_users", "manage_community", "manage_customer_service", "view_analytics", "export_report"],
+      "document_management": ["create_document", "modify_document", "delete_document", "view_document", "share_document", "archive_document"],
+      "log_management": ["view_log", "export_log", "analyze_log", "delete_log"]
+    },
+    "cto_admin": {
+      "user_management": ["create_user", "modify_user", "view_user", "reset_password"],
+      "role_management": ["create_role", "modify_role", "view_role", "assign_permission"],
+      "permission_management": ["grant_permission", "revoke_permission", "view_permission"],
+      "system_config": ["modify_config", "view_config", "backup_config", "restore_config"],
+      "data_management": ["view_data", "modify_data", "export_data", "import_data", "backup_data"],
+      "approval_management": ["submit_approval", "approve_approval", "reject_approval", "view_approval", "assign_approval"],
+      "financial_management": [],
+      "contract_management": ["view_contract", "sign_contract"],
+      "product_management": ["create_product", "modify_product", "delete_product", "view_product", "publish_product", "archive_product"],
+      "marketing_management": ["view_campaign"],
+      "operation_management": ["view_analytics", "export_report"],
+      "document_management": ["create_document", "modify_document", "view_document", "share_document", "archive_document"],
+      "log_management": ["view_log", "export_log", "analyze_log"]
+    },
+    "cmo_admin": {
+      "user_management": ["create_user", "modify_user", "view_user", "reset_password"],
+      "role_management": ["create_role", "modify_role", "view_role", "assign_permission"],
+      "permission_management": ["grant_permission", "revoke_permission", "view_permission"],
+      "system_config": ["view_config"],
+      "data_management": ["view_data", "modify_data", "export_data"],
+      "approval_management": ["submit_approval", "approve_approval", "reject_approval", "view_approval", "assign_approval"],
+      "financial_management": [],
+      "contract_management": ["view_contract"],
+      "product_management": ["view_product"],
+      "marketing_management": ["create_campaign", "modify_campaign", "delete_campaign", "view_campaign", "publish_campaign", "manage_content", "manage_brand"],
+      "operation_management": ["view_analytics", "export_report"],
+      "document_management": ["create_document", "modify_document", "view_document", "share_document", "archive_document"],
+      "log_management": ["view_log", "export_log", "analyze_log"]
+    },
+    "coo_admin": {
+      "user_management": ["create_user", "modify_user", "view_user"],
+      "role_management": ["view_role"],
+      "permission_management": ["view_permission"],
+      "system_config": ["view_config"],
+      "data_management": ["view_data", "modify_data", "export_data"],
+      "approval_management": ["submit_approval", "approve_approval", "reject_approval", "view_approval", "assign_approval"],
+      "financial_management": [],
+      "contract_management": ["view_contract"],
+      "product_management": ["view_product"],
+      "marketing_management": ["view_campaign"],
+      "operation_management": ["manage_users", "manage_community", "manage_customer_service", "view_analytics", "export_report"],
+      "document_management": ["create_document", "modify_document", "view_document", "share_document", "archive_document"],
+      "log_management": ["view_log", "export_log", "analyze_log"]
+    },
+    "cfo_admin": {
+      "user_management": ["create_user", "modify_user", "view_user"],
+      "role_management": ["view_role"],
+      "permission_management": ["view_permission"],
+      "system_config": ["view_config"],
+      "data_management": ["view_data", "modify_data", "export_data"],
+      "approval_management": ["submit_approval", "approve_approval", "reject_approval", "view_approval", "assign_approval"],
+      "financial_management": ["view_financial", "modify_financial", "approve_budget", "manage_funds", "view_report"],
+      "contract_management": ["view_contract", "sign_contract"],
+      "product_management": ["view_product"],
+      "marketing_management": ["view_campaign"],
+      "operation_management": ["view_analytics", "export_report"],
+      "document_management": ["create_document", "modify_document", "view_document", "share_document", "archive_document"],
+      "log_management": ["view_log", "export_log", "analyze_log"]
+    },
+    "manager": {
+      "user_management": ["view_user"],
+      "role_management": ["view_role"],
+      "permission_management": ["view_permission"],
+      "system_config": ["view_config"],
+      "data_management": ["view_data", "modify_data", "export_data"],
+      "approval_management": ["submit_approval", "view_approval"],
+      "financial_management": ["view_report"],
+      "contract_management": ["view_contract"],
+      "product_management": ["view_product", "modify_product"],
+      "marketing_management": ["view_campaign", "modify_campaign"],
+      "operation_management": ["view_analytics", "export_report"],
+      "document_management": ["create_document", "modify_document", "view_document", "share_document"],
+      "log_management": ["view_log"]
+    },
+    "staff": {
+      "user_management": [],
+      "role_management": [],
+      "permission_management": [],
+      "system_config": [],
+      "data_management": ["view_data", "export_data"],
+      "approval_management": ["submit_approval", "view_approval"],
+      "financial_management": ["view_report"],
+      "contract_management": ["view_contract"],
+      "product_management": ["view_product"],
+      "marketing_management": ["view_campaign"],
+      "operation_management": ["view_analytics"],
+      "document_management": ["create_document", "modify_document", "view_document"],
+      "log_management": []
+    }
+  },
+  "users": {
+    "xu_feng": {
+      "name": "许锋",
+      "email": "xufeng@meiyue.com",
+      "phone": "",
+      "role": "super_admin",
+      "department": "董事会",
+      "position": "董事长/CEO",
+      "status": "active",
+      "created_at": "2026-01-23",
+      "permissions": "super_admin"
+    },
+    "cto": {
+      "name": "待定",
+      "email": "cto@meiyue.com",
+      "phone": "",
+      "role": "cto_admin",
+      "department": "产品技术部",
+      "position": "首席技术官",
+      "status": "pending",
+      "created_at": "2026-01-23",
+      "permissions": "cto_admin"
+    },
+    "cmo": {
+      "name": "待定",
+      "email": "cmo@meiyue.com",
+      "phone": "",
+      "role": "cmo_admin",
+      "department": "市场营销部",
+      "position": "首席营销官",
+      "status": "pending",
+      "created_at": "2026-01-23",
+      "permissions": "cmo_admin"
+    },
+    "coo": {
+      "name": "待定",
+      "email": "coo@meiyue.com",
+      "phone": "",
+      "role": "coo_admin",
+      "department": "运营管理部",
+      "position": "首席运营官",
+      "status": "pending",
+      "created_at": "2026-01-23",
+      "permissions": "coo_admin"
+    },
+    "cfo": {
+      "name": "待定",
+      "email": "cfo@meiyue.com",
+      "phone": "",
+      "role": "cfo_admin",
+      "department": "财务管理部",
+      "position": "首席财务官",
+      "status": "pending",
+      "created_at": "2026-01-23",
+      "permissions": "cfo_admin"
+    }
+  },
+  "security_settings": {
+    "password_policy": {
+      "min_length": 8,
+      "require_uppercase": true,
+      "require_lowercase": true,
+      "require_number": true,
+      "require_special_char": true,
+      "expire_days": 90
+    },
+    "two_factor_auth": {
+      "enabled": true,
+      "required_for_all": true,
+      "methods": ["sms", "email", "authenticator"]
+    },
+    "session_policy": {
+      "max_session_time": 8,
+      "idle_timeout": 30,
+      "max_concurrent_sessions": 3
+    },
+    "audit_policy": {
+      "log_all_operations": true,
+      "log_retention_days": 1095,
+      "alert_on_suspicious_activity": true
+    }
+  },
+  "departments": {
+    "board": {
+      "name": "董事会",
+      "head": "许锋",
+      "members": ["许锋"]
+    },
+    "product_tech": {
+      "name": "产品技术部",
+      "head": "待定（CTO）",
+      "members": []
+    },
+    "marketing": {
+      "name": "市场营销部",
+      "head": "待定（CMO）",
+      "members": []
+    },
+    "operations": {
+      "name": "运营管理部",
+      "head": "待定（COO）",
+      "members": []
+    },
+    "finance": {
+      "name": "财务管理部",
+      "head": "待定（CFO）",
+      "members": []
+    },
+    "culture": {
+      "name": "文化研究部",
+      "head": "待定",
+      "members": []
+    }
+  }
+}

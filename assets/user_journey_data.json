@@ -1,0 +1,24 @@
+{
+  "新用户": {
+    "user_id": "新用户",
+    "first_login": "2026-01-28T02:24:22.762009",
+    "total_lingzhi": 25,
+    "interaction_count": 3,
+    "path_selected": false,
+    "has_consumed": false,
+    "stage_history": [
+      {
+        "stage": "login_register",
+        "timestamp": "2026-01-28T02:24:22.762112",
+        "total_lingzhi": 0
+      },
+      {
+        "stage": "system_experience",
+        "timestamp": "2026-01-28T02:32:03.217929",
+        "total_lingzhi": 10
+      }
+    ],
+    "current_stage": "system_experience",
+    "last_updated": "2026-01-28T02:33:59.991729"
+  }
+}
