@@ -1,3 +1,5 @@
 {
-  "rootDirectory": "web-app"
+  "buildCommand": "cd web-app && npm run build",
+  "outputDirectory": "web-app/dist",
+  "installCommand": "cd web-app && npm install"
 }
