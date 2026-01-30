@@ -1,3 +1,5 @@
 {
-  "outputDirectory": "web-app/dist"
+  "outputDirectory": "public",
+  "cleanUrls": true,
+  "trailingSlash": false
 }
