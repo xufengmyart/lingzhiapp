@@ -1,0 +1,9 @@
+{
+  "name": "lingzhiapp",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd web-app && npm run build",
+    "dev": "cd web-app && npm run dev"
+  }
+}
