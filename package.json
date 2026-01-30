@@ -1,11 +1,6 @@
 {
   "name": "lingzhiapp",
   "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "build": "cd web-app && echo '=== Installing dependencies ===' && npm install && echo '=== Building ===' && npm run build"
-  },
-  "devDependencies": {
-    "vite-plugin-pwa": "^1.2.0"
-  }
+  "description": "灵值生态园 - 智能体APP",
+  "private": true
 }
