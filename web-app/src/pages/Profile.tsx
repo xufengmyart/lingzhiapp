@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { userApi } from '../services/api'
-import { Mail, Phone, Calendar, Wallet, Target, Settings, LogOut, Lock, Key } from 'lucide-react'
+import { Mail, Phone, Calendar, Wallet, Target, Settings, LogOut, Lock, Key, Shield } from 'lucide-react'
 
 const Profile = () => {
   const { user, logout, updateUser } = useAuth()

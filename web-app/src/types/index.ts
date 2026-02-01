@@ -1,15 +1,20 @@
 export interface User {
-  id: string
+  id: number  // 修改为 number 类型，与后端一致
   username: string
   email: string
   phone: string
   totalLingzhi: number
-  currentStage: string
-  participationLevel: string
-  createdAt: string
-  login_type?: string
-  is_completed?: boolean
   avatar_url?: string
+  real_name?: string
+  created_at?: string
+  updated_at?: string
+  login_type?: string
+  is_verified?: number
+  // 以下字段用于前端逻辑（如果后端不提供，前端可以设置默认值）
+  currentStage?: string
+  participationLevel?: string
+  createdAt?: string  // 兼容旧代码
+  is_completed?: boolean
 }
 
 export interface Message {

@@ -2,7 +2,7 @@ import type { User, Message, IncomeLevel, JourneyStage } from '../types'
 
 // 模拟用户数据
 let mockUser: User = {
-  id: '1',
+  id: 1,
   username: '灵值体验者',
   email: 'demo@lingzhi.com',
   phone: '13800138000',

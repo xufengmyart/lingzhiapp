@@ -6,7 +6,7 @@
 默认管理员账号: admin / admin123
 ==================================================
 正在备份数据库...
-数据库备份成功: /workspace/projects/admin-backend/backups/lingzhi_ecosystem_backup_20260201_202737.db
+数据库备份成功: /workspace/projects/admin-backend/backups/lingzhi_ecosystem_backup_20260201_203402.db
  * Serving Flask app 'app'
  * Debug mode: on
 [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
@@ -23,38 +23,15 @@
 默认管理员账号: admin / admin123
 ==================================================
 正在备份数据库...
-数据库备份成功: /workspace/projects/admin-backend/backups/lingzhi_ecosystem_backup_20260201_202739.db
+数据库备份成功: /workspace/projects/admin-backend/backups/lingzhi_ecosystem_backup_20260201_203406.db
  * Debugger is active!
  * Debugger PIN: 606-621-662
-[调试] 手机号 13800138000 验证码: 929281
-127.0.0.1 - - [01/Feb/2026 20:27:49] "POST /api/send-code HTTP/1.1" 200 -
 /workspace/projects/admin-backend/app.py:476: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
   'exp': datetime.utcnow().timestamp() + JWT_EXPIRATION
-/workspace/projects/admin-backend/app.py:816: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+127.0.0.1 - - [01/Feb/2026 20:34:14] "POST /api/register HTTP/1.1" 200 -
+127.0.0.1 - - [01/Feb/2026 20:34:19] "PUT /api/user/profile HTTP/1.1" 200 -
+127.0.0.1 - - [01/Feb/2026 20:34:22] "[31m[1mPOST /api/login HTTP/1.1[0m" 400 -
+127.0.0.1 - - [01/Feb/2026 20:34:26] "PUT /api/user/security/settings HTTP/1.1" 200 -
+/workspace/projects/admin-backend/app.py:840: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
   cursor.execute(
-127.0.0.1 - - [01/Feb/2026 20:27:52] "POST /api/login HTTP/1.1" 200 -
-127.0.0.1 - - [01/Feb/2026 20:27:54] "[31m[1mPOST /api/login HTTP/1.1[0m" 400 -
-127.0.0.1 - - [01/Feb/2026 20:27:59] "GET /api/user/devices HTTP/1.1" 200 -
-127.0.0.1 - - [01/Feb/2026 20:28:03] "[35m[1mGET /api/user/security/settings HTTP/1.1[0m" 500 -
- * Detected change in '/workspace/projects/admin-backend/app.py', reloading
- * Restarting with watchdog (inotify)
-旧数据库不存在，跳过迁移
-==================================================
-灵值生态园 API 服务启动中...
-==================================================
-服务地址: http://0.0.0.0:8001
-默认管理员账号: admin / admin123
-==================================================
-正在备份数据库...
-数据库备份成功: /workspace/projects/admin-backend/backups/lingzhi_ecosystem_backup_20260201_202815.db
- * Debugger is active!
- * Debugger PIN: 606-621-662
-127.0.0.1 - - [01/Feb/2026 20:28:21] "GET /api/user/security/settings HTTP/1.1" 200 -
-127.0.0.1 - - [01/Feb/2026 20:28:25] "PUT /api/user/security/settings HTTP/1.1" 200 -
-127.0.0.1 - - [01/Feb/2026 20:28:30] "GET /api/user/security/settings HTTP/1.1" 200 -
-/workspace/projects/admin-backend/app.py:476: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
-  'exp': datetime.utcnow().timestamp() + JWT_EXPIRATION
-/workspace/projects/admin-backend/app.py:816: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
-  cursor.execute(
-127.0.0.1 - - [01/Feb/2026 20:28:32] "POST /api/login HTTP/1.1" 200 -
-127.0.0.1 - - [01/Feb/2026 20:28:36] "PUT /api/user/security/settings HTTP/1.1" 200 -
+127.0.0.1 - - [01/Feb/2026 20:34:30] "POST /api/login HTTP/1.1" 200 -

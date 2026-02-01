@@ -485,6 +485,31 @@ def verify_token(token):
     except:
         return None
 
+def format_user_data(user_row):
+    """格式化用户数据，统一字段命名"""
+    if not user_row:
+        return None
+
+    # 转换为字典
+    user_dict = dict(user_row)
+
+    # 统一字段命名：将下划线命名转换为驼峰命名
+    formatted = {
+        'id': user_dict.get('id'),
+        'username': user_dict.get('username'),
+        'email': user_dict.get('email'),
+        'phone': user_dict.get('phone'),
+        'totalLingzhi': user_dict.get('total_lingzhi', 0),  # 统一使用驼峰命名
+        'avatar_url': user_dict.get('avatar_url'),
+        'real_name': user_dict.get('real_name'),
+        'created_at': user_dict.get('created_at'),
+        'updated_at': user_dict.get('updated_at'),
+        'login_type': user_dict.get('login_type'),
+        'is_verified': user_dict.get('is_verified'),
+    }
+
+    return formatted
+
 # 初始化数据库
 init_db()
 
@@ -686,6 +711,11 @@ def register():
         )
         user_id = cursor.lastrowid
         conn.commit()
+
+        # 获取新创建的用户数据
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        new_user = cursor.fetchone()
+
         conn.close()
 
         # 生成token
@@ -696,13 +726,7 @@ def register():
             'message': '注册成功',
             'data': {
                 'token': token,
-                'user': {
-                    'id': user_id,
-                    'username': username,
-                    'email': email,
-                    'phone': phone,
-                    'totalLingzhi': 0
-                }
+                'user': format_user_data(new_user)
             }
         })
 
@@ -888,13 +912,7 @@ def login():
             'message': '登录成功',
             'data': {
                 'token': token,
-                'user': {
-                    'id': user['id'],
-                    'username': user['username'],
-                    'email': user['email'],
-                    'phone': user['phone'],
-                    'totalLingzhi': user['total_lingzhi']
-                },
+                'user': format_user_data(user),
                 'device': {
                     'device_id': device_id,
                     'device_name': device_name,
@@ -5159,7 +5177,7 @@ def update_user_profile():
         conn.commit()
 
         # 获取更新后的用户数据
-        cursor.execute("SELECT id, username, email, phone, avatar_url, total_lingzhi, real_name, created_at, updated_at FROM users WHERE id = ?", (user_id,))
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         updated_user = cursor.fetchone()
 
         conn.close()
@@ -5167,7 +5185,7 @@ def update_user_profile():
         return jsonify({
             'success': True,
             'message': '用户信息更新成功',
-            'data': dict(updated_user) if updated_user else None
+            'data': format_user_data(updated_user)
         })
 
     except Exception as e:

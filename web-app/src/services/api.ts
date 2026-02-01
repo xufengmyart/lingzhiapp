@@ -156,7 +156,7 @@ export const partnerApi = {
   },
 
   submitApplication: async (data: {
-    userId: string
+    userId: number | string
     userName: string
     phone: string
     currentLingzhi: number
@@ -166,7 +166,7 @@ export const partnerApi = {
     return response.data
   },
 
-  getApplicationStatus: async (userId: string) => {
+  getApplicationStatus: async (userId: number | string) => {
     const response = await api.get<ApiResponse<any>>(`/api/partner/status/${userId}`)
     return response.data
   },
