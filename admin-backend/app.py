@@ -4753,9 +4753,18 @@ def update_user_profile():
         cursor.execute(update_sql, update_values)
 
         conn.commit()
+
+        # 获取更新后的用户数据
+        cursor.execute("SELECT id, username, email, phone, avatar_url, total_lingzhi, real_name, created_at, updated_at FROM users WHERE id = ?", (user_id,))
+        updated_user = cursor.fetchone()
+
         conn.close()
 
-        return jsonify({'success': True, 'message': '用户信息更新成功'})
+        return jsonify({
+            'success': True,
+            'message': '用户信息更新成功',
+            'data': dict(updated_user) if updated_user else None
+        })
 
     except Exception as e:
         import traceback

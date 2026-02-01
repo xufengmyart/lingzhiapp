@@ -21,12 +21,9 @@ const Profile = () => {
         phone: formData.phone,
       })
 
-      if (response.success) {
-        // 更新 AuthContext 中的用户信息
-        if (user) {
-          const updatedUser = { ...user, ...formData }
-          updateUser(updatedUser)
-        }
+      if (response.success && response.data) {
+        // 使用后端返回的完整用户数据更新 AuthContext
+        updateUser(response.data)
         setIsEditing(false)
         alert('个人信息已更新')
       } else {
@@ -34,7 +31,8 @@ const Profile = () => {
       }
     } catch (error: any) {
       console.error('更新用户信息失败:', error)
-      alert(error?.response?.data?.message || '更新失败，请重试')
+      const errorMessage = error?.response?.data?.message || error?.message || '更新失败，请重试'
+      alert(errorMessage)
     }
   }
 
