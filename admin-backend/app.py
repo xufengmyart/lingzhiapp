@@ -6,6 +6,8 @@ import hashlib
 import jwt
 import os
 import bcrypt
+import random
+import string
 
 app = Flask(__name__)
 CORS(app)
@@ -18,6 +20,9 @@ OLD_DATABASE = '../../灵值生态园智能体移植包/src/auth/auth.db'  # 旧
 # JWT 配置
 JWT_SECRET = os.getenv('JWT_SECRET', 'lingzhi-jwt-secret-key')
 JWT_EXPIRATION = 7 * 24 * 60 * 60  # 7天
+
+# 验证码存储（模拟短信验证码）
+verification_codes = {}  # {phone: {'code': '123456', 'expire_at': timestamp}}
 
 def init_db():
     """初始化数据库"""
@@ -638,6 +643,180 @@ def admin_stats():
         return jsonify({
             'success': False,
             'message': f'获取统计数据失败: {str(e)}'
+        }), 500
+
+# ============ 忘记密码 ============
+
+@app.route('/api/send-code', methods=['POST'])
+def send_code():
+    """发送验证码"""
+    try:
+        data = request.json
+        phone = data.get('phone')
+
+        if not phone:
+            return jsonify({
+                'success': False,
+                'message': '手机号不能为空'
+            }), 400
+
+        if not phone.isdigit() or len(phone) != 11:
+            return jsonify({
+                'success': False,
+                'message': '手机号格式不正确'
+            }), 400
+
+        # 查询用户是否存在
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE phone = ?", (phone,))
+        user = cursor.fetchone()
+        conn.close()
+
+        if not user:
+            return jsonify({
+                'success': False,
+                'message': '该手机号未注册'
+            }), 400
+
+        # 生成6位验证码
+        code = ''.join(random.choices(string.digits, k=6))
+        expire_at = datetime.utcnow().timestamp() + 300  # 5分钟有效期
+
+        # 存储验证码
+        verification_codes[phone] = {
+            'code': code,
+            'expire_at': expire_at
+        }
+
+        # 打印验证码到控制台（模拟短信发送）
+        print(f"短信验证码已发送到 {phone}: {code}")
+
+        return jsonify({
+            'success': True,
+            'message': '验证码已发送'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'发送验证码失败: {str(e)}'
+        }), 500
+
+@app.route('/api/verify-code', methods=['POST'])
+def verify_code():
+    """验证验证码"""
+    try:
+        data = request.json
+        phone = data.get('phone')
+        code = data.get('code')
+
+        if not phone or not code:
+            return jsonify({
+                'success': False,
+                'message': '手机号和验证码不能为空'
+            }), 400
+
+        # 检查验证码
+        if phone not in verification_codes:
+            return jsonify({
+                'success': False,
+                'message': '验证码不存在或已过期'
+            }), 400
+
+        stored_code = verification_codes[phone]
+
+        # 检查是否过期
+        if datetime.utcnow().timestamp() > stored_code['expire_at']:
+            del verification_codes[phone]
+            return jsonify({
+                'success': False,
+                'message': '验证码已过期'
+            }), 400
+
+        # 验证码是否正确
+        if stored_code['code'] != code:
+            return jsonify({
+                'success': False,
+                'message': '验证码错误'
+            }), 400
+
+        return jsonify({
+            'success': True,
+            'message': '验证码正确'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'验证失败: {str(e)}'
+        }), 500
+
+@app.route('/api/reset-password', methods=['POST'])
+def reset_password():
+    """重置密码"""
+    try:
+        data = request.json
+        phone = data.get('phone')
+        code = data.get('code')
+        new_password = data.get('newPassword')
+
+        if not phone or not code or not new_password:
+            return jsonify({
+                'success': False,
+                'message': '参数不完整'
+            }), 400
+
+        if len(new_password) < 6:
+            return jsonify({
+                'success': False,
+                'message': '密码长度至少6位'
+            }), 400
+
+        # 再次验证验证码
+        if phone not in verification_codes:
+            return jsonify({
+                'success': False,
+                'message': '验证码不存在或已过期'
+            }), 400
+
+        stored_code = verification_codes[phone]
+
+        if datetime.utcnow().timestamp() > stored_code['expire_at']:
+            del verification_codes[phone]
+            return jsonify({
+                'success': False,
+                'message': '验证码已过期'
+            }), 400
+
+        if stored_code['code'] != code:
+            return jsonify({
+                'success': False,
+                'message': '验证码错误'
+            }), 400
+
+        # 更新密码
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET password_hash = ? WHERE phone = ?",
+            (hash_password(new_password), phone)
+        )
+        conn.commit()
+        conn.close()
+
+        # 清除验证码
+        del verification_codes[phone]
+
+        return jsonify({
+            'success': True,
+            'message': '密码重置成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'重置密码失败: {str(e)}'
         }), 500
 
 # ============ 启动服务 ============

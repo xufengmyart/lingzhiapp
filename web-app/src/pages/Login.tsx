@@ -81,6 +81,15 @@ const Login = () => {
               </div>
             </div>
 
+            <div className="flex items-center justify-between">
+              <Link
+                to="/forgot-password"
+                className="text-sm text-primary-600 hover:text-primary-700 transition-colors"
+              >
+                忘记密码？
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
