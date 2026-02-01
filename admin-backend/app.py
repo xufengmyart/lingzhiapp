@@ -243,10 +243,13 @@ def init_db():
             base_lingzhi INTEGER NOT NULL,
             bonus_lingzhi INTEGER NOT NULL,
             total_lingzhi INTEGER NOT NULL,
-            payment_method TEXT,
-            payment_status TEXT DEFAULT 'pending',
+            payment_method VARCHAR(20) DEFAULT 'online',
+            payment_status VARCHAR(20) DEFAULT 'pending',
             payment_time TIMESTAMP,
             transaction_id TEXT,
+            voucher_id INTEGER,
+            audit_status VARCHAR(20),
+            bank_info TEXT,
             status TEXT DEFAULT 'active',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id),
@@ -281,6 +284,47 @@ def init_db():
             source TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # 公司收款账户表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS company_accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            account_name VARCHAR(200) NOT NULL,
+            account_number VARCHAR(50) NOT NULL,
+            bank_name VARCHAR(200) NOT NULL,
+            bank_branch VARCHAR(200),
+            company_name VARCHAR(200) NOT NULL,
+            company_credit_code VARCHAR(50),
+            account_type VARCHAR(20) NOT NULL DEFAULT 'primary',
+            is_active BOOLEAN DEFAULT 1,
+            sort_order INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 转账凭证表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS transfer_vouchers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recharge_record_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            image_url VARCHAR(500) NOT NULL,
+            transfer_amount DECIMAL(10, 2) NOT NULL,
+            transfer_time TIMESTAMP,
+            transfer_account VARCHAR(200),
+            remark TEXT,
+            audit_status VARCHAR(20) DEFAULT 'pending',
+            audit_user_id INTEGER,
+            audit_time TIMESTAMP,
+            audit_remark TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (recharge_record_id) REFERENCES recharge_records(id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (audit_user_id) REFERENCES admins(id)
         )
     ''')
 
@@ -2185,6 +2229,27 @@ def init_default_data():
             
             print("已创建充值档位: 7个")
 
+        # 初始化公司收款账户
+        cursor.execute("SELECT id FROM company_accounts")
+        if not cursor.fetchone():
+            # 创建默认公司账户
+            cursor.execute(
+                """INSERT INTO company_accounts 
+                   (account_name, account_number, bank_name, bank_branch, company_name, company_credit_code, account_type, sort_order)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    '陕西媄月商业艺术有限责任公司',
+                    '6222020200012345678',
+                    '中国工商银行',
+                    '西安分行高新区支行',
+                    '陕西媄月商业艺术有限责任公司',
+                    '91610131MA6XXXXXX',
+                    'primary',
+                    1
+                )
+            )
+            print("已创建公司收款账户: 1个")
+
         conn.commit()
         conn.close()
     except Exception as e:
@@ -3078,10 +3143,13 @@ def create_recharge_order():
 
         data = request.json
         tier_id = data.get('tier_id')
-        payment_method = data.get('payment_method', 'wechat')
+        payment_method = data.get('payment_method', 'online')
 
         if not tier_id:
             return jsonify({'success': False, 'message': '档位ID不能为空'}), 400
+
+        if payment_method not in ['online', 'bank_transfer']:
+            return jsonify({'success': False, 'message': '支付方式无效'}), 400
 
         conn = get_db()
         cursor = conn.cursor()
@@ -3115,17 +3183,52 @@ def create_recharge_order():
 
         order_id = cursor.lastrowid
         conn.commit()
+
+        # 如果是公司公户转账，获取公司账户信息
+        company_accounts = []
+        transfer_remark = ""
+        
+        if payment_method == 'bank_transfer':
+            # 获取用户手机号
+            cursor.execute("SELECT phone FROM users WHERE id = ?", (user_id,))
+            user = cursor.fetchone()
+            user_phone = user['phone'] if user else ""
+            
+            # 生成转账备注
+            transfer_remark = f"LZ充值-{user_phone}-{order_no}"
+            
+            # 获取公司账户信息
+            cursor.execute("SELECT * FROM company_accounts WHERE is_active = 1 ORDER BY sort_order, id")
+            accounts = cursor.fetchall()
+            
+            for account in accounts:
+                company_accounts.append({
+                    'account_name': account['account_name'],
+                    'account_number': account['account_number'],
+                    'bank_name': account['bank_name'],
+                    'bank_branch': account['bank_branch'],
+                    'company_name': account['company_name']
+                })
+        
         conn.close()
+
+        response_data = {
+            'order_id': order_id,
+            'order_no': order_no,
+            'amount': float(tier['price']),
+            'total_lingzhi': tier['base_lingzhi'] + tier['bonus_lingzhi'],
+            'payment_method': payment_method
+        }
+        
+        # 如果是公司公户转账，添加账户信息和转账备注
+        if payment_method == 'bank_transfer':
+            response_data['company_accounts'] = company_accounts
+            response_data['transfer_remark'] = transfer_remark
 
         return jsonify({
             'success': True,
             'message': '订单创建成功',
-            'data': {
-                'order_id': order_id,
-                'order_no': order_no,
-                'amount': float(tier['price']),
-                'total_lingzhi': tier['base_lingzhi'] + tier['bonus_lingzhi']
-            }
+            'data': response_data
         })
 
     except Exception as e:
@@ -3193,6 +3296,453 @@ def complete_recharge_payment():
 
     except Exception as e:
         return jsonify({'success': False, 'message': f'充值失败: {str(e)}'}), 500
+
+@app.route('/api/company/accounts', methods=['GET'])
+def get_company_accounts():
+    """获取公司收款账户信息"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM company_accounts WHERE is_active = 1 ORDER BY sort_order, id")
+        accounts = cursor.fetchall()
+        conn.close()
+
+        result = []
+        for account in accounts:
+            result.append({
+                'id': account['id'],
+                'account_name': account['account_name'],
+                'account_number': account['account_number'],
+                'bank_name': account['bank_name'],
+                'bank_branch': account['bank_branch'],
+                'company_name': account['company_name'],
+                'company_credit_code': account['company_credit_code'],
+                'account_type': account['account_type']
+            })
+
+        return jsonify({
+            'success': True,
+            'data': result
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取公司账户信息失败: {str(e)}'}), 500
+
+@app.route('/api/recharge/upload-voucher', methods=['POST'])
+def upload_transfer_voucher():
+    """上传转账凭证"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        order_no = request.form.get('order_no')
+        transfer_amount = request.form.get('transfer_amount')
+        transfer_time = request.form.get('transfer_time')
+        transfer_account = request.form.get('transfer_account', '')
+        remark = request.form.get('remark', '')
+
+        if not order_no:
+            return jsonify({'success': False, 'message': '订单号不能为空'}), 400
+
+        if not transfer_amount:
+            return jsonify({'success': False, 'message': '转账金额不能为空'}), 400
+
+        # 检查是否有上传文件
+        if 'voucher_file' not in request.files:
+            return jsonify({'success': False, 'message': '请上传转账凭证'}), 400
+
+        file = request.files['voucher_file']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': '文件名为空'}), 400
+
+        # 简单的文件验证
+        allowed_extensions = {'jpg', 'jpeg', 'png', 'pdf'}
+        file_ext = file.filename.split('.')[-1].lower() if '.' in file.filename else ''
+        if file_ext not in allowed_extensions:
+            return jsonify({'success': False, 'message': '仅支持JPG、PNG、PDF格式'}), 400
+
+        # 保存文件到临时目录
+        import os
+        upload_dir = '/tmp/vouchers'
+        if not os.path.exists(upload_dir):
+            os.makedirs(upload_dir)
+        
+        timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+        filename = f"{order_no}_{timestamp}_{random.randint(1000, 9999)}.{file_ext}"
+        file_path = os.path.join(upload_dir, filename)
+        file.save(file_path)
+        
+        # 生成文件URL（这里使用相对路径，实际应该是上传到对象存储）
+        image_url = f"/uploads/vouchers/{filename}"
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取充值记录
+        cursor.execute("SELECT id, user_id, amount FROM recharge_records WHERE order_no = ?", (order_no,))
+        recharge_record = cursor.fetchone()
+
+        if not recharge_record:
+            conn.close()
+            return jsonify({'success': False, 'message': '订单不存在'}), 404
+
+        # 验证用户权限
+        if recharge_record['user_id'] != user_id:
+            conn.close()
+            return jsonify({'success': False, 'message': '无权操作此订单'}), 403
+
+        # 验证转账金额
+        try:
+            amount = float(transfer_amount)
+            if abs(amount - float(recharge_record['amount'])) > 0.01:
+                conn.close()
+                return jsonify({'success': False, 'message': '转账金额与订单金额不符'}), 400
+        except:
+            conn.close()
+            return jsonify({'success': False, 'message': '转账金额格式错误'}), 400
+
+        # 解析转账时间
+        parsed_transfer_time = None
+        if transfer_time:
+            try:
+                parsed_transfer_time = datetime.strptime(transfer_time, '%Y-%m-%d %H:%M:%S')
+            except:
+                pass
+
+        # 插入转账凭证
+        cursor.execute(
+            """INSERT INTO transfer_vouchers (recharge_record_id, user_id, image_url, transfer_amount, transfer_time, transfer_account, remark)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (
+                recharge_record['id'],
+                user_id,
+                image_url,
+                amount,
+                parsed_transfer_time,
+                transfer_account,
+                remark
+            )
+        )
+
+        voucher_id = cursor.lastrowid
+
+        # 更新充值记录状态
+        cursor.execute(
+            """UPDATE recharge_records
+               SET voucher_id = ?, audit_status = 'pending', payment_status = 'pending'
+               WHERE id = ?""",
+            (voucher_id, recharge_record['id'])
+        )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '凭证上传成功，等待审核',
+            'data': {
+                'voucher_id': voucher_id,
+                'audit_status': 'pending'
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'上传凭证失败: {str(e)}'}), 500
+
+@app.route('/api/recharge/voucher/<int:voucher_id>', methods=['GET'])
+def get_voucher_detail(voucher_id):
+    """获取转账凭证详情"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT tv.*, rr.order_no, rr.amount as order_amount
+            FROM transfer_vouchers tv
+            LEFT JOIN recharge_records rr ON tv.recharge_record_id = rr.id
+            WHERE tv.id = ? AND tv.user_id = ?
+        """, (voucher_id, user_id))
+        voucher = cursor.fetchone()
+        conn.close()
+
+        if not voucher:
+            return jsonify({
+                'success': False,
+                'message': '凭证不存在'
+            }), 404
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'id': voucher['id'],
+                'recharge_record_id': voucher['recharge_record_id'],
+                'order_no': voucher['order_no'],
+                'image_url': voucher['image_url'],
+                'transfer_amount': float(voucher['transfer_amount']),
+                'transfer_time': voucher['transfer_time'],
+                'transfer_account': voucher['transfer_account'],
+                'remark': voucher['remark'],
+                'audit_status': voucher['audit_status'],
+                'audit_remark': voucher['audit_remark'],
+                'created_at': voucher['created_at']
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取凭证详情失败: {str(e)}'}), 500
+
+@app.route('/api/admin/vouchers/pending', methods=['GET'])
+def get_pending_vouchers():
+    """管理员获取待审核凭证列表"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 20, type=int)
+        offset = (page - 1) * page_size
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取待审核凭证
+        cursor.execute("""
+            SELECT tv.*, u.username, u.phone, rr.order_no, rr.amount as order_amount, rt.name as tier_name
+            FROM transfer_vouchers tv
+            LEFT JOIN users u ON tv.user_id = u.id
+            LEFT JOIN recharge_records rr ON tv.recharge_record_id = rr.id
+            LEFT JOIN recharge_tiers rt ON rr.tier_id = rt.id
+            WHERE tv.audit_status = 'pending'
+            ORDER BY tv.created_at DESC
+            LIMIT ? OFFSET ?
+        """, (page_size, offset))
+        vouchers = cursor.fetchall()
+
+        # 获取总数
+        cursor.execute("SELECT COUNT(*) as total FROM transfer_vouchers WHERE audit_status = 'pending'")
+        total = cursor.fetchone()['total']
+
+        conn.close()
+
+        result = []
+        for voucher in vouchers:
+            result.append({
+                'id': voucher['id'],
+                'user_id': voucher['user_id'],
+                'username': voucher['username'],
+                'user_phone': voucher['phone'],
+                'recharge_record_id': voucher['recharge_record_id'],
+                'order_no': voucher['order_no'],
+                'tier_name': voucher['tier_name'],
+                'order_amount': float(voucher['order_amount']),
+                'image_url': voucher['image_url'],
+                'transfer_amount': float(voucher['transfer_amount']),
+                'transfer_time': voucher['transfer_time'],
+                'transfer_account': voucher['transfer_account'],
+                'remark': voucher['remark'],
+                'created_at': voucher['created_at']
+            })
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'total': total,
+                'page': page,
+                'page_size': page_size,
+                'records': result
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取待审核凭证列表失败: {str(e)}'}), 500
+
+@app.route('/api/admin/vouchers/<int:voucher_id>/audit', methods=['POST'])
+def audit_voucher(voucher_id):
+    """管理员审核转账凭证"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        data = request.json
+        audit_status = data.get('audit_status')
+        audit_remark = data.get('audit_remark', '')
+
+        if audit_status not in ['approved', 'rejected']:
+            return jsonify({'success': False, 'message': '审核状态无效'}), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取凭证信息
+        cursor.execute("""
+            SELECT tv.*, rr.user_id, rr.total_lingzhi, rr.id as record_id
+            FROM transfer_vouchers tv
+            LEFT JOIN recharge_records rr ON tv.recharge_record_id = rr.id
+            WHERE tv.id = ?
+        """, (voucher_id,))
+        voucher = cursor.fetchone()
+
+        if not voucher:
+            conn.close()
+            return jsonify({'success': False, 'message': '凭证不存在'}), 404
+
+        # 更新凭证审核状态
+        cursor.execute(
+            """UPDATE transfer_vouchers
+               SET audit_status = ?, audit_user_id = ?, audit_time = CURRENT_TIMESTAMP, audit_remark = ?
+               WHERE id = ?""",
+            (audit_status, user_id, audit_remark, voucher_id)
+        )
+
+        # 更新充值记录状态
+        if audit_status == 'approved':
+            # 审核通过，充值到账
+            cursor.execute(
+                """UPDATE recharge_records
+                   SET audit_status = 'approved', payment_status = 'paid', payment_time = CURRENT_TIMESTAMP
+                   WHERE id = ?""",
+                (voucher['record_id'],)
+            )
+            
+            # 增加用户灵值
+            cursor.execute(
+                """UPDATE users
+                   SET total_lingzhi = total_lingzhi + ?
+                   WHERE id = ?""",
+                (voucher['total_lingzhi'], voucher['user_id'])
+            )
+        else:
+            # 审核不通过
+            cursor.execute(
+                """UPDATE recharge_records
+                   SET audit_status = 'rejected'
+                   WHERE id = ?""",
+                (voucher['record_id'],)
+            )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '审核成功',
+            'data': {
+                'voucher_id': voucher_id,
+                'audit_status': audit_status,
+                'user_lingzhi': voucher['total_lingzhi'] if audit_status == 'approved' else 0
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'审核失败: {str(e)}'}), 500
+
+@app.route('/api/admin/vouchers', methods=['GET'])
+def get_all_vouchers():
+    """管理员获取所有转账凭证"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 20, type=int)
+        audit_status = request.args.get('audit_status')
+        offset = (page - 1) * page_size
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 构建查询条件
+        where_clause = ""
+        params = []
+        
+        if audit_status:
+            where_clause = "WHERE tv.audit_status = ?"
+            params.append(audit_status)
+
+        # 获取凭证列表
+        cursor.execute(f"""
+            SELECT tv.*, u.username, u.phone, rr.order_no, rr.amount as order_amount
+            FROM transfer_vouchers tv
+            LEFT JOIN users u ON tv.user_id = u.id
+            LEFT JOIN recharge_records rr ON tv.recharge_record_id = rr.id
+            {where_clause}
+            ORDER BY tv.created_at DESC
+            LIMIT ? OFFSET ?
+        """, params + [page_size, offset])
+        vouchers = cursor.fetchall()
+
+        # 获取总数
+        cursor.execute(f"SELECT COUNT(*) as total FROM transfer_vouchers {where_clause}", params)
+        total = cursor.fetchone()['total']
+
+        conn.close()
+
+        result = []
+        for voucher in vouchers:
+            result.append({
+                'id': voucher['id'],
+                'user_id': voucher['user_id'],
+                'username': voucher['username'],
+                'user_phone': voucher['phone'],
+                'recharge_record_id': voucher['recharge_record_id'],
+                'order_no': voucher['order_no'],
+                'order_amount': float(voucher['order_amount']),
+                'image_url': voucher['image_url'],
+                'transfer_amount': float(voucher['transfer_amount']),
+                'transfer_time': voucher['transfer_time'],
+                'transfer_account': voucher['transfer_account'],
+                'audit_status': voucher['audit_status'],
+                'audit_time': voucher['audit_time'],
+                'audit_remark': voucher['audit_remark'],
+                'created_at': voucher['created_at']
+            })
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'total': total,
+                'page': page,
+                'page_size': page_size,
+                'records': result
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取凭证列表失败: {str(e)}'}), 500
 
 @app.route('/api/recharge/records', methods=['GET'])
 def get_recharge_records():
