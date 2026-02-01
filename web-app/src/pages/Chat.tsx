@@ -1,10 +1,27 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { ChatProvider, useChat } from '../contexts/ChatContext'
-import { Send, Sparkles, User, Bot } from 'lucide-react'
+import { Send, Sparkles, User, Bot, ThumbsUp, ThumbsDown, MessageSquarePlus, X } from 'lucide-react'
+import axios from 'axios'
 
 const ChatContent = () => {
   const { messages, loading, sendMessage, clearChat } = useChat()
   const [input, setInput] = useState('')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [feedbackModal, setFeedbackModal] = useState<{ open: boolean; messageId: string; messageContent: string }>({
+    open: false,
+    messageId: '',
+    messageContent: ''
+  })
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
+
+  // 自动滚动到底部
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, loading])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -12,6 +29,35 @@ const ChatContent = () => {
     
     await sendMessage(input)
     setInput('')
+  }
+
+  const handleFeedback = async (type: 'helpful' | 'not_helpful' | 'suggestion', question?: string) => {
+    setFeedbackSubmitting(true)
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.post('/api/feedback', {
+        type,
+        question: feedbackModal.messageContent,
+        comment: question || '',
+        agent_id: 1
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.data.success) {
+        alert(`反馈提交成功！获得 ${response.data.data.contribution_value} 灵值`)
+        setFeedbackModal({ open: false, messageId: '', messageContent: '' })
+        // 刷新用户信息
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error('提交反馈失败:', error)
+      alert('提交反馈失败，请稍后重试')
+    } finally {
+      setFeedbackSubmitting(false)
+    }
   }
 
   return (
@@ -36,7 +82,7 @@ const ChatContent = () => {
       </div>
 
       {/* 消息列表 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4" id="messages-container">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-500">
             <Sparkles className="w-16 h-16 mb-4 text-primary-300" />
@@ -52,39 +98,55 @@ const ChatContent = () => {
               }`}
             >
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                   message.role === 'user'
                     ? 'bg-primary-500'
                     : 'bg-secondary-500'
                 }`}
               >
                 {message.role === 'user' ? (
-                  <User className="w-4 h-4 text-white" />
+                  <User className="w-5 h-5 text-white" />
                 ) : (
-                  <Bot className="w-4 h-4 text-white" />
+                  <Bot className="w-5 h-5 text-white" />
                 )}
               </div>
-              <div
-                className={`max-w-[70%] p-3 rounded-2xl ${
-                  message.role === 'user'
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
-                    : 'bg-gray-100 text-gray-900'
-                }`}
-              >
-                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                <span className="text-xs opacity-60 mt-1 block">
-                  {new Date(message.timestamp).toLocaleTimeString()}
-                </span>
+              <div className="flex-1 max-w-[70%]">
+                <div
+                  className={`p-4 rounded-2xl ${
+                    message.role === 'user'
+                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
+                      : 'bg-gray-100 text-gray-900'
+                  }`}
+                >
+                  {/* 文字加大两号 - 从 text-sm 改为 text-base */}
+                  <p className="text-base whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                  <span className="text-xs opacity-60 mt-2 block">
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+
+                {/* 智能体回复添加反馈按钮 */}
+                {message.role === 'assistant' && (
+                  <div className="flex items-center space-x-2 mt-2 ml-2">
+                    <button
+                      onClick={() => setFeedbackModal({ open: true, messageId: message.id, messageContent: message.content })}
+                      className="text-xs text-gray-500 hover:text-primary-600 flex items-center space-x-1 transition-colors"
+                    >
+                      <MessageSquarePlus className="w-3 h-3" />
+                      <span>反馈</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))
         )}
         {loading && (
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full bg-secondary-500 flex items-center justify-center">
-              <Bot className="w-4 h-4 text-white" />
+            <div className="w-10 h-10 rounded-full bg-secondary-500 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-white" />
             </div>
-            <div className="bg-gray-100 p-3 rounded-2xl">
+            <div className="bg-gray-100 p-4 rounded-2xl">
               <div className="flex space-x-2">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -93,6 +155,8 @@ const ChatContent = () => {
             </div>
           </div>
         )}
+        {/* 用于自动滚动的锚点 */}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* 输入框 */}
@@ -103,7 +167,7 @@ const ChatContent = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="输入您的问题..."
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-base"
             disabled={loading}
           />
           <button
@@ -115,6 +179,72 @@ const ChatContent = () => {
           </button>
         </form>
       </div>
+
+      {/* 反馈模态框 */}
+      {feedbackModal.open && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold">您的反馈对我们很重要</h3>
+              <button
+                onClick={() => setFeedbackModal({ open: false, messageId: '', messageContent: '' })}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4">智能体回复：</p>
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-sm text-gray-700">
+                {feedbackModal.messageContent}
+              </div>
+
+              <p className="text-sm font-medium text-gray-900 mb-3">这条回复对您有帮助吗？</p>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <button
+                  onClick={() => handleFeedback('helpful')}
+                  disabled={feedbackSubmitting}
+                  className="flex items-center justify-center space-x-2 p-4 border-2 border-green-200 rounded-lg hover:bg-green-50 hover:border-green-400 transition-all disabled:opacity-50"
+                >
+                  <ThumbsUp className="w-5 h-5 text-green-600" />
+                  <span className="font-medium text-gray-700">有帮助 (+3灵值)</span>
+                </button>
+                <button
+                  onClick={() => handleFeedback('not_helpful')}
+                  disabled={feedbackSubmitting}
+                  className="flex items-center justify-center space-x-2 p-4 border-2 border-orange-200 rounded-lg hover:bg-orange-50 hover:border-orange-400 transition-all disabled:opacity-50"
+                >
+                  <ThumbsDown className="w-5 h-5 text-orange-600" />
+                  <span className="font-medium text-gray-700">无帮助 (+5灵值)</span>
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  您的问题或建议 <span className="text-xs text-gray-500">(选填，+10灵值)</span>
+                </label>
+                <textarea
+                  id="feedback-question"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
+                  rows={3}
+                  placeholder="请描述您遇到的问题或改进建议..."
+                />
+              </div>
+
+              <button
+                onClick={() => {
+                  const questionInput = document.getElementById('feedback-question') as HTMLTextAreaElement
+                  handleFeedback('suggestion', questionInput?.value)
+                }}
+                disabled={feedbackSubmitting}
+                className="w-full py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all disabled:opacity-50"
+              >
+                {feedbackSubmitting ? '提交中...' : '提交反馈'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

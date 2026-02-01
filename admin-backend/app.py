@@ -200,9 +200,12 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             conversation_id INTEGER,
             agent_id INTEGER NOT NULL,
-            user_id INTEGER,
+            user_id INTEGER NOT NULL,
+            type TEXT NOT NULL,
             rating INTEGER,
+            question TEXT,
             comment TEXT,
+            contribution_value INTEGER DEFAULT 5,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (conversation_id) REFERENCES conversations(id),
             FOREIGN KEY (agent_id) REFERENCES agents(id),
@@ -924,6 +927,126 @@ def checkin_status():
         return jsonify({
             'success': False,
             'message': f'获取签到状态失败: {str(e)}'
+        }), 500
+
+# ============ 用户反馈 ============
+
+@app.route('/api/feedback', methods=['POST'])
+def submit_feedback():
+    """提交用户反馈"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({
+                'success': False,
+                'message': '未授权'
+            }), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+
+        if not user_id:
+            return jsonify({
+                'success': False,
+                'message': 'token无效'
+            }), 401
+
+        data = request.json
+        agent_id = data.get('agent_id', 1)  # 默认智能体ID为1
+        feedback_type = data.get('type')  # helpful / not_helpful / suggestion
+        question = data.get('question', '')
+        comment = data.get('comment', '')
+        rating = data.get('rating')  # 可选，评分
+
+        if not feedback_type:
+            return jsonify({
+                'success': False,
+                'message': '反馈类型不能为空'
+            }), 400
+
+        # 确定贡献值
+        contribution_value = 5  # 默认5灵值
+        if feedback_type == 'helpful':
+            contribution_value = 3
+        elif feedback_type == 'not_helpful':
+            contribution_value = 5  # 收集负面反馈更宝贵
+        elif feedback_type == 'suggestion':
+            contribution_value = 10  # 建议最有价值
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 插入反馈记录
+        cursor.execute(
+            """INSERT INTO feedback (agent_id, user_id, type, question, comment, rating, contribution_value)
+               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+            (agent_id, user_id, feedback_type, question, comment, rating, contribution_value)
+        )
+
+        # 增加用户灵值
+        cursor.execute(
+            "UPDATE users SET total_lingzhi = total_lingzhi + ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (contribution_value, user_id)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': f'反馈提交成功，获得 {contribution_value} 灵值',
+            'data': {
+                'contribution_value': contribution_value
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'提交反馈失败: {str(e)}'
+        }), 500
+
+@app.route('/api/feedback', methods=['GET'])
+def get_user_feedback():
+    """获取用户反馈历史"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({
+                'success': False,
+                'message': '未授权'
+            }), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+
+        if not user_id:
+            return jsonify({
+                'success': False,
+                'message': 'token无效'
+            }), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取用户的反馈历史
+        cursor.execute(
+            """SELECT id, type, question, comment, rating, contribution_value, created_at
+               FROM feedback WHERE user_id = ? ORDER BY created_at DESC LIMIT 20""",
+            (user_id,)
+        )
+        feedback_list = cursor.fetchall()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': [dict(f) for f in feedback_list]
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取反馈历史失败: {str(e)}'
         }), 500
 
 # ============ 后台管理 ============
@@ -2250,28 +2373,46 @@ def init_default_data():
         cursor.execute("SELECT id FROM agents WHERE name = '灵值'")
         if not cursor.fetchone():
             default_system_prompt = """# 角色定义
-我是灵值，是陕西媄月商业艺术有限责任公司官方的灵值生态园智能向导，专门帮助用户了解和使用灵值生态园的各项功能。
+我是灵值，是陕西媄月商业艺术有限责任公司官方的灵值生态园智能向导，专门帮助用户了解和使用灵值生态园的各项功能。我内置了公司核心文档和西安文化知识库，能够提供专业、准确的咨询。
 
 # 任务目标
 为用户提供灵值生态园的全方位咨询服务，帮助用户了解生态规则、经济模型、用户旅程和合伙人制度。
 
 # 能力
-- 详细介绍灵值生态园的核心价值和愿景
-- 解释灵值经济模型和生态规则
+- 详细介绍灵值生态园的核心价值和愿景（基于公司简介文档）
+- 解释灵值经济模型和生态规则（基于服务总纲）
+- 提供西安文化关键词和商业转译案例（基于文化关键词库）
 - 指导用户完成用户旅程的各个阶段
 - 解答关于合伙人申请和收益的问题
 - 提供中视频项目、西安美学侦探等特色功能的介绍
+- 解读公司战略规划和目标
+
+# 知识库使用指南
+我已内置以下核心知识库：
+1. 公司简介：媄月公司的使命、愿景和核心架构
+2. 灵值生态一体化服务总纲：生态全景、规则体系、贡献值体系
+3. 西安文化关键词库：110个文化关键词及转译提示
+4. 西安文化基因库：文化基因分类和解码方法
+5. 转译商业案例库：文化商业转译的六大方法及案例
 
 # 过程
 1. 热情欢迎用户，介绍自己是灵值生态园的智能向导
 2. 了解用户需求和兴趣点
-3. 提供相关的详细信息和建议
+3. 从知识库中检索相关信息，提供专业回答
 4. 引导用户使用各项功能
+5. 鼓励用户通过反馈功能提供意见（可获得贡献值）
 
 # 约束
 - 必须表明自己是陕西媄月商业艺术有限责任公司的官方智能体
 - 回答要简洁清晰，专业友好
-- 不确定的细节建议用户联系客服或查看官方文档"""
+- 基于知识库内容提供准确信息，不编造
+- 不确定的细节建议用户联系客服或查看官方文档
+- 提醒用户可以对对话进行反馈，获得贡献值奖励
+
+# 反馈激励
+- 有帮助反馈：+3 灵值
+- 无帮助反馈：+5 灵值
+- 建议反馈：+10 灵值"""
 
             default_model_config = {
                 "model": "doubao-seed-1-6-251015",
