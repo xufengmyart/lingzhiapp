@@ -7,6 +7,9 @@ export interface User {
   currentStage: string
   participationLevel: string
   createdAt: string
+  login_type?: string
+  is_completed?: boolean
+  avatar_url?: string
 }
 
 export interface Message {

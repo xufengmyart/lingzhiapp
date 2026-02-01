@@ -39,6 +39,11 @@ OLD_DATABASE = '../../灵值生态园智能体移植包/src/auth/auth.db'  # 旧
 JWT_SECRET = os.getenv('JWT_SECRET', 'lingzhi-jwt-secret-key')
 JWT_EXPIRATION = 7 * 24 * 60 * 60  # 7天
 
+# 微信开放平台配置
+WECHAT_APP_ID = os.getenv('WECHAT_APP_ID', '')
+WECHAT_APP_SECRET = os.getenv('WECHAT_APP_SECRET', '')
+WECHAT_REDIRECT_URI = os.getenv('WECHAT_REDIRECT_URI', 'http://localhost:3000/wechat/callback')
+
 # 验证码存储（模拟短信验证码）
 verification_codes = {}  # {phone: {'code': '123456', 'expire_at': timestamp}}
 
@@ -61,6 +66,11 @@ def init_db():
             avatar_url TEXT,
             real_name TEXT,
             is_verified BOOLEAN DEFAULT 0,
+            login_type TEXT DEFAULT 'phone',
+            wechat_openid TEXT UNIQUE,
+            wechat_unionid TEXT,
+            wechat_nickname TEXT,
+            wechat_avatar TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
@@ -87,6 +97,46 @@ def init_db():
         cursor.execute("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0")
     except:
         pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN login_type TEXT DEFAULT 'phone'")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN wechat_openid TEXT UNIQUE")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN wechat_unionid TEXT")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN wechat_nickname TEXT")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN wechat_avatar TEXT")
+    except:
+        pass
+
+    # 用户详细信息表（用于完善信息）
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER UNIQUE NOT NULL,
+            real_name TEXT,
+            phone TEXT UNIQUE,
+            email TEXT UNIQUE,
+            id_card TEXT,
+            bank_account TEXT,
+            bank_name TEXT,
+            address TEXT,
+            is_completed BOOLEAN DEFAULT 0,
+            completed_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
 
     # 签到记录表
     cursor.execute('''
@@ -4354,6 +4404,305 @@ def get_recharge_records():
 
     except Exception as e:
         return jsonify({'success': False, 'message': f'获取充值记录失败: {str(e)}'}), 500
+
+# ============ 微信登录接口 ============
+
+@app.route('/api/wechat/login', methods=['GET'])
+def wechat_login():
+    """获取微信登录授权URL"""
+    try:
+        if not WECHAT_APP_ID:
+            return jsonify({'success': False, 'message': '微信登录未配置'}), 400
+
+        # 生成state参数用于防止CSRF
+        state = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+        
+        # 构造微信授权URL
+        params = {
+            'appid': WECHAT_APP_ID,
+            'redirect_uri': WECHAT_REDIRECT_URI,
+            'response_type': 'code',
+            'scope': 'snsapi_userinfo',
+            'state': state
+        }
+        
+        auth_url = f"https://open.weixin.qq.com/connect/qrconnect?{urlencode(params)}#wechat_redirect"
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'auth_url': auth_url,
+                'state': state
+            }
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取微信登录URL失败: {str(e)}'}), 500
+
+@app.route('/api/wechat/callback', methods=['GET'])
+def wechat_callback():
+    """微信登录回调处理"""
+    try:
+        code = request.args.get('code')
+        state = request.args.get('state')
+        
+        if not code:
+            return jsonify({'success': False, 'message': '未获取到授权码'}), 400
+
+        # 第一步：通过code获取access_token
+        token_url = f"https://api.weixin.qq.com/sns/oauth2/access_token?appid={WECHAT_APP_ID}&secret={WECHAT_APP_SECRET}&code={code}&grant_type=authorization_code"
+        
+        token_response = requests.get(token_url)
+        token_data = token_response.json()
+        
+        if 'errcode' in token_data:
+            return jsonify({'success': False, 'message': f'微信授权失败: {token_data.get("errmsg")}'}), 400
+        
+        access_token = token_data.get('access_token')
+        openid = token_data.get('openid')
+        unionid = token_data.get('unionid')
+        
+        # 第二步：获取用户信息
+        user_info_url = f"https://api.weixin.qq.com/sns/userinfo?access_token={access_token}&openid={openid}"
+        user_info_response = requests.get(user_info_url)
+        user_info = user_info_response.json()
+        
+        if 'errcode' in user_info:
+            return jsonify({'success': False, 'message': f'获取用户信息失败: {user_info.get("errmsg")}'}), 400
+        
+        wechat_nickname = user_info.get('nickname', '')
+        wechat_avatar = user_info.get('headimgurl', '')
+        
+        # 第三步：检查用户是否存在
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 通过openid查找用户
+        cursor.execute("SELECT * FROM users WHERE wechat_openid = ?", (openid,))
+        user = cursor.fetchone()
+        
+        if user:
+            # 用户已存在，更新登录信息
+            user_id = user['id']
+            cursor.execute("""
+                UPDATE users 
+                SET last_login_at = CURRENT_TIMESTAMP,
+                    wechat_nickname = ?,
+                    wechat_avatar = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """, (wechat_nickname, wechat_avatar, user_id))
+            
+            # 检查是否完善信息
+            cursor.execute("SELECT * FROM user_profiles WHERE user_id = ?", (user_id,))
+            profile = cursor.fetchone()
+            is_completed = profile['is_completed'] if profile else False
+        else:
+            # 创建新用户
+            # 生成随机用户名和密码
+            random_username = f"wx_{openid[:8]}_{random.randint(1000, 9999)}"
+            random_password = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
+            password_hash = bcrypt.hashpw(random_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            
+            cursor.execute("""
+                INSERT INTO users (
+                    username, email, phone, password_hash, 
+                    login_type, wechat_openid, wechat_unionid,
+                    wechat_nickname, wechat_avatar, avatar_url
+                ) VALUES (?, NULL, NULL, ?, 'wechat', ?, ?, ?, ?, ?)
+            """, (random_username, password_hash, openid, unionid, wechat_nickname, wechat_avatar))
+            
+            user_id = cursor.lastrowid
+            is_completed = False
+        
+        conn.commit()
+        conn.close()
+        
+        # 生成JWT token
+        token = jwt.encode({
+            'user_id': user_id,
+            'exp': datetime.utcnow() + timedelta(seconds=JWT_EXPIRATION)
+        }, JWT_SECRET, algorithm='HS256')
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'token': token,
+                'user_id': user_id,
+                'username': wechat_nickname,
+                'avatar_url': wechat_avatar,
+                'is_completed': is_completed,
+                'need_complete_info': not is_completed
+            }
+        })
+        
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': f'微信登录失败: {str(e)}'}), 500
+
+@app.route('/api/user/profile', methods=['GET'])
+def get_user_profile():
+    """获取用户详细信息"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取用户基本信息
+        cursor.execute("SELECT id, username, email, phone, avatar_url, wechat_nickname, wechat_avatar FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
+        
+        # 获取用户详细信息
+        cursor.execute("SELECT * FROM user_profiles WHERE user_id = ?", (user_id,))
+        profile = cursor.fetchone()
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'user': dict(user) if user else None,
+                'profile': dict(profile) if profile else None,
+                'is_completed': profile['is_completed'] if profile else False
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取用户信息失败: {str(e)}'}), 500
+
+@app.route('/api/user/profile', methods=['POST'])
+def complete_user_profile():
+    """完善用户信息"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        data = request.get_json()
+        
+        real_name = data.get('real_name', '')
+        phone = data.get('phone', '')
+        email = data.get('email', '')
+        id_card = data.get('id_card', '')
+        bank_account = data.get('bank_account', '')
+        bank_name = data.get('bank_name', '')
+        address = data.get('address', '')
+        
+        # 验证必填字段
+        if not real_name or not phone:
+            return jsonify({'success': False, 'message': '真实姓名和手机号为必填项'}), 400
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 检查是否已存在profile
+        cursor.execute("SELECT id FROM user_profiles WHERE user_id = ?", (user_id,))
+        existing_profile = cursor.fetchone()
+        
+        if existing_profile:
+            # 更新
+            cursor.execute("""
+                UPDATE user_profiles 
+                SET real_name = ?, phone = ?, email = ?, id_card = ?,
+                    bank_account = ?, bank_name = ?, address = ?,
+                    is_completed = 1, completed_at = CURRENT_TIMESTAMP,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ?
+            """, (real_name, phone, email, id_card, bank_account, bank_name, address, user_id))
+        else:
+            # 插入
+            cursor.execute("""
+                INSERT INTO user_profiles (
+                    user_id, real_name, phone, email, id_card,
+                    bank_account, bank_name, address, is_completed, completed_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP)
+            """, (user_id, real_name, phone, email, id_card, bank_account, bank_name, address))
+        
+        # 同时更新users表
+        cursor.execute("""
+            UPDATE users 
+            SET phone = ?, real_name = ?, is_verified = 1, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        """, (phone, real_name, user_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': '用户信息完善成功'
+        })
+        
+    except sqlite3.IntegrityError as e:
+        return jsonify({'success': False, 'message': '手机号已被使用'}), 400
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': f'完善用户信息失败: {str(e)}'}), 500
+
+@app.route('/api/user/require-complete', methods=['GET'])
+def check_require_complete():
+    """检查用户是否需要完善信息"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取用户详细信息
+        cursor.execute("SELECT is_completed FROM user_profiles WHERE user_id = ?", (user_id,))
+        profile = cursor.fetchone()
+        
+        # 获取登录类型
+        cursor.execute("SELECT login_type FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
+        
+        conn.close()
+        
+        login_type = user['login_type'] if user else 'phone'
+        is_completed = profile['is_completed'] if profile else False
+        
+        # 只有微信登录且未完善信息的用户才需要完善信息
+        need_complete = (login_type == 'wechat' and not is_completed)
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'need_complete': need_complete,
+                'login_type': login_type,
+                'is_completed': is_completed
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'检查失败: {str(e)}'}), 500
+
+# 需要导入requests和urlencode
+import requests
+from urllib.parse import urlencode
 
 # ============ 启动服务 ============
 

@@ -12,6 +12,8 @@ import Profile from './pages/Profile'
 import UserGuide from './pages/UserGuide'
 import MediumVideoProject from './pages/MediumVideoProject'
 import XianAesthetics from './pages/XianAesthetics'
+import CompleteProfile from './pages/CompleteProfile'
+import WeChatCallback from './pages/WeChatCallback'
 import AdminDashboard from './pages/AdminDashboard'
 import AgentManagement from './pages/AgentManagement'
 import KnowledgeManagement from './pages/KnowledgeManagement'
@@ -24,6 +26,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/wechat/callback" element={<WeChatCallback />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/admin/forgot-password" element={<ForgotPassword />} />
@@ -39,6 +42,7 @@ function App() {
           <Route path="/medium-video" element={<MediumVideoProject />} />
           <Route path="/xian-aesthetics" element={<XianAesthetics />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/complete-profile" element={<CompleteProfile />} />
         </Route>
       </Route>
 

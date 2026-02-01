@@ -6,8 +6,10 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   login: (username: string, password: string) => Promise<void>
+  loginWithToken: (token: string, userData: any) => void
   logout: () => void
   updateUser: (user: User) => void
+  checkRequireComplete: () => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -48,6 +50,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(res.data.user)
   }
 
+  const loginWithToken = (token: string, userData: any) => {
+    localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify(userData))
+    setUser(userData)
+  }
+
   const logout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
@@ -59,8 +67,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem('user', JSON.stringify(user))
   }
 
+  const checkRequireComplete = async (): Promise<boolean> => {
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return false
+
+      const response = await fetch('http://localhost:8001/api/user/require-complete', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      const data = await response.json()
+      return data.data?.need_complete || false
+    } catch (error) {
+      return false
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithToken, logout, updateUser, checkRequireComplete }}>
       {children}
     </AuthContext.Provider>
   )

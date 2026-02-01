@@ -75,6 +75,25 @@ const Login = () => {
     }
   }
 
+  const handleWeChatLogin = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('http://localhost:8001/api/wechat/login')
+      const data = await response.json()
+
+      if (data.success && data.data.auth_url) {
+        // 跳转到微信授权页面
+        window.location.href = data.data.auth_url
+      } else {
+        setError(data.message || '微信登录配置错误')
+      }
+    } catch (err) {
+      setError('微信登录失败，请稍后重试')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="w-full max-w-md">
@@ -155,6 +174,29 @@ const Login = () => {
               )}
             </button>
           </form>
+
+          {/* 微信登录 */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">或使用以下方式登录</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => handleWeChatLogin()}
+              className="mt-4 w-full bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition-all flex items-center justify-center space-x-2 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0"
+            >
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M8.5 13.5c-2.5 0-4.5-2-4.5-4.5S6 4.5 8.5 4.5s4.5 2 4.5 4.5-2 4.5-4.5 4.5zm7 0c-.3 0-.5 0-.8 0-1.5 2.2-4 3.5-6.7 3.5-4.4 0-8-3.6-8-8s3.6-8 8-8c4.4 0 8 3.6 8 8 0 1.5-.4 2.8-1.1 4-1.7.4-3 2-3 3.8v.7h.1c1.5 0 3-.6 4.1-1.5l.2.2c.8-.8 1.9-1.3 3-1.3 2.5 0 4.5 2 4.5 4.5s-2 4.5-4.5 4.5-4.5-2-4.5-4.5c0-1.2.5-2.3 1.3-3.1.6-1.8 2-3.4 3.7-4.2z"/>
+              </svg>
+              <span>微信登录</span>
+            </button>
+          </div>
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
