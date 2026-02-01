@@ -213,6 +213,77 @@ def init_db():
         )
     ''')
 
+    # 充值档位表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS recharge_tiers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            price DECIMAL(10,2) NOT NULL,
+            base_lingzhi INTEGER NOT NULL,
+            bonus_lingzhi INTEGER NOT NULL,
+            bonus_percentage INTEGER NOT NULL,
+            partner_level INTEGER DEFAULT 0,
+            benefits TEXT,
+            status TEXT DEFAULT 'active',
+            sort_order INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    # 充值记录表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS recharge_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            tier_id INTEGER NOT NULL,
+            order_no TEXT UNIQUE NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            base_lingzhi INTEGER NOT NULL,
+            bonus_lingzhi INTEGER NOT NULL,
+            total_lingzhi INTEGER NOT NULL,
+            payment_method TEXT,
+            payment_status TEXT DEFAULT 'pending',
+            payment_time TIMESTAMP,
+            transaction_id TEXT,
+            status TEXT DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (tier_id) REFERENCES recharge_tiers(id)
+        )
+    ''')
+
+    # 灵值消费记录表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS lingzhi_consumption_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            consumption_type TEXT NOT NULL,
+            consumption_item TEXT NOT NULL,
+            lingzhi_amount INTEGER NOT NULL,
+            item_id INTEGER,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # 用户权益表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_benefits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            benefit_type TEXT NOT NULL,
+            benefit_name TEXT NOT NULL,
+            benefit_count INTEGER DEFAULT 0,
+            benefit_expiry TIMESTAMP,
+            source TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -1379,181 +1450,7 @@ def admin_stats():
             'message': f'获取统计数据失败: {str(e)}'
         }), 500
 
-# ============ 忘记密码 ============
 
-@app.route('/api/send-code', methods=['POST'])
-def send_code():
-    """发送验证码"""
-    try:
-        data = request.json
-        phone = data.get('phone')
-
-        if not phone:
-            return jsonify({
-                'success': False,
-                'message': '手机号不能为空'
-            }), 400
-
-        if not phone.isdigit() or len(phone) != 11:
-            return jsonify({
-                'success': False,
-                'message': '手机号格式不正确'
-            }), 400
-
-        # 查询用户是否存在
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE phone = ?", (phone,))
-        user = cursor.fetchone()
-        conn.close()
-
-        if not user:
-            return jsonify({
-                'success': False,
-                'message': '该手机号未注册'
-            }), 400
-
-        # 生成6位验证码
-        code = ''.join(random.choices(string.digits, k=6))
-        expire_at = datetime.utcnow().timestamp() + 300  # 5分钟有效期
-
-        # 存储验证码
-        verification_codes[phone] = {
-            'code': code,
-            'expire_at': expire_at
-        }
-
-        # 打印验证码到控制台（模拟短信发送）
-        print(f"短信验证码已发送到 {phone}: {code}")
-
-        return jsonify({
-            'success': True,
-            'message': '验证码已发送'
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'发送验证码失败: {str(e)}'
-        }), 500
-
-@app.route('/api/verify-code', methods=['POST'])
-def verify_code():
-    """验证验证码"""
-    try:
-        data = request.json
-        phone = data.get('phone')
-        code = data.get('code')
-
-        if not phone or not code:
-            return jsonify({
-                'success': False,
-                'message': '手机号和验证码不能为空'
-            }), 400
-
-        # 检查验证码
-        if phone not in verification_codes:
-            return jsonify({
-                'success': False,
-                'message': '验证码不存在或已过期'
-            }), 400
-
-        stored_code = verification_codes[phone]
-
-        # 检查是否过期
-        if datetime.utcnow().timestamp() > stored_code['expire_at']:
-            del verification_codes[phone]
-            return jsonify({
-                'success': False,
-                'message': '验证码已过期'
-            }), 400
-
-        # 验证码是否正确
-        if stored_code['code'] != code:
-            return jsonify({
-                'success': False,
-                'message': '验证码错误'
-            }), 400
-
-        return jsonify({
-            'success': True,
-            'message': '验证码正确'
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'验证失败: {str(e)}'
-        }), 500
-
-@app.route('/api/reset-password', methods=['POST'])
-def reset_password():
-    """重置密码"""
-    try:
-        data = request.json
-        phone = data.get('phone')
-        code = data.get('code')
-        new_password = data.get('newPassword')
-
-        if not phone or not code or not new_password:
-            return jsonify({
-                'success': False,
-                'message': '参数不完整'
-            }), 400
-
-        if len(new_password) < 6:
-            return jsonify({
-                'success': False,
-                'message': '密码长度至少6位'
-            }), 400
-
-        # 再次验证验证码
-        if phone not in verification_codes:
-            return jsonify({
-                'success': False,
-                'message': '验证码不存在或已过期'
-            }), 400
-
-        stored_code = verification_codes[phone]
-
-        if datetime.utcnow().timestamp() > stored_code['expire_at']:
-            del verification_codes[phone]
-            return jsonify({
-                'success': False,
-                'message': '验证码已过期'
-            }), 400
-
-        if stored_code['code'] != code:
-            return jsonify({
-                'success': False,
-                'message': '验证码错误'
-            }), 400
-
-        # 更新密码
-        conn = get_db()
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE users SET password_hash = ? WHERE phone = ?",
-            (hash_password(new_password), phone)
-        )
-        conn.commit()
-        conn.close()
-
-        # 清除验证码
-        del verification_codes[phone]
-
-        return jsonify({
-            'success': True,
-            'message': '密码重置成功'
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'重置密码失败: {str(e)}'
-        }), 500
-
-# ============ 智能对话 ============
 
 def get_text_content(content):
     """安全提取 AIMessage.content 中的文本"""
@@ -2030,615 +1927,6 @@ def agent_chat():
             'message': f'对话处理失败: {str(e)}'
         }), 500
 
-@app.route('/api/agent/conversations/<conversation_id>', methods=['GET'])
-def get_conversation_history(conversation_id):
-    """获取对话历史"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "SELECT messages, title, created_at FROM conversations WHERE conversation_id = ?",
-            (conversation_id,)
-        )
-
-        conv = cursor.fetchone()
-        conn.close()
-
-        if not conv:
-            return jsonify({
-                'success': False,
-                'message': '对话不存在'
-            }), 404
-
-        messages = json.loads(conv['messages']) if conv['messages'] else []
-
-        return jsonify({
-            'success': True,
-            'data': {
-                'messages': messages,
-                'title': conv['title'],
-                'createdAt': conv['created_at']
-            }
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'获取对话历史失败: {str(e)}'
-        }), 500
-
-# ============ 智能体管理 ============
-
-@app.route('/api/admin/agents', methods=['GET'])
-def get_agents():
-    """获取智能体列表"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute('''
-            SELECT id, name, description, status, avatar_url, created_at, updated_at
-            FROM agents
-            ORDER BY created_at DESC
-        ''')
-        agents = cursor.fetchall()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'data': [dict(agent) for agent in agents]
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'获取智能体列表失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/agents', methods=['POST'])
-def create_agent():
-    """创建智能体"""
-    try:
-        data = request.json
-        name = data.get('name')
-        description = data.get('description', '')
-        system_prompt = data.get('system_prompt', '')
-        model_config = data.get('model_config', {})
-        tools = data.get('tools', [])
-        avatar_url = data.get('avatar_url', '')
-
-        if not name:
-            return jsonify({
-                'success': False,
-                'message': '智能体名称不能为空'
-            }), 400
-
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute('''
-            INSERT INTO agents (name, description, system_prompt, model_config, tools, avatar_url)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (
-            name,
-            description,
-            system_prompt,
-            json.dumps(model_config),
-            json.dumps(tools),
-            avatar_url
-        ))
-        agent_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'message': '智能体创建成功',
-            'data': {'id': agent_id}
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'创建智能体失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/agents/<int:agent_id>', methods=['GET'])
-def get_agent_detail(agent_id):
-    """获取智能体详情"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute('''
-            SELECT * FROM agents WHERE id = ?
-        ''', (agent_id,))
-        agent = cursor.fetchone()
-        conn.close()
-
-        if not agent:
-            return jsonify({
-                'success': False,
-                'message': '智能体不存在'
-            }), 404
-
-        return jsonify({
-            'success': True,
-            'data': dict(agent)
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'获取智能体详情失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/agents/<int:agent_id>', methods=['PUT'])
-def update_agent(agent_id):
-    """更新智能体"""
-    try:
-        data = request.json
-        name = data.get('name')
-        description = data.get('description')
-        system_prompt = data.get('system_prompt')
-        model_config = data.get('model_config')
-        tools = data.get('tools')
-        avatar_url = data.get('avatar_url')
-        status = data.get('status')
-
-        conn = get_db()
-        cursor = conn.cursor()
-
-        # 检查智能体是否存在
-        cursor.execute('SELECT id FROM agents WHERE id = ?', (agent_id,))
-        if not cursor.fetchone():
-            conn.close()
-            return jsonify({
-                'success': False,
-                'message': '智能体不存在'
-            }), 404
-
-        # 构建更新语句
-        update_fields = []
-        update_values = []
-        
-        if name is not None:
-            update_fields.append('name = ?')
-            update_values.append(name)
-        if description is not None:
-            update_fields.append('description = ?')
-            update_values.append(description)
-        if system_prompt is not None:
-            update_fields.append('system_prompt = ?')
-            update_values.append(system_prompt)
-        if model_config is not None:
-            update_fields.append('model_config = ?')
-            update_values.append(json.dumps(model_config))
-        if tools is not None:
-            update_fields.append('tools = ?')
-            update_values.append(json.dumps(tools))
-        if avatar_url is not None:
-            update_fields.append('avatar_url = ?')
-            update_values.append(avatar_url)
-        if status is not None:
-            update_fields.append('status = ?')
-            update_values.append(status)
-
-        if update_fields:
-            update_fields.append('updated_at = CURRENT_TIMESTAMP')
-            update_values.append(agent_id)
-
-            cursor.execute(f'''
-                UPDATE agents
-                SET {', '.join(update_fields)}
-                WHERE id = ?
-            ''', update_values)
-
-        conn.commit()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'message': '智能体更新成功'
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'更新智能体失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/agents/<int:agent_id>', methods=['DELETE'])
-def delete_agent(agent_id):
-    """删除智能体"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-
-        # 检查智能体是否存在
-        cursor.execute('SELECT id FROM agents WHERE id = ?', (agent_id,))
-        if not cursor.fetchone():
-            conn.close()
-            return jsonify({
-                'success': False,
-                'message': '智能体不存在'
-            }), 404
-
-        cursor.execute('DELETE FROM agents WHERE id = ?', (agent_id,))
-        conn.commit()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'message': '智能体删除成功'
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'删除智能体失败: {str(e)}'
-        }), 500
-
-# ============ 知识库管理 ============
-
-@app.route('/api/admin/knowledge-bases', methods=['GET'])
-def get_knowledge_bases():
-    """获取知识库列表"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute('''
-            SELECT id, name, description, vector_db_id, document_count, created_at, updated_at
-            FROM knowledge_bases
-            ORDER BY created_at DESC
-        ''')
-        kbs = cursor.fetchall()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'data': [dict(kb) for kb in kbs]
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'获取知识库列表失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/knowledge-bases', methods=['POST'])
-def create_knowledge_base():
-    """创建知识库"""
-    try:
-        data = request.json
-        name = data.get('name')
-        description = data.get('description', '')
-
-        if not name:
-            return jsonify({
-                'success': False,
-                'message': '知识库名称不能为空'
-            }), 400
-
-        conn = get_db()
-        cursor = conn.cursor()
-
-        # 生成 vector_db_id
-        vector_db_id = f"kb_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
-
-        cursor.execute('''
-            INSERT INTO knowledge_bases (name, description, vector_db_id)
-            VALUES (?, ?, ?)
-        ''', (name, description, vector_db_id))
-        kb_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'message': '知识库创建成功',
-            'data': {'id': kb_id, 'vector_db_id': vector_db_id}
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'创建知识库失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/knowledge-bases/<int:kb_id>', methods=['GET'])
-def get_knowledge_base_detail(kb_id):
-    """获取知识库详情"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute('''
-            SELECT * FROM knowledge_bases WHERE id = ?
-        ''', (kb_id,))
-        kb = cursor.fetchone()
-
-        if not kb:
-            conn.close()
-            return jsonify({
-                'success': False,
-                'message': '知识库不存在'
-            }), 404
-
-        # 获取文档列表
-        cursor.execute('''
-            SELECT id, title, content, file_type, file_size, embedding_status, created_at
-            FROM knowledge_documents
-            WHERE knowledge_base_id = ?
-            ORDER BY created_at DESC
-        ''', (kb_id,))
-        documents = cursor.fetchall()
-
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'data': {
-                'knowledge_base': dict(kb),
-                'documents': [dict(doc) for doc in documents]
-            }
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'获取知识库详情失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/knowledge-bases/<int:kb_id>', methods=['PUT'])
-def update_knowledge_base(kb_id):
-    """更新知识库"""
-    try:
-        data = request.json
-        name = data.get('name')
-        description = data.get('description')
-
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute('SELECT id FROM knowledge_bases WHERE id = ?', (kb_id,))
-        if not cursor.fetchone():
-            conn.close()
-            return jsonify({
-                'success': False,
-                'message': '知识库不存在'
-            }), 404
-
-        update_fields = []
-        update_values = []
-
-        if name is not None:
-            update_fields.append('name = ?')
-            update_values.append(name)
-        if description is not None:
-            update_fields.append('description = ?')
-            update_values.append(description)
-
-        if update_fields:
-            update_fields.append('updated_at = CURRENT_TIMESTAMP')
-            update_values.append(kb_id)
-
-            cursor.execute(f'''
-                UPDATE knowledge_bases
-                SET {', '.join(update_fields)}
-                WHERE id = ?
-            ''', update_values)
-
-        conn.commit()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'message': '知识库更新成功'
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'更新知识库失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/knowledge-bases/<int:kb_id>', methods=['DELETE'])
-def delete_knowledge_base(kb_id):
-    """删除知识库"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute('SELECT id FROM knowledge_bases WHERE id = ?', (kb_id,))
-        if not cursor.fetchone():
-            conn.close()
-            return jsonify({
-                'success': False,
-                'message': '知识库不存在'
-            }), 404
-
-        # 删除知识库的所有文档
-        cursor.execute('DELETE FROM knowledge_documents WHERE knowledge_base_id = ?', (kb_id,))
-        # 删除知识库
-        cursor.execute('DELETE FROM knowledge_bases WHERE id = ?', (kb_id,))
-
-        conn.commit()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'message': '知识库删除成功'
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'删除知识库失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/knowledge-bases/<int:kb_id>/documents', methods=['POST'])
-def upload_document(kb_id):
-    """上传文档到知识库"""
-    try:
-        # 检查是否是 multipart/form-data
-        if not request.files:
-            return jsonify({
-                'success': False,
-                'message': '请上传文件'
-            }), 400
-
-        file = request.files.get('file')
-        if not file:
-            return jsonify({
-                'success': False,
-                'message': '请上传文件'
-            }), 400
-
-        if file.filename == '':
-            return jsonify({
-                'success': False,
-                'message': '文件名为空'
-            }), 400
-
-        # 读取文件内容
-        content = file.read().decode('utf-8', errors='ignore')
-        file_type = file.filename.split('.')[-1] if '.' in file.filename else 'txt'
-        file_size = len(content)
-
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute('SELECT id FROM knowledge_bases WHERE id = ?', (kb_id,))
-        if not cursor.fetchone():
-            conn.close()
-            return jsonify({
-                'success': False,
-                'message': '知识库不存在'
-            }), 404
-
-        # 插入文档记录
-        cursor.execute('''
-            INSERT INTO knowledge_documents (knowledge_base_id, title, content, file_type, file_size)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (kb_id, file.filename, content, file_type, file_size))
-
-        doc_id = cursor.lastrowid
-
-        # 更新文档计数
-        cursor.execute('''
-            UPDATE knowledge_bases
-            SET document_count = document_count + 1
-            WHERE id = ?
-        ''', (kb_id,))
-
-        conn.commit()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'message': '文档上传成功',
-            'data': {'id': doc_id}
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'上传文档失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/knowledge-bases/<int:kb_id>/documents', methods=['POST'])
-def add_document_text(kb_id):
-    """添加文本内容到知识库"""
-    try:
-        data = request.json
-        title = data.get('title', '')
-        content = data.get('content', '')
-
-        if not content:
-            return jsonify({
-                'success': False,
-                'message': '内容不能为空'
-            }), 400
-
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute('SELECT id FROM knowledge_bases WHERE id = ?', (kb_id,))
-        if not cursor.fetchone():
-            conn.close()
-            return jsonify({
-                'success': False,
-                'message': '知识库不存在'
-            }), 404
-
-        cursor.execute('''
-            INSERT INTO knowledge_documents (knowledge_base_id, title, content, file_type, file_size)
-            VALUES (?, ?, ?, 'text', ?)
-        ''', (kb_id, title, content, len(content)))
-
-        doc_id = cursor.lastrowid
-
-        cursor.execute('''
-            UPDATE knowledge_bases
-            SET document_count = document_count + 1
-            WHERE id = ?
-        ''', (kb_id,))
-
-        conn.commit()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'message': '内容添加成功',
-            'data': {'id': doc_id}
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'添加内容失败: {str(e)}'
-        }), 500
-
-@app.route('/api/admin/knowledge-bases/<int:kb_id>/documents/<int:doc_id>', methods=['DELETE'])
-def delete_document(kb_id, doc_id):
-    """删除文档"""
-    try:
-        conn = get_db()
-        cursor = conn.cursor()
-
-        cursor.execute('SELECT id FROM knowledge_documents WHERE id = ? AND knowledge_base_id = ?', (doc_id, kb_id))
-        if not cursor.fetchone():
-            conn.close()
-            return jsonify({
-                'success': False,
-                'message': '文档不存在'
-            }), 404
-
-        cursor.execute('DELETE FROM knowledge_documents WHERE id = ? AND knowledge_base_id = ?', (doc_id, kb_id))
-
-        cursor.execute('''
-            UPDATE knowledge_bases
-            SET document_count = document_count - 1
-            WHERE id = ?
-        ''', (kb_id,))
-
-        conn.commit()
-        conn.close()
-
-        return jsonify({
-            'success': True,
-            'message': '文档删除成功'
-        })
-
-    except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': f'删除文档失败: {str(e)}'
-        }), 500
-
 # ============ 初始化默认数据 ============
 
 def init_default_data():
@@ -2723,6 +2011,179 @@ def init_default_data():
                 )
             )
             print("已创建默认智能体: 灵值生态园")
+
+        # 初始化充值档位
+        cursor.execute("SELECT id FROM recharge_tiers")
+        if not cursor.fetchone():
+            # 新手体验包
+            cursor.execute(
+                """INSERT INTO recharge_tiers 
+                   (name, description, price, base_lingzhi, bonus_lingzhi, bonus_percentage, partner_level, benefits, sort_order)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    '新手体验包',
+                    '适合新用户快速体验平台服务',
+                    99.00,
+                    1000,
+                    100,
+                    10,
+                    0,
+                    json.dumps([
+                        '免费参加1次线上文化沙龙',
+                        '文化转译案例库访问权限（7天）'
+                    ]),
+                    1
+                )
+            )
+            
+            # 入门加速包
+            cursor.execute(
+                """INSERT INTO recharge_tiers 
+                   (name, description, price, base_lingzhi, bonus_lingzhi, bonus_percentage, partner_level, benefits, sort_order)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    '入门加速包',
+                    '适合启动小型文化转译项目',
+                    199.00,
+                    2000,
+                    300,
+                    15,
+                    0,
+                    json.dumps([
+                        '免费参加2次线上文化沙龙',
+                        '文化转译案例库访问权限（30天）',
+                        '美学侦探任务优先权（5次）'
+                    ]),
+                    2
+                )
+            )
+            
+            # 专业创作包
+            cursor.execute(
+                """INSERT INTO recharge_tiers 
+                   (name, description, price, base_lingzhi, bonus_lingzhi, bonus_percentage, partner_level, benefits, sort_order)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    '专业创作包',
+                    '适合启动中型文化转译项目',
+                    499.00,
+                    5000,
+                    1000,
+                    20,
+                    0,
+                    json.dumps([
+                        '免费参加5次线上文化沙龙',
+                        '文化转译案例库访问权限（90天）',
+                        '美学侦探任务优先权（20次）',
+                        '1次文化专家1对1咨询（30分钟）',
+                        '品牌空间设计服务优惠券（200元）'
+                    ]),
+                    3
+                )
+            )
+            
+            # 高级创作包
+            cursor.execute(
+                """INSERT INTO recharge_tiers 
+                   (name, description, price, base_lingzhi, bonus_lingzhi, bonus_percentage, partner_level, benefits, sort_order)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    '高级创作包',
+                    '适合启动大型文化转译项目',
+                    999.00,
+                    10000,
+                    2500,
+                    25,
+                    0,
+                    json.dumps([
+                        '免费参加10次线上文化沙龙',
+                        '永久获得文化转译案例库访问权限',
+                        '美学侦探任务优先权（50次）',
+                        '3次文化专家1对1咨询（每次30分钟）',
+                        '品牌空间设计服务优惠券（500元）',
+                        '线下文化体验活动优先参与权'
+                    ]),
+                    4
+                )
+            )
+            
+            # 合伙人L1包
+            cursor.execute(
+                """INSERT INTO recharge_tiers 
+                   (name, description, price, base_lingzhi, bonus_lingzhi, bonus_percentage, partner_level, benefits, sort_order)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    '合伙人L1包',
+                    '直接获得合伙人L1资格，享受合伙人权益',
+                    1999.00,
+                    20000,
+                    5000,
+                    25,
+                    1,
+                    json.dumps([
+                        '直接获得合伙人L1资格',
+                        '所有专业创作包权益',
+                        '合伙人专属咨询服务',
+                        '新项目优先参与权',
+                        '合伙人专属社群',
+                        '年度文化盛典VIP门票（1张）'
+                    ]),
+                    10
+                )
+            )
+            
+            # 合伙人L2包
+            cursor.execute(
+                """INSERT INTO recharge_tiers 
+                   (name, description, price, base_lingzhi, bonus_lingzhi, bonus_percentage, partner_level, benefits, sort_order)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    '合伙人L2包',
+                    '直接获得合伙人L2资格，享受高级合伙人权益',
+                    9999.00,
+                    100000,
+                    30000,
+                    30,
+                    2,
+                    json.dumps([
+                        '直接获得合伙人L2资格',
+                        '更高的推荐分红比例（15%/8%/5%）',
+                        '优先参与高价值项目',
+                        '年度文化盛典VIP门票（3张）',
+                        '公司股权期权授予资格',
+                        '专属客户经理服务'
+                    ]),
+                    11
+                )
+            )
+            
+            # 合伙人L3包
+            cursor.execute(
+                """INSERT INTO recharge_tiers 
+                   (name, description, price, base_lingzhi, bonus_lingzhi, bonus_percentage, partner_level, benefits, sort_order)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    '合伙人L3包',
+                    '直接获得合伙人L3资格，享受顶级合伙人权益',
+                    49999.00,
+                    500000,
+                    150000,
+                    30,
+                    3,
+                    json.dumps([
+                        '直接获得合伙人L3资格',
+                        '最高的推荐分红比例（18%/10%/6%）',
+                        '最高优先参与高价值项目',
+                        '年度文化盛典VIP门票（10张）',
+                        '公司股权期权（更大比例）',
+                        '专属客户经理服务（7×24小时）',
+                        '文化项目投资优先权'
+                    ]),
+                    12
+                )
+            )
+            
+            print("已创建充值档位: 7个")
 
         conn.commit()
         conn.close()
@@ -3561,6 +3022,242 @@ def chat_with_agent():
 
     except Exception as e:
         return jsonify({'success': False, 'message': f'对话失败: {str(e)}'}), 500
+
+# ============ 充值管理 API ============
+
+@app.route('/api/recharge/tiers', methods=['GET'])
+def get_recharge_tiers():
+    """获取充值档位列表"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id, name, description, price, base_lingzhi, bonus_lingzhi, bonus_percentage,
+                   partner_level, benefits, status, sort_order
+            FROM recharge_tiers
+            WHERE status = 'active'
+            ORDER BY sort_order, price
+        """)
+        tiers = cursor.fetchall()
+        conn.close()
+
+        result = []
+        for tier in tiers:
+            result.append({
+                'id': tier['id'],
+                'name': tier['name'],
+                'description': tier['description'],
+                'price': float(tier['price']),
+                'base_lingzhi': tier['base_lingzhi'],
+                'bonus_lingzhi': tier['bonus_lingzhi'],
+                'total_lingzhi': tier['base_lingzhi'] + tier['bonus_lingzhi'],
+                'bonus_percentage': tier['bonus_percentage'],
+                'partner_level': tier['partner_level'],
+                'benefits': json.loads(tier['benefits']) if tier['benefits'] else [],
+                'sort_order': tier['sort_order']
+            })
+
+        return jsonify({'success': True, 'data': result})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取充值档位失败: {str(e)}'}), 500
+
+@app.route('/api/recharge/create-order', methods=['POST'])
+def create_recharge_order():
+    """创建充值订单"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        data = request.json
+        tier_id = data.get('tier_id')
+        payment_method = data.get('payment_method', 'wechat')
+
+        if not tier_id:
+            return jsonify({'success': False, 'message': '档位ID不能为空'}), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取档位信息
+        cursor.execute("SELECT * FROM recharge_tiers WHERE id = ? AND status = 'active'", (tier_id,))
+        tier = cursor.fetchone()
+
+        if not tier:
+            conn.close()
+            return jsonify({'success': False, 'message': '充值档位不存在或已下架'}), 404
+
+        # 生成订单号
+        order_no = f"R{datetime.now().strftime('%Y%m%d%H%M%S')}{random.randint(1000, 9999)}"
+
+        # 创建订单
+        cursor.execute(
+            """INSERT INTO recharge_records (user_id, tier_id, order_no, amount, base_lingzhi, bonus_lingzhi, total_lingzhi, payment_method)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                user_id,
+                tier_id,
+                order_no,
+                tier['price'],
+                tier['base_lingzhi'],
+                tier['bonus_lingzhi'],
+                tier['base_lingzhi'] + tier['bonus_lingzhi'],
+                payment_method
+            )
+        )
+
+        order_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '订单创建成功',
+            'data': {
+                'order_id': order_id,
+                'order_no': order_no,
+                'amount': float(tier['price']),
+                'total_lingzhi': tier['base_lingzhi'] + tier['bonus_lingzhi']
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'创建订单失败: {str(e)}'}), 500
+
+@app.route('/api/recharge/complete-payment', methods=['POST'])
+def complete_recharge_payment():
+    """完成充值支付（模拟支付回调）"""
+    try:
+        data = request.json
+        order_no = data.get('order_no')
+        transaction_id = data.get('transaction_id')
+
+        if not order_no:
+            return jsonify({'success': False, 'message': '订单号不能为空'}), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取订单信息
+        cursor.execute("""
+            SELECT id, user_id, total_lingzhi, base_lingzhi, bonus_lingzhi, payment_status
+            FROM recharge_records
+            WHERE order_no = ? AND status = 'active'
+        """, (order_no,))
+        order = cursor.fetchone()
+
+        if not order:
+            conn.close()
+            return jsonify({'success': False, 'message': '订单不存在'}), 404
+
+        if order['payment_status'] == 'paid':
+            conn.close()
+            return jsonify({'success': False, 'message': '订单已支付'}), 400
+
+        # 更新订单状态
+        cursor.execute(
+            """UPDATE recharge_records
+               SET payment_status = 'paid',
+                   payment_time = CURRENT_TIMESTAMP,
+                   transaction_id = ?
+               WHERE id = ?""",
+            (transaction_id, order['id'])
+        )
+
+        # 增加用户灵值
+        cursor.execute(
+            """UPDATE users
+               SET total_lingzhi = total_lingzhi + ?,
+                   updated_at = CURRENT_TIMESTAMP
+               WHERE id = ?""",
+            (order['total_lingzhi'], order['user_id'])
+        )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '充值成功',
+            'data': {
+                'total_lingzhi': order['total_lingzhi']
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'充值失败: {str(e)}'}), 500
+
+@app.route('/api/recharge/records', methods=['GET'])
+def get_recharge_records():
+    """获取充值记录"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 20, type=int)
+        offset = (page - 1) * page_size
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取充值记录
+        cursor.execute("""
+            SELECT rr.id, rr.order_no, rr.amount, rr.base_lingzhi, rr.bonus_lingzhi,
+                   rr.total_lingzhi, rr.payment_status, rr.payment_time, rt.name as tier_name
+            FROM recharge_records rr
+            LEFT JOIN recharge_tiers rt ON rr.tier_id = rt.id
+            WHERE rr.user_id = ?
+            ORDER BY rr.created_at DESC
+            LIMIT ? OFFSET ?
+        """, (user_id, page_size, offset))
+        records = cursor.fetchall()
+
+        # 获取总数
+        cursor.execute("SELECT COUNT(*) as total FROM recharge_records WHERE user_id = ?", (user_id,))
+        total = cursor.fetchone()['total']
+
+        conn.close()
+
+        result = []
+        for record in records:
+            result.append({
+                'id': record['id'],
+                'order_no': record['order_no'],
+                'amount': float(record['amount']),
+                'base_lingzhi': record['base_lingzhi'],
+                'bonus_lingzhi': record['bonus_lingzhi'],
+                'total_lingzhi': record['total_lingzhi'],
+                'payment_status': record['payment_status'],
+                'payment_time': record['payment_time'],
+                'tier_name': record['tier_name']
+            })
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'records': result,
+                'total': total,
+                'page': page,
+                'page_size': page_size
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取充值记录失败: {str(e)}'}), 500
 
 # ============ 启动服务 ============
 
