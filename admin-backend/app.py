@@ -8,6 +8,24 @@ import os
 import bcrypt
 import random
 import string
+import json
+
+# 设置 Coze 环境变量（如果未设置）
+os.environ.setdefault('COZE_WORKLOAD_IDENTITY_API_KEY', 'WU9RNGFQTmZTc3VnbnRCMmsyWUtDcDZHOWJMa0g5ZVk6NVN5cHNRbkNidjFzWHNEVnJ4UTZKQlN1SUxYMlU3ZEtidVRXbDYwWDFyZW9sdmhQbTU1QVdQaVJHcVo4b1BoWA==')
+os.environ.setdefault('COZE_INTEGRATION_MODEL_BASE_URL', 'https://integration.coze.cn/api/v3')
+os.environ.setdefault('COZE_INTEGRATION_BASE_URL', 'https://integration.coze.cn')
+os.environ.setdefault('COZE_PROJECT_ID', '7597768668038643746')
+
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+
+# 导入大模型 SDK
+try:
+    from coze_coding_dev_sdk import LLMClient
+    from coze_coding_utils.runtime_ctx.context import new_context
+    LLM_AVAILABLE = True
+except ImportError:
+    LLM_AVAILABLE = False
+    print("警告: coze_coding_dev_sdk 未安装，智能对话功能将不可用")
 
 app = Flask(__name__)
 CORS(app)
@@ -164,7 +182,7 @@ def init_db():
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS conversations (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            agent_id INTEGER NOT NULL,
+            agent_id INTEGER,
             user_id INTEGER,
             conversation_id TEXT,
             messages TEXT,
@@ -913,6 +931,233 @@ def reset_password():
         return jsonify({
             'success': False,
             'message': f'重置密码失败: {str(e)}'
+        }), 500
+
+# ============ 智能对话 ============
+
+def get_text_content(content):
+    """安全提取 AIMessage.content 中的文本"""
+    if isinstance(content, str):
+        return content
+    elif isinstance(content, list):
+        if content and isinstance(content[0], str):
+            return " ".join(content)
+        else:
+            text_parts = []
+            for item in content:
+                if isinstance(item, dict) and item.get("type") == "text":
+                    text_parts.append(item.get("text", ""))
+            return " ".join(text_parts)
+    else:
+        return str(content)
+
+@app.route('/api/agent/chat', methods=['POST'])
+def chat():
+    """智能对话接口"""
+    if not LLM_AVAILABLE:
+        return jsonify({
+            'success': False,
+            'message': '对话服务不可用'
+        }), 503
+
+    try:
+        data = request.json
+        user_message = data.get('message', '')
+        conversation_id = data.get('conversationId')
+        agent_id = data.get('agentId')  # 可选：指定使用的智能体
+
+        if not user_message:
+            return jsonify({
+                'success': False,
+                'message': '消息不能为空'
+            }), 400
+
+        # 构建对话上下文
+        messages = []
+        model_config = {
+            'model': 'doubao-seed-1-6-251015',
+            'temperature': 0.7,
+            'thinking': 'disabled',
+            'caching': 'disabled'
+        }
+
+        # 如果指定了智能体，加载智能体配置
+        if agent_id:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM agents WHERE id = ? AND status = ?', (agent_id, 'active'))
+            agent = cursor.fetchone()
+            conn.close()
+
+            if agent:
+                # 添加系统提示词
+                if agent.get('system_prompt'):
+                    messages.append(SystemMessage(content=agent['system_prompt']))
+                
+                # 加载模型配置
+                if agent.get('model_config'):
+                    try:
+                        config = json.loads(agent['model_config'])
+                        model_config.update(config)
+                    except:
+                        pass
+
+        # 如果没有系统提示词，使用默认的
+        if len(messages) == 0 or not any(isinstance(m, SystemMessage) for m in messages):
+            default_system_prompt = """你是灵值生态园的智能助手，你的名字叫"灵值"。
+
+你的主要职责：
+1. 帮助用户了解灵值生态园的价值体系和生态玩法
+2. 解答关于灵值获取、签到、合伙人机制的问题
+3. 引导用户探索文化价值与数字资产的结合
+4. 提供友好、专业的对话体验
+
+回复特点：
+- 语气亲切友好，像朋友一样交流
+- 信息准确，基于灵值生态园的实际规则
+- 适当使用表情符号增加亲和力
+- 如果不确定，诚实地告诉用户并建议联系客服"""
+            messages.append(SystemMessage(content=default_system_prompt))
+
+        # 加载历史对话（如果有 conversation_id）
+        if conversation_id:
+            conn = get_db()
+            cursor = conn.cursor()
+            cursor.execute('SELECT messages FROM conversations WHERE conversation_id = ?', (conversation_id,))
+            result = cursor.fetchone()
+            conn.close()
+
+            if result:
+                try:
+                    history = json.loads(result['messages'])
+                    for msg in history:
+                        if msg.get('role') == 'user':
+                            messages.append(HumanMessage(content=msg.get('content', '')))
+                        elif msg.get('role') == 'assistant':
+                            content = msg.get('content', '')
+                            messages.append(AIMessage(content=content))
+                except:
+                    pass
+
+        # 添加当前用户消息
+        messages.append(HumanMessage(content=user_message))
+
+        # 调用大模型
+        try:
+            ctx = new_context(method="chat")
+            client = LLMClient(ctx=ctx)
+            
+            response = client.invoke(
+                messages=messages,
+                model=model_config.get('model', 'doubao-seed-1-6-251015'),
+                temperature=model_config.get('temperature', 0.7),
+                thinking=model_config.get('thinking', 'disabled'),
+                caching=model_config.get('caching', 'disabled'),
+                max_completion_tokens=model_config.get('max_completion_tokens', 4096)
+            )
+
+            # 提取回复内容
+            reply = get_text_content(response.content)
+
+            # 保存对话记录
+            if not conversation_id:
+                conversation_id = f"conv_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{random.randint(1000, 9999)}"
+
+            conn = get_db()
+            cursor = conn.cursor()
+
+            # 更新对话消息
+            updated_messages = []
+            if conversation_id:
+                cursor.execute('SELECT messages FROM conversations WHERE conversation_id = ?', (conversation_id,))
+                result = cursor.fetchone()
+                if result:
+                    try:
+                        updated_messages = json.loads(result['messages'])
+                    except:
+                        pass
+
+            updated_messages.append({'role': 'user', 'content': user_message, 'timestamp': datetime.utcnow().isoformat()})
+            updated_messages.append({'role': 'assistant', 'content': reply, 'timestamp': datetime.utcnow().isoformat()})
+
+            # 保存或更新对话
+            # 如果没有指定 agent_id，使用 0 表示默认智能体
+            save_agent_id = agent_id if agent_id is not None else 0
+            
+            if conversation_id:
+                cursor.execute('''
+                    INSERT OR REPLACE INTO conversations (agent_id, user_id, conversation_id, messages, updated_at)
+                    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ''', (save_agent_id, None, conversation_id, json.dumps(updated_messages, ensure_ascii=False)))
+            else:
+                # 创建新对话（通常不会到这里，因为上面已经生成了 conversation_id）
+                new_conversation_id = f"conv_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{random.randint(1000, 9999)}"
+                cursor.execute('''
+                    INSERT INTO conversations (agent_id, user_id, conversation_id, messages)
+                    VALUES (?, ?, ?, ?)
+                ''', (save_agent_id, None, new_conversation_id, json.dumps(updated_messages, ensure_ascii=False)))
+                conversation_id = new_conversation_id
+
+            conn.commit()
+            conn.close()
+
+            return jsonify({
+                'success': True,
+                'message': '对话成功',
+                'data': {
+                    'reply': reply,
+                    'conversationId': conversation_id
+                }
+            })
+
+        except Exception as llm_error:
+            print(f"LLM 调用错误: {str(llm_error)}")
+            return jsonify({
+                'success': False,
+                'message': f'智能体暂时无法响应: {str(llm_error)}'
+            }), 500
+
+    except Exception as e:
+        print(f"对话接口错误: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'对话失败: {str(e)}'
+        }), 500
+
+@app.route('/api/agent/conversations/<conversation_id>', methods=['GET'])
+def get_conversation_history(conversation_id):
+    """获取对话历史"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute('SELECT messages FROM conversations WHERE conversation_id = ?', (conversation_id,))
+        result = cursor.fetchone()
+        conn.close()
+
+        if not result:
+            return jsonify({
+                'success': False,
+                'message': '对话不存在'
+            }), 404
+
+        try:
+            messages = json.loads(result['messages'])
+            return jsonify({
+                'success': True,
+                'data': {'messages': messages}
+            })
+        except:
+            return jsonify({
+                'success': False,
+                'message': '对话数据格式错误'
+            }), 500
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取对话历史失败: {str(e)}'
         }), 500
 
 # ============ 智能体管理 ============
