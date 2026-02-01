@@ -3,6 +3,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import AdminLogin from './pages/AdminLogin'
 import ForgotPassword from './pages/ForgotPassword'
+import ApiConfig from './pages/ApiConfig'
 import Dashboard from './pages/Dashboard'
 import Chat from './pages/Chat'
 import ChatTest from './pages/ChatTest'
@@ -28,6 +29,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/api-config" element={<ApiConfig />} />
       <Route path="/wechat/callback" element={<WeChatCallback />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />

@@ -221,6 +221,12 @@ const Login = () => {
               >
                 忘记密码？
               </Link>
+              <Link
+                to="/api-config"
+                className="text-sm text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                API配置
+              </Link>
             </div>
 
             <button
