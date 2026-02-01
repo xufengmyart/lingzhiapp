@@ -1,11 +1,21 @@
 import { useState, useRef, useEffect } from 'react'
 import { ChatProvider, useChat } from '../contexts/ChatContext'
-import { Send, Sparkles, User, Bot, ThumbsUp, ThumbsDown, MessageSquarePlus, X } from 'lucide-react'
+import { Send, Sparkles, User, Bot, ThumbsUp, ThumbsDown, MessageSquarePlus, X, ChevronDown } from 'lucide-react'
 import axios from 'axios'
+
+interface Agent {
+  id: number
+  name: string
+  description: string
+  avatar_url: string
+}
 
 const ChatContent = () => {
   const { messages, loading, sendMessage, clearChat } = useChat()
   const [input, setInput] = useState('')
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [showAgentDropdown, setShowAgentDropdown] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [feedbackModal, setFeedbackModal] = useState<{ open: boolean; messageId: string; messageContent: string }>({
     open: false,
@@ -13,6 +23,27 @@ const ChatContent = () => {
     messageContent: ''
   })
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
+
+  // 加载智能体列表
+  useEffect(() => {
+    loadAgents()
+  }, [])
+
+  const loadAgents = async () => {
+    try {
+      const response = await axios.get('/api/admin/agents')
+      if (response.data.success) {
+        const activeAgents = response.data.data.filter((a: any) => a.status === 'active')
+        setAgents(activeAgents)
+        // 默认选中第一个智能体
+        if (activeAgents.length > 0 && !selectedAgent) {
+          setSelectedAgent(activeAgents[0])
+        }
+      }
+    } catch (error) {
+      console.error('加载智能体列表失败:', error)
+    }
+  }
 
   // 自动滚动到底部
   const scrollToBottom = () => {
@@ -27,7 +58,7 @@ const ChatContent = () => {
     e.preventDefault()
     if (!input.trim() || loading) return
     
-    await sendMessage(input)
+    await sendMessage(input, selectedAgent?.id)
     setInput('')
   }
 

@@ -6,7 +6,7 @@ interface ChatContextType {
   messages: Message[]
   loading: boolean
   conversationId: string | null
-  sendMessage: (content: string) => Promise<void>
+  sendMessage: (content: string, agentId?: number) => Promise<void>
   clearChat: () => void
   setConversationId: (id: string) => void
 }
@@ -18,7 +18,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(false)
   const [conversationId, setConversationId] = useState<string | null>(null)
 
-  const sendMessage = async (content: string) => {
+  const sendMessage = async (content: string, agentId: number = 1) => {
     // 添加用户消息
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -30,7 +30,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setLoading(true)
 
     try {
-      const res = await agentApi.sendMessage(content, conversationId || undefined)
+      const res = await agentApi.sendMessage(content, conversationId || undefined, agentId)
 
       // 设置会话ID
       if (!conversationId) {

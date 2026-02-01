@@ -74,11 +74,11 @@ export const userApi = {
 
 // 智能体相关API
 export const agentApi = {
-  sendMessage: async (message: string, conversationId?: string) => {
+  sendMessage: async (message: string, conversationId?: string, agentId?: number) => {
     if (USE_MOCK_API) return mockApi.sendMessage(message, conversationId)
-    const response = await api.post<ApiResponse<{ reply: string; conversationId: string }>>(
+    const response = await api.post<ApiResponse<{ reply: string; conversationId: string; agentId: number }>>(
       '/api/agent/chat',
-      { message, conversationId }
+      { message, conversationId, agentId: agentId || 1 }
     )
     return response.data
   },
@@ -88,6 +88,11 @@ export const agentApi = {
     const response = await api.get<ApiResponse<{ messages: any[] }>>(
       `/api/agent/conversations/${conversationId}`
     )
+    return response.data
+  },
+
+  getAgents: async () => {
+    const response = await api.get<ApiResponse<any[]>>('/api/admin/agents')
     return response.data
   },
 }

@@ -1780,6 +1780,294 @@ def get_conversation_history(conversation_id):
             'message': f'获取对话历史失败: {str(e)}'
         }), 500
 
+# ============ 智能体对话 ============
+
+def get_llm_client():
+    """获取LLM客户端"""
+    try:
+        ctx = new_context(method="agent_chat")
+        return LLMClient(ctx=ctx)
+    except Exception as e:
+        print(f"获取LLM客户端失败: {e}")
+        return None
+
+def get_knowledge_client():
+    """获取知识库客户端"""
+    try:
+        ctx = new_context(method="agent_chat")
+        from coze_coding_dev_sdk import KnowledgeClient, Config
+        config = Config()
+        return KnowledgeClient(config=config, ctx=ctx)
+    except Exception as e:
+        print(f"获取知识库客户端失败: {e}")
+        return None
+
+def search_knowledge(query: str, agent_id: int = None) -> str:
+    """从知识库中检索相关信息"""
+    try:
+        # 获取智能体关联的知识库
+        conn = get_db()
+        cursor = conn.cursor()
+
+        kb_ids = []
+        if agent_id:
+            cursor.execute(
+                "SELECT knowledge_base_id FROM agent_knowledge_bases WHERE agent_id = ?",
+                (agent_id,)
+            )
+            kb_rows = cursor.fetchall()
+            kb_ids = [row['knowledge_base_id'] for row in kb_rows]
+
+        conn.close()
+
+        # 调用知识库搜索
+        kb_client = get_knowledge_client()
+        if not kb_client:
+            return ""
+
+        # 默认搜索 lingzhi_knowledge 数据集
+        response = kb_client.search(
+            query=query,
+            table_names=["lingzhi_knowledge"] if not kb_ids else None,
+            top_k=3,
+            min_score=0.3
+        )
+
+        if response.code == 0 and response.chunks:
+            context = "\n\n".join([chunk.content for chunk in response.chunks])
+            return f"\n\n[知识库参考信息]\n{context}\n[/知识库参考信息]"
+
+        return ""
+    except Exception as e:
+        print(f"知识库搜索失败: {e}")
+        return ""
+
+@app.route('/api/agent/chat', methods=['POST'])
+def agent_chat():
+    """智能体对话"""
+    try:
+        data = request.json
+        message = data.get('message', '')
+        conversation_id = data.get('conversationId')
+        agent_id = data.get('agentId', 1)  # 默认使用ID为1的智能体
+
+        if not message:
+            return jsonify({
+                'success': False,
+                'message': '消息内容不能为空'
+            }), 400
+
+        # 获取用户信息（可选）
+        auth_header = request.headers.get('Authorization')
+        user_id = None
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.replace('Bearer ', '')
+            user_id = verify_token(token)
+
+        # 获取智能体配置
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT * FROM agents WHERE id = ? AND status = 'active'", (agent_id,))
+        agent = cursor.fetchone()
+
+        if not agent:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '智能体不存在或已禁用'
+            }), 404
+
+        system_prompt = agent['system_prompt']
+        model_config = json.loads(agent['model_config']) if agent['model_config'] else {}
+
+        # 获取历史对话
+        history_messages = []
+        if conversation_id:
+            cursor.execute(
+                "SELECT messages FROM conversations WHERE conversation_id = ?",
+                (conversation_id,)
+            )
+            conv = cursor.fetchone()
+            if conv:
+                history_messages = json.loads(conv['messages']) if conv['messages'] else []
+
+        conn.close()
+
+        # 检查LLM是否可用
+        if not LLM_AVAILABLE:
+            return jsonify({
+                'success': False,
+                'message': '智能对话服务暂不可用'
+            }), 503
+
+        # 从知识库检索相关信息
+        knowledge_context = search_knowledge(message, agent_id)
+
+        # 构建消息列表
+        messages = [SystemMessage(content=system_prompt)]
+
+        # 添加历史消息（最近5轮）
+        for hist_msg in history_messages[-10:]:
+            role = hist_msg.get('role')
+            content = hist_msg.get('content')
+            if role == 'user':
+                messages.append(HumanMessage(content=content))
+            elif role == 'assistant':
+                messages.append(AIMessage(content=content))
+
+        # 添加知识库上下文（如果有）
+        if knowledge_context:
+            augmented_message = f"{message}\n\n{knowledge_context}"
+        else:
+            augmented_message = message
+
+        # 添加当前用户消息
+        messages.append(HumanMessage(content=augmented_message))
+
+        # 调用大模型
+        try:
+            llm_client = get_llm_client()
+            if not llm_client:
+                return jsonify({
+                    'success': False,
+                    'message': '无法初始化大模型客户端'
+                }), 500
+
+            # 调用模型
+            response = llm_client.chat(
+                messages=messages,
+                model=model_config.get('model', 'doubao-seed-1-6-251015'),
+                temperature=model_config.get('temperature', 0.7),
+                max_tokens=model_config.get('max_tokens', 2000)
+            )
+
+            # 提取回复
+            reply = ""
+            if hasattr(response, 'content'):
+                reply = response.content
+            elif isinstance(response, str):
+                reply = response
+            elif hasattr(response, 'message') and hasattr(response.message, 'content'):
+                reply = response.message.content
+            else:
+                reply = str(response)
+
+            if not reply:
+                reply = "抱歉，我无法理解您的问题，请重新表述。"
+
+        except Exception as e:
+            print(f"调用大模型失败: {e}")
+            reply = f"抱歉，智能服务暂时不可用。错误信息：{str(e)}"
+
+        # 生成或更新对话ID
+        if not conversation_id:
+            conversation_id = f"conv_{datetime.now().strftime('%Y%m%d%H%M%S')}_{user_id or 'guest'}_{random.randint(1000, 9999)}"
+
+        # 保存对话记录
+        try:
+            conn = get_db()
+            cursor = conn.cursor()
+
+            # 添加新消息到历史
+            new_messages = history_messages + [
+                {'role': 'user', 'content': message, 'timestamp': datetime.now().isoformat()},
+                {'role': 'assistant', 'content': reply, 'timestamp': datetime.now().isoformat()}
+            ]
+
+            # 检查对话是否存在
+            cursor.execute(
+                "SELECT id FROM conversations WHERE conversation_id = ?",
+                (conversation_id,)
+            )
+
+            conv_exists = cursor.fetchone()
+
+            if conv_exists:
+                # 更新对话
+                cursor.execute(
+                    """UPDATE conversations SET messages = ?, updated_at = CURRENT_TIMESTAMP
+                       WHERE conversation_id = ?""",
+                    (json.dumps(new_messages), conversation_id)
+                )
+            else:
+                # 创建新对话
+                cursor.execute(
+                    """INSERT INTO conversations (agent_id, user_id, conversation_id, messages, title)
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (
+                        agent_id,
+                        user_id,
+                        conversation_id,
+                        json.dumps(new_messages),
+                        message[:50] + "..." if len(message) > 50 else message
+                    )
+                )
+
+            conn.commit()
+            conn.close()
+
+        except Exception as e:
+            print(f"保存对话记录失败: {e}")
+            # 即使保存失败，也返回回复
+
+        return jsonify({
+            'success': True,
+            'message': '对话成功',
+            'data': {
+                'reply': reply,
+                'conversationId': conversation_id,
+                'agentId': agent_id
+            }
+        })
+
+    except Exception as e:
+        print(f"对话处理失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'message': f'对话处理失败: {str(e)}'
+        }), 500
+
+@app.route('/api/agent/conversations/<conversation_id>', methods=['GET'])
+def get_conversation_history(conversation_id):
+    """获取对话历史"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT messages, title, created_at FROM conversations WHERE conversation_id = ?",
+            (conversation_id,)
+        )
+
+        conv = cursor.fetchone()
+        conn.close()
+
+        if not conv:
+            return jsonify({
+                'success': False,
+                'message': '对话不存在'
+            }), 404
+
+        messages = json.loads(conv['messages']) if conv['messages'] else []
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'messages': messages,
+                'title': conv['title'],
+                'createdAt': conv['created_at']
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取对话历史失败: {str(e)}'
+        }), 500
+
 # ============ 智能体管理 ============
 
 @app.route('/api/admin/agents', methods=['GET'])
