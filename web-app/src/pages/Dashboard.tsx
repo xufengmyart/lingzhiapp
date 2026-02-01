@@ -11,6 +11,7 @@ import {
   Star
 } from 'lucide-react'
 import { checkInApi } from '../services/api'
+import { mockApi } from '../services/mockApi'
 
 interface DashboardStats {
   todayLingzhi: number
@@ -43,7 +44,7 @@ const Dashboard = () => {
       setLoading(true)
       // 获取签到状态
       const checkInRes = await checkInApi.getTodayStatus()
-      
+
       // 计算下一个里程碑
       const milestones = [10, 100, 500, 1000, 5000, 10000]
       const nextMilestone = milestones.find(m => m > user.totalLingzhi) || milestones[milestones.length - 1]
@@ -68,8 +69,22 @@ const Dashboard = () => {
     if (!stats.checkedIn) {
       setCheckInLoading(true)
       try {
-        await checkInApi.checkIn()
-        await loadDashboardData()
+        const result = await checkInApi.checkIn()
+        if (result.success) {
+          // 更新用户信息（总灵值）
+          const userInfo = await mockApi.getUserInfo()
+          // 这里需要更新用户上下文
+          if (userInfo.success && userInfo.data) {
+            // 临时存储更新后的总灵值用于显示
+            setStats(prev => ({
+              ...prev,
+              todayLingzhi: result.data.lingzhi,
+              checkedIn: true
+            }))
+            // 刷新页面数据以更新总灵值显示
+            window.location.reload()
+          }
+        }
       } catch (error) {
         console.error('签到失败:', error)
       } finally {

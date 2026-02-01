@@ -1,7 +1,7 @@
 import type { User, Message, IncomeLevel, JourneyStage } from '../types'
 
 // 模拟用户数据
-const mockUser: User = {
+let mockUser: User = {
   id: '1',
   username: '灵值体验者',
   email: 'demo@lingzhi.com',
@@ -10,6 +10,13 @@ const mockUser: User = {
   currentStage: '探索者',
   participationLevel: '积极参与者',
   createdAt: '2024-01-15T00:00:00Z',
+}
+
+// 模拟签到状态
+let mockCheckInState = {
+  checkedIn: false,
+  lingzhi: 0,
+  lastCheckInDate: null as string | null,
 }
 
 // 模拟收入层级
@@ -323,10 +330,34 @@ export const mockApi = {
   // 签到
   async checkIn() {
     await delay(500)
+
+    // 获取今天的日期字符串
+    const today = new Date().toISOString().split('T')[0]
+
+    // 检查今天是否已经签到
+    if (mockCheckInState.lastCheckInDate === today) {
+      return {
+        success: false,
+        message: '今天已经签到过了',
+        data: {
+          lingzhi: 0,
+        },
+      }
+    }
+
+    // 更新签到状态
+    mockCheckInState.checkedIn = true
+    mockCheckInState.lingzhi = 10
+    mockCheckInState.lastCheckInDate = today
+
+    // 更新用户总灵值
+    mockUser.totalLingzhi += 10
+
     return {
       success: true,
       data: {
         lingzhi: 10,
+        totalLingzhi: mockUser.totalLingzhi,
         message: '签到成功！获得10灵值',
       },
     }
@@ -334,11 +365,19 @@ export const mockApi = {
 
   async getTodayStatus() {
     await delay(200)
+
+    // 获取今天的日期字符串
+    const today = new Date().toISOString().split('T')[0]
+
+    // 检查是否是今天的签到
+    const isToday = mockCheckInState.lastCheckInDate === today
+
     return {
       success: true,
       data: {
-        checkedIn: false,
-        lingzhi: 0,
+        checkedIn: isToday,
+        lingzhi: isToday ? mockCheckInState.lingzhi : 0,
+        totalLingzhi: mockUser.totalLingzhi,
       },
     }
   },

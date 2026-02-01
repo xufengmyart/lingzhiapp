@@ -1,0 +1,21 @@
+[33md712e6c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m docs: 分析服务器部署问题并提供解决方案
+[33m96de213[m[33m ([m[1;31morigin/main[m[33m)[m docs: 添加公司网站介绍模板和页面示例
+[33m4e2ff09[m docs: 解决 manifest.json 图标文件路径问题
+[33md2bad63[m docs: 添加 WebAPP 完整部署指南
+[33m5573421[m docs: 创建清晰整合的完整执行方案文档
+[33m60eb1f7[m docs: 添加推送后完整操作指南，包含验证、部署和测试步骤
+[33mdabb2b4[m docs: 灵值生态园APP完整版（已清理所有密钥）
+[33maf042b3[m docs: 添加Cloudflare Pages部署指南，解决Netlify域名误报问题
+[33m72ff43e[m fix: 修复输入框文字不可见问题和浏览器安全警告
+[33mb34469b[m fix: 修复输入框文字不可见问题和浏览器安全警告
+[33mf1935c0[m docs: 添加Netlify部署状态查看详细指南文档
+[33md8398ee[m feat: 恢复完整的React应用，构建输出到public目录用于Netlify部署
+[33m2768345[m docs: 添加Netlify注册和部署详细指南文档
+[33m4c5bd8a[m feat: 添加Netlify配置，改用Netlify部署（Vercel无法访问）
+[33mee1ab77[m fix: 添加Vercel部署故障排查文档，诊断DNS域名解析问题
+[33m36ae612[m fix: 将静态文件移至public目录，简化Vercel配置
+[33mf367b37[m fix: 使用简单静态HTML页面替换React应用，排除应用代码导致的加载问题
+[33m6a23eed[m fix: 在build脚本中添加npm install，确保web-app依赖已安装
+[33m6c52e3d[m fix: 添加根目录package.json和vercel.json，解决Vercel找不到package.json的问题
+[33md4e4d43[m chore: 删除vercel.json，改用Vercel Settings手动配置
+[33m0156457[m test: 添加简单测试页面，验证Vercel部署是否正常
