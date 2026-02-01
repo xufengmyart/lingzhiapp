@@ -96,6 +96,102 @@ def init_db():
         )
     ''')
 
+    # 智能体表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS agents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            system_prompt TEXT,
+            model_config TEXT,
+            tools TEXT,
+            status TEXT DEFAULT 'active',
+            avatar_url TEXT,
+            created_by INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (created_by) REFERENCES admins(id)
+        )
+    ''')
+
+    # 知识库表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS knowledge_bases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            vector_db_id TEXT,
+            document_count INTEGER DEFAULT 0,
+            created_by INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (created_by) REFERENCES admins(id)
+        )
+    ''')
+
+    # 知识库文档表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS knowledge_documents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            knowledge_base_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            content TEXT,
+            file_path TEXT,
+            file_type TEXT,
+            file_size INTEGER,
+            embedding_status TEXT DEFAULT 'pending',
+            embedding_error TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (knowledge_base_id) REFERENCES knowledge_bases(id)
+        )
+    ''')
+
+    # 智能体-知识库关联表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS agent_knowledge_bases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            agent_id INTEGER NOT NULL,
+            knowledge_base_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (agent_id) REFERENCES agents(id),
+            FOREIGN KEY (knowledge_base_id) REFERENCES knowledge_bases(id),
+            UNIQUE(agent_id, knowledge_base_id)
+        )
+    ''')
+
+    # 对话记录表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS conversations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            agent_id INTEGER NOT NULL,
+            user_id INTEGER,
+            conversation_id TEXT,
+            messages TEXT,
+            title TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (agent_id) REFERENCES agents(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # 反馈表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            conversation_id INTEGER,
+            agent_id INTEGER NOT NULL,
+            user_id INTEGER,
+            rating INTEGER,
+            comment TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (conversation_id) REFERENCES conversations(id),
+            FOREIGN KEY (agent_id) REFERENCES agents(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -817,6 +913,577 @@ def reset_password():
         return jsonify({
             'success': False,
             'message': f'重置密码失败: {str(e)}'
+        }), 500
+
+# ============ 智能体管理 ============
+
+@app.route('/api/admin/agents', methods=['GET'])
+def get_agents():
+    """获取智能体列表"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT id, name, description, status, avatar_url, created_at, updated_at
+            FROM agents
+            ORDER BY created_at DESC
+        ''')
+        agents = cursor.fetchall()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': [dict(agent) for agent in agents]
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取智能体列表失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/agents', methods=['POST'])
+def create_agent():
+    """创建智能体"""
+    try:
+        data = request.json
+        name = data.get('name')
+        description = data.get('description', '')
+        system_prompt = data.get('system_prompt', '')
+        model_config = data.get('model_config', {})
+        tools = data.get('tools', [])
+        avatar_url = data.get('avatar_url', '')
+
+        if not name:
+            return jsonify({
+                'success': False,
+                'message': '智能体名称不能为空'
+            }), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            INSERT INTO agents (name, description, system_prompt, model_config, tools, avatar_url)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            name,
+            description,
+            system_prompt,
+            json.dumps(model_config),
+            json.dumps(tools),
+            avatar_url
+        ))
+        agent_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '智能体创建成功',
+            'data': {'id': agent_id}
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'创建智能体失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/agents/<int:agent_id>', methods=['GET'])
+def get_agent_detail(agent_id):
+    """获取智能体详情"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT * FROM agents WHERE id = ?
+        ''', (agent_id,))
+        agent = cursor.fetchone()
+        conn.close()
+
+        if not agent:
+            return jsonify({
+                'success': False,
+                'message': '智能体不存在'
+            }), 404
+
+        return jsonify({
+            'success': True,
+            'data': dict(agent)
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取智能体详情失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/agents/<int:agent_id>', methods=['PUT'])
+def update_agent(agent_id):
+    """更新智能体"""
+    try:
+        data = request.json
+        name = data.get('name')
+        description = data.get('description')
+        system_prompt = data.get('system_prompt')
+        model_config = data.get('model_config')
+        tools = data.get('tools')
+        avatar_url = data.get('avatar_url')
+        status = data.get('status')
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 检查智能体是否存在
+        cursor.execute('SELECT id FROM agents WHERE id = ?', (agent_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '智能体不存在'
+            }), 404
+
+        # 构建更新语句
+        update_fields = []
+        update_values = []
+        
+        if name is not None:
+            update_fields.append('name = ?')
+            update_values.append(name)
+        if description is not None:
+            update_fields.append('description = ?')
+            update_values.append(description)
+        if system_prompt is not None:
+            update_fields.append('system_prompt = ?')
+            update_values.append(system_prompt)
+        if model_config is not None:
+            update_fields.append('model_config = ?')
+            update_values.append(json.dumps(model_config))
+        if tools is not None:
+            update_fields.append('tools = ?')
+            update_values.append(json.dumps(tools))
+        if avatar_url is not None:
+            update_fields.append('avatar_url = ?')
+            update_values.append(avatar_url)
+        if status is not None:
+            update_fields.append('status = ?')
+            update_values.append(status)
+
+        if update_fields:
+            update_fields.append('updated_at = CURRENT_TIMESTAMP')
+            update_values.append(agent_id)
+
+            cursor.execute(f'''
+                UPDATE agents
+                SET {', '.join(update_fields)}
+                WHERE id = ?
+            ''', update_values)
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '智能体更新成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'更新智能体失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/agents/<int:agent_id>', methods=['DELETE'])
+def delete_agent(agent_id):
+    """删除智能体"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 检查智能体是否存在
+        cursor.execute('SELECT id FROM agents WHERE id = ?', (agent_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '智能体不存在'
+            }), 404
+
+        cursor.execute('DELETE FROM agents WHERE id = ?', (agent_id,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '智能体删除成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'删除智能体失败: {str(e)}'
+        }), 500
+
+# ============ 知识库管理 ============
+
+@app.route('/api/admin/knowledge-bases', methods=['GET'])
+def get_knowledge_bases():
+    """获取知识库列表"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT id, name, description, vector_db_id, document_count, created_at, updated_at
+            FROM knowledge_bases
+            ORDER BY created_at DESC
+        ''')
+        kbs = cursor.fetchall()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': [dict(kb) for kb in kbs]
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取知识库列表失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/knowledge-bases', methods=['POST'])
+def create_knowledge_base():
+    """创建知识库"""
+    try:
+        data = request.json
+        name = data.get('name')
+        description = data.get('description', '')
+
+        if not name:
+            return jsonify({
+                'success': False,
+                'message': '知识库名称不能为空'
+            }), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 生成 vector_db_id
+        vector_db_id = f"kb_{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
+
+        cursor.execute('''
+            INSERT INTO knowledge_bases (name, description, vector_db_id)
+            VALUES (?, ?, ?)
+        ''', (name, description, vector_db_id))
+        kb_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '知识库创建成功',
+            'data': {'id': kb_id, 'vector_db_id': vector_db_id}
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'创建知识库失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/knowledge-bases/<int:kb_id>', methods=['GET'])
+def get_knowledge_base_detail(kb_id):
+    """获取知识库详情"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('''
+            SELECT * FROM knowledge_bases WHERE id = ?
+        ''', (kb_id,))
+        kb = cursor.fetchone()
+
+        if not kb:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '知识库不存在'
+            }), 404
+
+        # 获取文档列表
+        cursor.execute('''
+            SELECT id, title, content, file_type, file_size, embedding_status, created_at
+            FROM knowledge_documents
+            WHERE knowledge_base_id = ?
+            ORDER BY created_at DESC
+        ''', (kb_id,))
+        documents = cursor.fetchall()
+
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'knowledge_base': dict(kb),
+                'documents': [dict(doc) for doc in documents]
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取知识库详情失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/knowledge-bases/<int:kb_id>', methods=['PUT'])
+def update_knowledge_base(kb_id):
+    """更新知识库"""
+    try:
+        data = request.json
+        name = data.get('name')
+        description = data.get('description')
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT id FROM knowledge_bases WHERE id = ?', (kb_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '知识库不存在'
+            }), 404
+
+        update_fields = []
+        update_values = []
+
+        if name is not None:
+            update_fields.append('name = ?')
+            update_values.append(name)
+        if description is not None:
+            update_fields.append('description = ?')
+            update_values.append(description)
+
+        if update_fields:
+            update_fields.append('updated_at = CURRENT_TIMESTAMP')
+            update_values.append(kb_id)
+
+            cursor.execute(f'''
+                UPDATE knowledge_bases
+                SET {', '.join(update_fields)}
+                WHERE id = ?
+            ''', update_values)
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '知识库更新成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'更新知识库失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/knowledge-bases/<int:kb_id>', methods=['DELETE'])
+def delete_knowledge_base(kb_id):
+    """删除知识库"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT id FROM knowledge_bases WHERE id = ?', (kb_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '知识库不存在'
+            }), 404
+
+        # 删除知识库的所有文档
+        cursor.execute('DELETE FROM knowledge_documents WHERE knowledge_base_id = ?', (kb_id,))
+        # 删除知识库
+        cursor.execute('DELETE FROM knowledge_bases WHERE id = ?', (kb_id,))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '知识库删除成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'删除知识库失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/knowledge-bases/<int:kb_id>/documents', methods=['POST'])
+def upload_document(kb_id):
+    """上传文档到知识库"""
+    try:
+        # 检查是否是 multipart/form-data
+        if not request.files:
+            return jsonify({
+                'success': False,
+                'message': '请上传文件'
+            }), 400
+
+        file = request.files.get('file')
+        if not file:
+            return jsonify({
+                'success': False,
+                'message': '请上传文件'
+            }), 400
+
+        if file.filename == '':
+            return jsonify({
+                'success': False,
+                'message': '文件名为空'
+            }), 400
+
+        # 读取文件内容
+        content = file.read().decode('utf-8', errors='ignore')
+        file_type = file.filename.split('.')[-1] if '.' in file.filename else 'txt'
+        file_size = len(content)
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT id FROM knowledge_bases WHERE id = ?', (kb_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '知识库不存在'
+            }), 404
+
+        # 插入文档记录
+        cursor.execute('''
+            INSERT INTO knowledge_documents (knowledge_base_id, title, content, file_type, file_size)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (kb_id, file.filename, content, file_type, file_size))
+
+        doc_id = cursor.lastrowid
+
+        # 更新文档计数
+        cursor.execute('''
+            UPDATE knowledge_bases
+            SET document_count = document_count + 1
+            WHERE id = ?
+        ''', (kb_id,))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '文档上传成功',
+            'data': {'id': doc_id}
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'上传文档失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/knowledge-bases/<int:kb_id>/documents', methods=['POST'])
+def add_document_text(kb_id):
+    """添加文本内容到知识库"""
+    try:
+        data = request.json
+        title = data.get('title', '')
+        content = data.get('content', '')
+
+        if not content:
+            return jsonify({
+                'success': False,
+                'message': '内容不能为空'
+            }), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT id FROM knowledge_bases WHERE id = ?', (kb_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '知识库不存在'
+            }), 404
+
+        cursor.execute('''
+            INSERT INTO knowledge_documents (knowledge_base_id, title, content, file_type, file_size)
+            VALUES (?, ?, ?, 'text', ?)
+        ''', (kb_id, title, content, len(content)))
+
+        doc_id = cursor.lastrowid
+
+        cursor.execute('''
+            UPDATE knowledge_bases
+            SET document_count = document_count + 1
+            WHERE id = ?
+        ''', (kb_id,))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '内容添加成功',
+            'data': {'id': doc_id}
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'添加内容失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/knowledge-bases/<int:kb_id>/documents/<int:doc_id>', methods=['DELETE'])
+def delete_document(kb_id, doc_id):
+    """删除文档"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT id FROM knowledge_documents WHERE id = ? AND knowledge_base_id = ?', (doc_id, kb_id))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '文档不存在'
+            }), 404
+
+        cursor.execute('DELETE FROM knowledge_documents WHERE id = ? AND knowledge_base_id = ?', (doc_id, kb_id))
+
+        cursor.execute('''
+            UPDATE knowledge_bases
+            SET document_count = document_count - 1
+            WHERE id = ?
+        ''', (kb_id,))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '文档删除成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'删除文档失败: {str(e)}'
         }), 500
 
 # ============ 启动服务 ============

@@ -152,6 +152,8 @@ const AdminDashboard = () => {
 
   const sidebarItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: '仪表盘' },
+    { id: 'agents', icon: Zap, label: '智能体管理', path: '/admin/agents' },
+    { id: 'knowledge', icon: Monitor, label: '知识库管理', path: '/admin/knowledge' },
     { id: 'code', icon: Code, label: '代码编辑' },
     { id: 'deploy', icon: Rocket, label: '部署管理' },
     { id: 'logs', icon: Terminal, label: '日志查看' },
@@ -200,10 +202,17 @@ const AdminDashboard = () => {
             <nav className="p-4 space-y-2">
               {sidebarItems.map((item) => {
                 const Icon = item.icon
+                const handleClick = () => {
+                  if (item.path) {
+                    navigate(item.path)
+                  } else {
+                    setActiveTab(item.id)
+                  }
+                }
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    onClick={handleClick}
                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                       activeTab === item.id
                         ? 'bg-primary-100 text-primary-700'
