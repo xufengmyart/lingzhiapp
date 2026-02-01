@@ -278,6 +278,82 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* 用户动态 */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">👥 用户动态</h2>
+        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+          <UserActivityFeed />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// 用户动态组件
+const UserActivityFeed = () => {
+  const [recentUsers, setRecentUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadRecentUsers()
+  }, [])
+
+  const loadRecentUsers = async () => {
+    try {
+      const response = await fetch('http://localhost:8001/api/public/users/recent?limit=20')
+      const data = await response.json()
+      if (data.success) {
+        setRecentUsers(data.data)
+      }
+    } catch (error) {
+      console.error('加载用户动态失败:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {recentUsers.map((user) => (
+        <div
+          key={user.id}
+          className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+        >
+          <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-full flex items-center justify-center text-white font-bold">
+            {user.username.charAt(0)}
+          </div>
+          <div className="flex-1">
+            <div className="text-sm font-semibold text-gray-900">
+              {user.username} 加入了灵值生态
+            </div>
+            <div className="text-xs text-gray-500">
+              {new Date(user.created_at).toLocaleString('zh-CN', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
+          </div>
+          <div className="text-xs text-primary-600 font-medium">
+            新用户
+          </div>
+        </div>
+      ))}
+      {recentUsers.length === 0 && (
+        <div className="text-center text-gray-500 py-8">
+          暂无用户动态
+        </div>
+      )}
     </div>
   )
 }

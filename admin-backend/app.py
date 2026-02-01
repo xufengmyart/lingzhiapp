@@ -56,10 +56,37 @@ def init_db():
             phone TEXT,
             password_hash TEXT NOT NULL,
             total_lingzhi INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'active',
+            last_login_at TIMESTAMP,
+            avatar_url TEXT,
+            real_name TEXT,
+            is_verified BOOLEAN DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # 添加新字段（如果表已存在）
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN real_name TEXT")
+    except:
+        pass
+    try:
+        cursor.execute("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0")
+    except:
+        pass
 
     # 签到记录表
     cursor.execute('''
@@ -1436,6 +1463,309 @@ def admin_delete_user(user_id):
             'message': f'删除用户失败: {str(e)}'
         }), 500
 
+
+@app.route('/api/admin/users/<int:user_id>', methods=['GET'])
+def admin_get_user_detail(user_id):
+    """获取用户详情"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        admin_id = verify_token(token)
+        if not admin_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        # 验证是否为管理员
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
+        admin = cursor.fetchone()
+        if not admin:
+            conn.close()
+            return jsonify({'success': False, 'message': '无权限'}), 403
+
+        # 获取用户详情
+        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
+
+        if not user:
+            conn.close()
+            return jsonify({'success': False, 'message': '用户不存在'}), 404
+
+        # 获取用户签到统计
+        cursor.execute("SELECT COUNT(*) as count FROM checkin_records WHERE user_id = ?", (user_id,))
+        checkin_count = cursor.fetchone()['count']
+
+        # 获取用户充值记录
+        cursor.execute("""
+            SELECT COUNT(*) as count, COALESCE(SUM(amount), 0) as total_amount 
+            FROM recharge_records 
+            WHERE user_id = ? AND payment_status = 'paid'
+        """, (user_id,))
+        recharge_stats = cursor.fetchone()
+
+        # 获取用户消费记录
+        cursor.execute("""
+            SELECT COUNT(*) as count, COALESCE(SUM(lingzhi_amount), 0) as total_lingzhi 
+            FROM lingzhi_consumption_records 
+            WHERE user_id = ?
+        """, (user_id,))
+        consumption_stats = cursor.fetchone()
+
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'id': user['id'],
+                'username': user['username'],
+                'email': user['email'],
+                'phone': user['phone'],
+                'total_lingzhi': user['total_lingzhi'],
+                'status': user.get('status', 'active'),
+                'last_login_at': user.get('last_login_at'),
+                'avatar_url': user.get('avatar_url'),
+                'real_name': user.get('real_name'),
+                'is_verified': user.get('is_verified', 0),
+                'created_at': user['created_at'],
+                'updated_at': user['updated_at'],
+                'stats': {
+                    'checkin_count': checkin_count,
+                    'recharge_count': recharge_stats['count'],
+                    'recharge_amount': float(recharge_stats['total_amount']),
+                    'consumption_count': consumption_stats['count'],
+                    'consumption_lingzhi': consumption_stats['total_lingzhi']
+                }
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取用户详情失败: {str(e)}'}), 500
+
+@app.route('/api/admin/users/<int:user_id>/status', methods=['PUT'])
+def admin_update_user_status(user_id):
+    """更新用户状态"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        admin_id = verify_token(token)
+        if not admin_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        # 验证是否为管理员
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
+        admin = cursor.fetchone()
+        if not admin:
+            conn.close()
+            return jsonify({'success': False, 'message': '无权限'}), 403
+
+        data = request.json
+        status = data.get('status')
+
+        if status not in ['active', 'inactive', 'banned']:
+            return jsonify({'success': False, 'message': '无效的状态'}), 400
+
+        # 检查用户是否存在
+        cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': '用户不存在'}), 404
+
+        # 更新用户状态
+        cursor.execute(
+            "UPDATE users SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (status, user_id)
+        )
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'message': '用户状态更新成功'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'更新用户状态失败: {str(e)}'}), 500
+
+@app.route('/api/admin/users/<int:user_id>/lingzhi', methods=['POST'])
+def admin_adjust_user_lingzhi(user_id):
+    """调整用户灵值"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        admin_id = verify_token(token)
+        if not admin_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        # 验证是否为管理员
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
+        admin = cursor.fetchone()
+        if not admin:
+            conn.close()
+            return jsonify({'success': False, 'message': '无权限'}), 403
+
+        data = request.json
+        amount = data.get('amount')
+        reason = data.get('reason', '管理员调整')
+
+        if not amount:
+            return jsonify({'success': False, 'message': '调整金额不能为空'}), 400
+
+        # 检查用户是否存在
+        cursor.execute("SELECT id, total_lingzhi FROM users WHERE id = ?", (user_id,))
+        user = cursor.fetchone()
+        if not user:
+            conn.close()
+            return jsonify({'success': False, 'message': '用户不存在'}), 404
+
+        # 调整灵值
+        new_lingzhi = user['total_lingzhi'] + amount
+        if new_lingzhi < 0:
+            conn.close()
+            return jsonify({'success': False, 'message': '灵值余额不足'}), 400
+
+        cursor.execute(
+            "UPDATE users SET total_lingzhi = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (new_lingzhi, user_id)
+        )
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '灵值调整成功',
+            'data': {
+                'old_lingzhi': user['total_lingzhi'],
+                'new_lingzhi': new_lingzhi,
+                'adjustment': amount
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'调整灵值失败: {str(e)}'}), 500
+
+@app.route('/api/admin/users/search', methods=['GET'])
+def admin_search_users():
+    """搜索用户"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        admin_id = verify_token(token)
+        if not admin_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        # 验证是否为管理员
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
+        admin = cursor.fetchone()
+        if not admin:
+            conn.close()
+            return jsonify({'success': False, 'message': '无权限'}), 403
+
+        keyword = request.args.get('keyword', '')
+        limit = int(request.args.get('limit', 10))
+
+        if not keyword:
+            conn.close()
+            return jsonify({'success': False, 'message': '搜索关键词不能为空'}), 400
+
+        # 搜索用户
+        search_pattern = f'%{keyword}%'
+        cursor.execute("""
+            SELECT id, username, email, phone, total_lingzhi, status, created_at
+            FROM users
+            WHERE username LIKE ? OR email LIKE ? OR phone LIKE ?
+            ORDER BY id DESC
+            LIMIT ?
+        """, (search_pattern, search_pattern, search_pattern, limit))
+        users = cursor.fetchall()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': [dict(user) for user in users]
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'搜索用户失败: {str(e)}'}), 500
+
+@app.route('/api/admin/users/export', methods=['GET'])
+def admin_export_users():
+    """导出用户列表"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        admin_id = verify_token(token)
+        if not admin_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        # 验证是否为管理员
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
+        admin = cursor.fetchone()
+        if not admin:
+            conn.close()
+            return jsonify({'success': False, 'message': '无权限'}), 403
+
+        # 获取所有用户
+        cursor.execute("""
+            SELECT id, username, email, phone, total_lingzhi, status, created_at
+            FROM users
+            ORDER BY id DESC
+        """)
+        users = cursor.fetchall()
+        conn.close()
+
+        # 生成CSV
+        import csv
+        import io
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(['ID', '用户名', '邮箱', '手机', '灵值', '状态', '注册时间'])
+        
+        for user in users:
+            writer.writerow([
+                user['id'],
+                user['username'],
+                user.get('email', ''),
+                user.get('phone', ''),
+                user['total_lingzhi'],
+                user.get('status', 'active'),
+                user['created_at']
+            ])
+
+        # 返回CSV文件
+        output.seek(0)
+        from flask import Response
+        response = Response(
+            output.getvalue(),
+            mimetype='text/csv',
+            headers={
+                'Content-Disposition': 'attachment; filename=users.csv'
+            }
+        )
+        return response
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'导出用户列表失败: {str(e)}'}), 500
+
 @app.route('/api/admin/stats', methods=['GET'])
 def admin_stats():
     """获取系统统计"""
@@ -2588,6 +2918,222 @@ def get_agent_stats(agent_id):
 
     except Exception as e:
         return jsonify({'success': False, 'message': f'获取统计数据失败: {str(e)}'}), 500
+
+
+@app.route('/api/admin/stats/user', methods=['GET'])
+def admin_user_stats():
+    """获取用户统计详情（注册趋势、活跃度等）"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        admin_id = verify_token(token)
+        if not admin_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取日期范围（最近30天）
+        days = int(request.args.get('days', 30))
+        from datetime import timedelta
+        end_date = date.today()
+        start_date = end_date - timedelta(days=days)
+        
+        # 每日新增用户
+        cursor.execute("""
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM users
+            WHERE DATE(created_at) >= ?
+            GROUP BY DATE(created_at)
+            ORDER BY date
+        """, (start_date,))
+        daily_new_users = {row['date']: row['count'] for row in cursor.fetchall()}
+        
+        # 每日活跃用户（有签到或对话记录的用户）
+        cursor.execute("""
+            SELECT date, COUNT(DISTINCT user_id) as count
+            FROM (
+                SELECT DATE(checkin_date) as date, user_id FROM checkin_records WHERE DATE(checkin_date) >= ?
+                UNION
+                SELECT DATE(created_at) as date, user_id FROM conversations WHERE DATE(created_at) >= ?
+            )
+            GROUP BY date
+            ORDER BY date
+        """, (start_date, start_date))
+        daily_active_users = {row['date']: row['count'] for row in cursor.fetchall()}
+        
+        # 用户状态分布
+        cursor.execute("""
+            SELECT status, COUNT(*) as count
+            FROM users
+            GROUP BY status
+        """)
+        user_status_dist = {row['status']: row['count'] for row in cursor.fetchall()}
+        
+        # 用户灵值分布
+        cursor.execute("""
+            SELECT 
+                CASE 
+                    WHEN total_lingzhi = 0 THEN '0'
+                    WHEN total_lingzhi < 100 THEN '1-99'
+                    WHEN total_lingzhi < 1000 THEN '100-999'
+                    WHEN total_lingzhi < 10000 THEN '1000-9999'
+                    ELSE '10000+'
+                END as range,
+                COUNT(*) as count
+            FROM users
+            GROUP BY range
+            ORDER BY range
+        """)
+        lingzhi_dist = {row['range']: row['count'] for row in cursor.fetchall()}
+        
+        # 注册趋势（最近7天）
+        cursor.execute("""
+            SELECT 
+                DATE(created_at) as date,
+                COUNT(*) as count
+            FROM users
+            WHERE DATE(created_at) >= DATE('now', '-7 days')
+            GROUP BY DATE(created_at)
+            ORDER BY date
+        """)
+        registration_trend = [{'date': row['date'], 'count': row['count']} for row in cursor.fetchall()]
+        
+        # 今日统计
+        today = date.today()
+        cursor.execute("SELECT COUNT(*) as count FROM users WHERE DATE(created_at) = ?", (today,))
+        today_new_users = cursor.fetchone()['count']
+        
+        cursor.execute("SELECT COUNT(DISTINCT user_id) as count FROM checkin_records WHERE checkin_date = ?", (today,))
+        today_active_users = cursor.fetchone()['count']
+        
+        cursor.execute("SELECT COUNT(*) as count FROM users WHERE status = 'active'")
+        total_active_users = cursor.fetchone()['count']
+        
+        cursor.execute("SELECT COUNT(*) as count FROM users WHERE status = 'inactive'")
+        total_inactive_users = cursor.fetchone()['count']
+        
+        cursor.execute("SELECT COUNT(*) as count FROM users WHERE status = 'banned'")
+        total_banned_users = cursor.fetchone()['count']
+        
+        conn.close()
+        
+        # 生成日期列表
+        date_list = []
+        current_date = start_date
+        while current_date <= end_date:
+            date_list.append(str(current_date))
+            current_date += timedelta(days=1)
+        
+        # 填充数据
+        daily_new_users_filled = [{'date': d, 'count': daily_new_users.get(d, 0)} for d in date_list]
+        daily_active_users_filled = [{'date': d, 'count': daily_active_users.get(d, 0)} for d in date_list]
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'dailyNewUsers': daily_new_users_filled,
+                'dailyActiveUsers': daily_active_users_filled,
+                'userStatusDistribution': {
+                    'active': user_status_dist.get('active', 0),
+                    'inactive': user_status_dist.get('inactive', 0),
+                    'banned': user_status_dist.get('banned', 0)
+                },
+                'lingzhiDistribution': lingzhi_dist,
+                'registrationTrend': registration_trend,
+                'todayStats': {
+                    'newUsers': today_new_users,
+                    'activeUsers': today_active_users
+                },
+                'totalStats': {
+                    'active': total_active_users,
+                    'inactive': total_inactive_users,
+                    'banned': total_banned_users
+                }
+            }
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': f'获取用户统计失败: {str(e)}'}), 500
+
+@app.route('/api/admin/users/recent', methods=['GET'])
+def admin_get_recent_users():
+    """获取最近注册用户"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        admin_id = verify_token(token)
+        if not admin_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        # 验证是否为管理员
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
+        admin = cursor.fetchone()
+        if not admin:
+            conn.close()
+            return jsonify({'success': False, 'message': '无权限'}), 403
+
+        limit = int(request.args.get('limit', 10))
+
+        # 获取最近注册的用户
+        cursor.execute("""
+            SELECT id, username, email, phone, total_lingzhi, status, created_at
+            FROM users
+            ORDER BY created_at DESC
+            LIMIT ?
+        """, (limit,))
+        users = cursor.fetchall()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': [dict(user) for user in users]
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取最近用户失败: {str(e)}'}), 500
+
+@app.route('/api/public/users/recent', methods=['GET'])
+def public_get_recent_users():
+    """前台：获取最近注册用户（用户动态）"""
+    try:
+        limit = int(request.args.get('limit', 20))
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取最近注册的用户
+        cursor.execute("""
+            SELECT id, username, created_at
+            FROM users
+            WHERE status = 'active'
+            ORDER BY created_at DESC
+            LIMIT ?
+        """, (limit,))
+        users = cursor.fetchall()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': [{
+                'id': user['id'],
+                'username': user['username'][:1] + '**' if len(user['username']) > 1 else user['username'],  # 隐藏部分用户名
+                'created_at': user['created_at']
+            } for user in users]
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取用户动态失败: {str(e)}'}), 500
 
 @app.route('/api/admin/agents/<int:agent_id>/conversations', methods=['GET'])
 def get_agent_conversations(agent_id):

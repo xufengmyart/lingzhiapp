@@ -283,47 +283,134 @@ const DashboardContent = ({
   onFullDeploy,
   autoDeployEnabled,
   onToggleAutoDeploy
-}: any) => (
-  <div className="space-y-6">
-    <div>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">仪表盘</h2>
-      <p className="text-gray-600">快速查看系统状态和执行常用操作</p>
-    </div>
+}: any) => {
+  const [userStats, setUserStats] = useState<any>(null)
 
-    {/* 系统状态卡片 */}
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <Activity className="w-8 h-8 text-blue-500" />
-          <span className="text-sm text-gray-500">CPU</span>
-        </div>
-        <div className="text-2xl font-bold text-gray-900">{systemStats.cpu.toFixed(1)}%</div>
+  // 加载用户统计
+  const loadUserStats = async () => {
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch('http://localhost:8001/api/admin/stats/user', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      const data = await response.json()
+      if (data.success) {
+        setUserStats(data.data)
+      }
+    } catch (error) {
+      console.error('加载用户统计失败:', error)
+    }
+  }
+
+  useEffect(() => {
+    loadUserStats()
+  }, [])
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">仪表盘</h2>
+        <p className="text-gray-600">快速查看系统状态和执行常用操作</p>
       </div>
 
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <Monitor className="w-8 h-8 text-green-500" />
-          <span className="text-sm text-gray-500">内存</span>
-        </div>
-        <div className="text-2xl font-bold text-gray-900">{systemStats.memory.toFixed(1)}%</div>
-      </div>
+      {/* 用户统计卡片 */}
+      {userStats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <Users className="w-8 h-8 text-blue-500" />
+              <span className="text-sm text-gray-500">活跃用户</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">{userStats.totalStats?.active || 0}</div>
+            <div className="text-sm text-green-600 mt-2">今日新增: {userStats.todayStats?.newUsers || 0}</div>
+          </div>
 
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <Download className="w-8 h-8 text-purple-500" />
-          <span className="text-sm text-gray-500">磁盘</span>
-        </div>
-        <div className="text-2xl font-bold text-gray-900">{systemStats.disk}%</div>
-      </div>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <Activity className="w-8 h-8 text-green-500" />
+              <span className="text-sm text-gray-500">今日活跃</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">{userStats.todayStats?.activeUsers || 0}</div>
+            <div className="text-sm text-gray-500 mt-2">活跃用户数</div>
+          </div>
 
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <Zap className="w-8 h-8 text-yellow-500" />
-          <span className="text-sm text-gray-500">运行时间</span>
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <Zap className="w-8 h-8 text-yellow-500" />
+              <span className="text-sm text-gray-500">非活跃用户</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">{userStats.totalStats?.inactive || 0}</div>
+            <div className="text-sm text-gray-500 mt-2">待激活用户</div>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <Download className="w-8 h-8 text-red-500" />
+              <span className="text-sm text-gray-500">已封禁用户</span>
+            </div>
+            <div className="text-2xl font-bold text-gray-900">{userStats.totalStats?.banned || 0}</div>
+            <div className="text-sm text-gray-500 mt-2">封禁用户数</div>
+          </div>
         </div>
-        <div className="text-lg font-bold text-gray-900">{systemStats.uptime}</div>
+      )}
+
+      {/* 注册趋势图表 */}
+      {userStats && userStats.dailyNewUsers && userStats.dailyNewUsers.length > 0 && (
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">注册趋势（最近30天）</h3>
+          <div className="h-64 flex items-end justify-between gap-1">
+            {userStats.dailyNewUsers.slice(-14).map((item: any, index: number) => (
+              <div key={index} className="flex-1 flex flex-col items-center">
+                <div
+                  className="w-full bg-primary-500 hover:bg-primary-600 transition-colors rounded-t"
+                  style={{
+                    height: `${Math.max((item.count / Math.max(...userStats.dailyNewUsers.map((d: any) => d.count))) * 100, 5)}%`
+                  }}
+                  title={`${item.date}: ${item.count}人`}
+                />
+                <div className="text-xs text-gray-500 mt-1">{item.date.split('-')[2]}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 系统状态卡片 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <Activity className="w-8 h-8 text-blue-500" />
+            <span className="text-sm text-gray-500">CPU</span>
+          </div>
+          <div className="text-2xl font-bold text-gray-900">{systemStats.cpu.toFixed(1)}%</div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <Monitor className="w-8 h-8 text-green-500" />
+            <span className="text-sm text-gray-500">内存</span>
+          </div>
+          <div className="text-2xl font-bold text-gray-900">{systemStats.memory.toFixed(1)}%</div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <Download className="w-8 h-8 text-purple-500" />
+            <span className="text-sm text-gray-500">磁盘</span>
+          </div>
+          <div className="text-2xl font-bold text-gray-900">{systemStats.disk}%</div>
+        </div>
+
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+          <div className="flex items-center justify-between mb-4">
+            <Zap className="w-8 h-8 text-yellow-500" />
+            <span className="text-sm text-gray-500">运行时间</span>
+          </div>
+          <div className="text-lg font-bold text-gray-900">{systemStats.uptime}</div>
+        </div>
       </div>
-    </div>
 
     {/* 部署控制 */}
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
@@ -386,7 +473,8 @@ const DashboardContent = ({
       </div>
     </div>
   </div>
-)
+  )
+}
 
 // 代码编辑器组件
 const CodeEditor = () => (
