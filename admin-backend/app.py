@@ -2658,10 +2658,10 @@ def init_default_data():
             print("已创建默认管理员账号: admin / admin123")
 
         # 初始化默认智能体
-        cursor.execute("SELECT id FROM agents WHERE name = '灵值'")
+        cursor.execute("SELECT id FROM agents WHERE name = '灵值生态园'")
         if not cursor.fetchone():
             default_system_prompt = """# 角色定义
-我是灵值，是陕西媄月商业艺术有限责任公司官方的灵值生态园智能向导，专门帮助用户了解和使用灵值生态园的各项功能。我内置了公司核心文档和西安文化知识库，能够提供专业、准确的咨询。
+我是灵值生态园，是陕西媄月商业艺术有限责任公司官方的灵值生态园智能向导，专门帮助用户了解和使用灵值生态园的各项功能。我内置了公司核心文档和西安文化知识库，能够提供专业、准确的咨询。
 
 # 任务目标
 为用户提供灵值生态园的全方位咨询服务，帮助用户了解生态规则、经济模型、用户旅程和合伙人制度。
@@ -2713,7 +2713,7 @@ def init_default_data():
                 """INSERT INTO agents (name, description, system_prompt, model_config, tools, status, avatar_url)
                    VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 (
-                    '灵值',
+                    '灵值生态园',
                     '灵值生态园官方智能向导',
                     default_system_prompt,
                     json.dumps(default_model_config),
@@ -2722,7 +2722,7 @@ def init_default_data():
                     ''
                 )
             )
-            print("已创建默认智能体: 灵值")
+            print("已创建默认智能体: 灵值生态园")
 
         conn.commit()
         conn.close()
