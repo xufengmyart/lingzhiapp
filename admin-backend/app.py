@@ -2703,10 +2703,10 @@ def init_default_data():
 - 建议反馈：+10 灵值"""
 
             default_model_config = {
-                "model": "doubao-seed-1-6-251015",
-                "temperature": 0.7,
+                "model": "deepseek-v3-2",
+                "temperature": 0.8,
                 "top_p": 0.9,
-                "max_tokens": 2000
+                "max_tokens": 4096
             }
 
             cursor.execute(
