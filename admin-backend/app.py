@@ -5,6 +5,7 @@ import sqlite3
 import hashlib
 import jwt
 import os
+import bcrypt
 
 app = Flask(__name__)
 CORS(app)
@@ -12,6 +13,7 @@ CORS(app)
 # 配置
 SECRET_KEY = os.getenv('SECRET_KEY', 'lingzhi-ecosystem-secret-key-2026')
 DATABASE = 'lingzhi_ecosystem.db'
+OLD_DATABASE = '../../灵值生态园智能体移植包/src/auth/auth.db'  # 旧数据库路径
 
 # JWT 配置
 JWT_SECRET = os.getenv('JWT_SECRET', 'lingzhi-jwt-secret-key')
@@ -99,8 +101,28 @@ def get_db():
     return conn
 
 def hash_password(password):
-    """密码哈希"""
+    """密码哈希（SHA256）"""
     return hashlib.sha256(password.encode()).hexdigest()
+
+def hash_password_bcrypt(password):
+    """密码哈希（bcrypt）"""
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+
+def verify_password(password, password_hash):
+    """验证密码（支持 SHA256 和 bcrypt）"""
+    # 先尝试 SHA256
+    if password_hash == hashlib.sha256(password.encode()).hexdigest():
+        return True
+    
+    # 再尝试 bcrypt
+    try:
+        if password_hash.startswith('$2b$'):
+            return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+    except:
+        pass
+    
+    return False
 
 def generate_token(user_id):
     """生成JWT token"""
@@ -136,6 +158,61 @@ def create_default_admin():
     conn.close()
 
 create_default_admin()
+
+# 迁移旧用户数据
+def migrate_old_users():
+    """从旧数据库迁移用户数据"""
+    old_db_path = os.path.join(os.path.dirname(__file__), OLD_DATABASE)
+    if not os.path.exists(old_db_path):
+        print("旧数据库不存在，跳过迁移")
+        return
+    
+    conn_old = sqlite3.connect(old_db_path)
+    cursor_old = conn_old.cursor()
+    
+    # 查询旧用户
+    cursor_old.execute("SELECT id, name, email, phone, password_hash, created_at FROM users")
+    old_users = cursor_old.fetchall()
+    
+    if not old_users:
+        print("旧数据库中没有用户数据")
+        conn_old.close()
+        return
+    
+    conn_new = get_db()
+    cursor_new = conn_new.cursor()
+    
+    migrated_count = 0
+    for old_user in old_users:
+        old_id, name, email, phone, password_hash, created_at = old_user
+        
+        # 检查是否已存在（按邮箱）
+        cursor_new.execute("SELECT id FROM users WHERE email = ?", (email,))
+        if cursor_new.fetchone():
+            continue
+        
+        # 插入新用户（使用 name 作为 username）
+        try:
+            cursor_new.execute(
+                "INSERT INTO users (username, email, phone, password_hash, total_lingzhi, created_at) VALUES (?, ?, ?, ?, 0, ?)",
+                (name, email, phone or '', password_hash, created_at)
+            )
+            migrated_count += 1
+            print(f"迁移用户: {name} ({email})")
+        except Exception as e:
+            print(f"迁移用户失败 {name}: {e}")
+    
+    conn_new.commit()
+    conn_new.close()
+    conn_old.close()
+    
+    if migrated_count > 0:
+        print(f"成功迁移 {migrated_count} 个用户")
+    else:
+        print("没有新用户需要迁移")
+
+# 执行迁移
+migrate_old_users()
 
 # ============ 路由定义 ============
 
@@ -247,7 +324,7 @@ def login():
                 'message': '用户名或密码错误'
             }), 401
 
-        if user['password_hash'] != hash_password(password):
+        if not verify_password(password, user['password_hash']):
             return jsonify({
                 'success': False,
                 'message': '用户名或密码错误'
@@ -477,7 +554,7 @@ def admin_login():
                 'message': '用户名或密码错误'
             }), 401
 
-        if admin['password_hash'] != hash_password(password):
+        if not verify_password(password, admin['password_hash']):
             return jsonify({
                 'success': False,
                 'message': '用户名或密码错误'
