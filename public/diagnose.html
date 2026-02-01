@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API诊断工具 - 123.56.142.143</title>
+    <title>API诊断工具 - 灵值生态园</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -30,10 +30,6 @@
             font-size: 28px;
             margin-bottom: 10px;
         }
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
         .content {
             padding: 30px;
         }
@@ -47,42 +43,21 @@
             color: #333;
             margin-bottom: 15px;
             font-size: 20px;
-            display: flex;
-            align-items: center;
-        }
-        .section h2 .emoji {
-            font-size: 24px;
-            margin-right: 10px;
-        }
-        .info-box {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 4px;
         }
         .success-box {
             background: #d4edda;
             color: #155724;
-            border-left: 4px solid #28a745;
             padding: 15px;
             margin: 10px 0;
+            border-left: 4px solid #28a745;
             border-radius: 4px;
         }
         .error-box {
             background: #f8d7da;
             color: #721c24;
+            padding: 15px;
+            margin: 10px 0;
             border-left: 4px solid #dc3545;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        .warning-box {
-            background: #fff3cd;
-            color: #856404;
-            border-left: 4px solid #ffc107;
-            padding: 15px;
-            margin: 10px 0;
             border-radius: 4px;
         }
         .btn {
@@ -95,23 +70,14 @@
             margin: 5px;
             font-size: 16px;
             font-weight: 500;
-            transition: all 0.3s;
         }
-        .btn:hover { background: #1976d2; transform: translateY(-2px); }
-        .btn:active { transform: translateY(0); }
+        .btn:hover { background: #1976d2; }
         .btn-success { background: #28a745; }
         .btn-success:hover { background: #218838; }
-        .btn-danger { background: #dc3545; }
-        .btn-danger:hover { background: #c82333; }
-        .btn-lg {
-            padding: 15px 40px;
-            font-size: 18px;
-        }
         .input-group {
             display: flex;
             gap: 10px;
             margin: 15px 0;
-            flex-wrap: wrap;
         }
         input {
             padding: 12px 15px;
@@ -121,317 +87,94 @@
             flex: 1;
             min-width: 300px;
         }
-        input:focus {
-            border-color: #2196f3;
-            outline: none;
-        }
-        .result-box {
-            background: #f8f9fa;
-            border: 2px solid #dee2e6;
-            padding: 20px;
-            margin: 15px 0;
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            white-space: pre-wrap;
-            word-break: break-all;
-            font-size: 14px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background: #f2f2f2;
-            font-weight: 600;
-        }
-        .status-ok { color: #28a745; font-weight: bold; }
-        .status-fail { color: #dc3545; font-weight: bold; }
-        .status-warning { color: #ffc107; font-weight: bold; }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .highlight {
-            background: #fff3cd;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-weight: bold;
-        }
-        .ip-display {
-            background: rgba(255,255,255,0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            display: inline-block;
-            margin-top: 10px;
-            font-family: 'Courier New', monospace;
-            font-size: 18px;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🔍 灵值生态园 - API诊断工具</h1>
-            <p>服务器IP: <span class="ip-display">123.56.142.143</span></p>
+            <h1>🔍 API诊断工具</h1>
+            <p>服务器: 123.56.142.143</p>
         </div>
 
         <div class="content">
             <div class="section">
-                <h2><span class="emoji">📍</span>步骤1：当前环境信息</h2>
-                <div class="info-box">
-                    <p><strong>当前URL：</strong> <span id="currentUrl" class="highlight"></span></p>
-                    <p><strong>访问域名/IP：</strong> <span id="hostname" class="highlight"></span></p>
-                    <p><strong>端口：</strong> <span id="port" class="highlight"></span></p>
-                    <p><strong>协议：</strong> <span id="protocol" class="highlight"></span></p>
+                <h2>🎯 API地址配置</h2>
+                <div class="success-box">
+                    <p><strong>当前配置：</strong> <span id="currentApi" style="font-size: 18px; font-weight: bold; color: #2196f3;">/api</span></p>
+                    <p>✓ 使用相对路径，由Nginx反向代理到后端8001端口</p>
                 </div>
-            </div>
 
-            <div class="section">
-                <h2><span class="emoji">📊</span>步骤2：环境检测</h2>
-                <div id="envStatus">
-                    <p>正在检测环境...</p>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2><span class="emoji">🎯</span>步骤3：API地址自动检测</h2>
-                <div class="info-box">
-                    <p><strong>自动检测到的API地址：</strong></p>
-                    <div class="result-box" id="detectedApi" style="font-size: 20px; color: #2196f3; font-weight: bold; text-align: center;"></div>
-                </div>
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-lg" onclick="runAllTests()">🚀 运行完整测试</button>
+                <h2>📋 测试功能</h2>
+                <div style="text-align: center; margin: 20px 0;">
                     <button class="btn" onclick="testApiConnection()">🔌 测试API连接</button>
-                    <button class="btn" onclick="testLogin()">👤 测试登录</button>
+                    <button class="btn btn-success" onclick="testLogin()">👤 测试登录</button>
                 </div>
-            </div>
 
-            <div class="section">
-                <h2><span class="emoji">⚙️</span>步骤4：手动配置API地址</h2>
-                <div class="warning-box">
-                    <p>如果自动检测失败或显示错误的API地址，请在此手动配置</p>
-                </div>
+                <h2>⚙️ 手动配置</h2>
                 <div class="input-group">
-                    <input type="text" id="apiInput" placeholder="例如: http://123.56.142.143:8001" value="http://123.56.142.143:8001">
-                    <button class="btn btn-success" onclick="setCustomApi()">💾 保存配置</button>
-                    <button class="btn btn-danger" onclick="clearCustomApi()">🗑️ 清除配置</button>
+                    <input type="text" id="apiInput" placeholder="例如: /api 或 http://123.56.142.143:8001" value="/api">
+                    <button class="btn btn-success" onclick="setCustomApi()">💾 保存</button>
+                    <button class="btn" onclick="clearCustomApi()">🗑️ 清除</button>
                 </div>
             </div>
 
             <div class="section">
-                <h2><span class="emoji">📋</span>步骤5：测试结果</h2>
+                <h2>📋 测试结果</h2>
                 <div id="testResults">
-                    <div class="info-box">
-                        <p>点击上方"运行完整测试"按钮开始测试</p>
-                        <p style="margin-top: 10px; color: #666;">测试包括：API健康检查、登录功能测试</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section">
-                <h2><span class="emoji">📝</span>操作记录</h2>
-                <div id="logs" class="result-box" style="max-height: 200px; overflow-y: auto; font-size: 12px; color: #666;">
-                    等待操作...
+                    <p>点击上方按钮开始测试</p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 日志功能
-        function log(message) {
-            const logsDiv = document.getElementById('logs');
-            const timestamp = new Date().toLocaleTimeString();
-            logsDiv.innerHTML += `[${timestamp}] ${message}\n`;
-            logsDiv.scrollTop = logsDiv.scrollHeight;
-            console.log(message);
-        }
-
-        // 显示当前环境信息
-        const currentUrl = window.location.href;
-        const url = new URL(currentUrl);
-
-        document.getElementById('currentUrl').textContent = currentUrl;
-        document.getElementById('hostname').textContent = url.hostname;
-        document.getElementById('port').textContent = url.port || (url.protocol === 'https:' ? '443' : '80');
-        document.getElementById('protocol').textContent = url.protocol;
-
-        log('页面加载完成');
-        log('当前URL: ' + currentUrl);
-
-        // 检测环境
-        function detectEnvironment() {
-            log('开始检测环境...');
-            const envStatus = document.getElementById('envStatus');
-            let html = '<table>';
-
-            // 检查localStorage
-            const hasLocalStorage = typeof(Storage) !== "undefined";
-            const apiBaseURL = localStorage.getItem('apiBaseURL');
-
-            html += `<tr>
-                <td><strong>LocalStorage支持</strong></td>
-                <td>${hasLocalStorage ? '<span class="status-ok">✓ 支持</span>' : '<span class="status-fail">✗ 不支持</span>'}</td>
-            </tr>`;
-
-            html += `<tr>
-                <td><strong>API地址配置</strong></td>
-                <td>${apiBaseURL ? '<span class="status-warning">⚠️ 已配置: ' + apiBaseURL + '</span>' : '<span class="status-ok">✓ 未配置（使用自动检测）</span>'}</td>
-            </tr>`;
-
-            // 检查环境变量
-            if (typeof import.meta !== 'undefined' && import.meta.env) {
-                const envApiUrl = import.meta.env.VITE_API_BASE_URL;
-                html += `<tr>
-                    <td><strong>VITE_API_BASE_URL</strong></td>
-                    <td>${envApiUrl ? envApiUrl : '<span style="color: #999;">未设置</span>'}</td>
-                </tr>`;
-                if (envApiUrl) log('检测到环境变量: ' + envApiUrl);
-            }
-
-            // 检查当前URL端口
-            const currentPort = url.port || (url.protocol === 'https:' ? '443' : '80');
-            html += `<tr>
-                <td><strong>当前访问端口</strong></td>
-                <td>${currentPort}</td>
-            </tr>`;
-
-            // 预期API端口
-            const expectedApiPort = currentPort === '80' || currentPort === '443' ? '8001' : currentPort;
-            html += `<tr>
-                <td><strong>预期API端口</strong></td>
-                <td><span class="highlight">${expectedApiPort}</span></td>
-            </tr>`;
-
-            html += '</table>';
-            envStatus.innerHTML = html;
-
-            log('环境检测完成');
-            log('当前端口: ' + currentPort + ', 预期API端口: ' + expectedApiPort);
-        }
-
-        // 获取API地址（模拟前端逻辑）
-        function getApiBaseURL() {
-            // 优先使用环境变量
-            if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) {
-                log('使用环境变量中的API地址');
-                return import.meta.env.VITE_API_BASE_URL;
-            }
-
-            // 尝试从localStorage读取
-            const customApiURL = localStorage.getItem('apiBaseURL');
-            if (customApiURL) {
-                log('使用localStorage中的API地址: ' + customApiURL);
-                return customApiURL;
-            }
-
-            // 智能检测
-            const origin = window.location.origin;
-            const currentPort = url.port || (url.protocol === 'https:' ? '443' : '80');
-
-            // 如果当前端口是80或443，自动使用8001
-            if (currentPort === '80' || currentPort === '443') {
-                const urlObj = new URL(origin);
-                const apiUrl = `${urlObj.protocol}//${urlObj.hostname}:8001`;
-                log('自动检测API地址: ' + apiUrl);
-                return apiUrl;
-            }
-
-            log('使用当前URL作为API地址: ' + origin);
-            return origin;
-        }
-
-        // 显示检测到的API地址
-        const detectedApi = getApiBaseURL();
-        document.getElementById('detectedApi').textContent = detectedApi;
-
-        // 运行所有测试
-        async function runAllTests() {
-            log('=== 开始完整测试 ===');
-            detectEnvironment();
-            await new Promise(resolve => setTimeout(resolve, 500));
-            await testApiConnection();
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            await testLogin();
-            log('=== 完整测试完成 ===');
-        }
+        // 显示当前配置
+        const currentApi = localStorage.getItem('apiBaseURL') || '/api';
+        document.getElementById('currentApi').textContent = currentApi;
+        document.getElementById('apiInput').value = currentApi;
 
         // 测试API连接
         async function testApiConnection() {
-            const apiBase = getApiBaseURL();
-            const healthUrl = `${apiBase}/api/health`;
-
-            log('开始测试API连接...');
-            log('请求URL: ' + healthUrl);
+            const apiBase = document.getElementById('apiInput').value || '/api';
+            const healthUrl = apiBase.startsWith('http') ? `${apiBase}/api/health` : `${apiBase}/health`;
 
             const resultDiv = document.getElementById('testResults');
-            resultDiv.innerHTML += '<div style="margin: 10px 0; color: #666;">🔌 正在测试API连接... <span class="loading"></span></div>';
+            resultDiv.innerHTML = '<p>🔌 正在测试API连接...</p>';
 
             try {
                 const startTime = Date.now();
                 const response = await fetch(healthUrl, {
                     method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     cache: 'no-cache'
                 });
 
-                const endTime = Date.now();
-                const duration = endTime - startTime;
+                const duration = Date.now() - startTime;
 
                 if (response.ok) {
                     const data = await response.json();
-                    log('✓ API连接成功，耗时: ' + duration + 'ms');
-                    log('健康检查结果: ' + JSON.stringify(data));
-                    resultDiv.innerHTML += `
+                    resultDiv.innerHTML = `
                         <div class="success-box">
                             <strong>✓ API连接测试成功！</strong><br>
-                            • 请求地址: <span class="highlight">${healthUrl}</span><br>
-                            • 响应时间: <strong>${duration}ms</strong><br>
-                            • 健康检查: ${JSON.stringify(data, null, 2)}
+                            • 请求地址: ${healthUrl}<br>
+                            • 响应时间: ${duration}ms<br>
+                            • 健康检查: ${JSON.stringify(data)}
                         </div>
                     `;
                 } else {
-                    log('✗ API连接失败，状态码: ' + response.status);
-                    resultDiv.innerHTML += `
+                    resultDiv.innerHTML = `
                         <div class="error-box">
                             <strong>✗ API连接测试失败！</strong><br>
-                            • 请求地址: <span class="highlight">${healthUrl}</span><br>
-                            • 状态码: <strong>${response.status}</strong><br>
-                            • 状态文本: ${response.statusText}
+                            • 请求地址: ${healthUrl}<br>
+                            • 状态码: ${response.status}
                         </div>
                     `;
                 }
             } catch (error) {
-                log('✗ API连接失败，错误: ' + error.message);
-                resultDiv.innerHTML += `
+                resultDiv.innerHTML = `
                     <div class="error-box">
                         <strong>✗ API连接测试失败！</strong><br>
-                        • 请求地址: <span class="highlight">${healthUrl}</span><br>
-                        • 错误信息: <strong>${error.message}</strong><br>
-                        <br>
-                        <strong>可能原因：</strong><br>
-                        1. 防火墙拦截了8001端口<br>
-                        2. 后端服务未启动<br>
-                        3. API地址配置错误
+                        • 错误信息: ${error.message}
                     </div>
                 `;
             }
@@ -439,22 +182,17 @@
 
         // 测试登录
         async function testLogin() {
-            const apiBase = getApiBaseURL();
-            const loginUrl = `${apiBase}/api/login`;
-
-            log('开始测试登录...');
-            log('请求URL: ' + loginUrl);
+            const apiBase = document.getElementById('apiInput').value || '/api';
+            const loginUrl = apiBase.startsWith('http') ? `${apiBase}/api/login` : `${apiBase}/login`;
 
             const resultDiv = document.getElementById('testResults');
-            resultDiv.innerHTML += '<div style="margin: 10px 0; color: #666;">👤 正在测试登录... <span class="loading"></span></div>';
+            resultDiv.innerHTML = '<p>👤 正在测试登录...</p>';
 
             try {
                 const startTime = Date.now();
                 const response = await fetch(loginUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         username: 'testuser2_updated',
                         password: 'password123'
@@ -462,41 +200,33 @@
                     cache: 'no-cache'
                 });
 
-                const endTime = Date.now();
-                const duration = endTime - startTime;
+                const duration = Date.now() - startTime;
 
                 if (response.ok) {
                     const data = await response.json();
-                    log('✓ 登录成功，耗时: ' + duration + 'ms');
-                    log('登录结果: ' + JSON.stringify(data));
-                    resultDiv.innerHTML += `
+                    resultDiv.innerHTML = `
                         <div class="success-box">
                             <strong>✓ 登录测试成功！</strong><br>
-                            • 请求地址: <span class="highlight">${loginUrl}</span><br>
-                            • 响应时间: <strong>${duration}ms</strong><br>
-                            • 响应数据: ${JSON.stringify(data, null, 2)}
+                            • 请求地址: ${loginUrl}<br>
+                            • 响应时间: ${duration}ms<br>
+                            • 用户: ${data.data.user.username}
                         </div>
                     `;
                 } else {
                     const data = await response.json();
-                    log('✗ 登录失败，状态码: ' + response.status);
-                    log('错误信息: ' + JSON.stringify(data));
-                    resultDiv.innerHTML += `
+                    resultDiv.innerHTML = `
                         <div class="error-box">
                             <strong>✗ 登录测试失败！</strong><br>
-                            • 请求地址: <span class="highlight">${loginUrl}</span><br>
-                            • 状态码: <strong>${response.status}</strong><br>
-                            • 错误信息: ${JSON.stringify(data, null, 2)}
+                            • 请求地址: ${loginUrl}<br>
+                            • 错误信息: ${JSON.stringify(data)}
                         </div>
                     `;
                 }
             } catch (error) {
-                log('✗ 登录失败，错误: ' + error.message);
-                resultDiv.innerHTML += `
+                resultDiv.innerHTML = `
                     <div class="error-box">
                         <strong>✗ 登录测试失败！</strong><br>
-                        • 请求地址: <span class="highlight">${loginUrl}</span><br>
-                        • 错误信息: <strong>${error.message}</strong>
+                        • 错误信息: ${error.message}
                     </div>
                 `;
             }
@@ -507,28 +237,20 @@
             const apiInput = document.getElementById('apiInput').value;
             if (apiInput) {
                 localStorage.setItem('apiBaseURL', apiInput);
-                log('已设置自定义API地址: ' + apiInput);
-                document.getElementById('detectedApi').textContent = getApiBaseURL();
+                document.getElementById('currentApi').textContent = apiInput;
                 alert('✓ API地址已设置为: ' + apiInput + '\n\n请刷新页面重新测试');
                 location.reload();
-            } else {
-                alert('请输入API地址');
             }
         }
 
-        // 清除自定义API地址
+        // 清除配置
         function clearCustomApi() {
             localStorage.removeItem('apiBaseURL');
-            log('已清除自定义API地址');
-            document.getElementById('detectedApi').textContent = getApiBaseURL();
-            document.getElementById('apiInput').value = '';
-            alert('✓ 已清除自定义API地址\n\n请刷新页面重新测试');
+            document.getElementById('currentApi').textContent = '/api';
+            document.getElementById('apiInput').value = '/api';
+            alert('✓ 已清除自定义API地址\n\n将使用相对路径: /api');
             location.reload();
         }
-
-        // 页面加载时自动检测环境
-        detectEnvironment();
-        log('等待用户操作...');
     </script>
 </body>
 </html>

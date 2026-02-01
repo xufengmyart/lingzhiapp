@@ -5,33 +5,9 @@ import { mockApi } from './mockApi'
 // 生产环境使用真实API，开发环境根据需要切换
 const USE_MOCK_API = false
 
-// 智能API地址检测
-const getApiBaseURL = (): string => {
-  // 优先使用环境变量
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL
-  }
-
-  // 尝试从localStorage读取（允许运行时动态配置）
-  const customApiURL = localStorage.getItem('apiBaseURL')
-  if (customApiURL) {
-    return customApiURL
-  }
-
-  // 智能检测：如果当前URL不包含:8001，自动修正
-  const currentOrigin = window.location.origin
-  if (!currentOrigin.includes(':8001')) {
-    // 检测端口，如果是80/443，添加8001
-    const url = new URL(currentOrigin)
-    if (url.port === '80' || url.port === '443' || !url.port) {
-      return `${url.protocol}//${url.hostname}:8001`
-    }
-  }
-
-  return currentOrigin
-}
-
-const API_BASE_URL = getApiBaseURL()
+// API地址配置：使用相对路径，配合Nginx反向代理
+// Nginx会将 /api/ 请求转发到 http://127.0.0.1:8001/api/
+const API_BASE_URL = '/api'
 
 const api = axios.create({
   baseURL: API_BASE_URL,

@@ -13,7 +13,17 @@
     <meta name="msapplication-TileColor" content="#4F46E5" />
     <meta name="msapplication-tap-highlight" content="no" />
     <title>灵值生态园 - 智能体APP</title>
-    <script type="module" crossorigin src="/assets/index-CoyzQ4kC.js"></script>
+
+    <!-- API配置脚本：设置相对路径API地址 -->
+    <script>
+      (function() {
+        // 设置API基础地址为相对路径，配合Nginx反向代理
+        localStorage.setItem('apiBaseURL', '/api');
+        console.log('API地址已设置为: /api (相对路径)');
+      })();
+    </script>
+
+    <script type="module" crossorigin src="/assets/index-JklDmC0r.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-Dt-LoNni.css">
   </head>
   <body>
