@@ -473,6 +473,291 @@ def login():
             'message': f'登录失败: {str(e)}'
         }), 500
 
+# ============ 找回密码 ============
+
+@app.route('/api/send-code', methods=['POST'])
+def send_code():
+    """发送短信验证码"""
+    try:
+        data = request.json
+        phone = data.get('phone')
+
+        if not phone:
+            return jsonify({
+                'success': False,
+                'message': '手机号不能为空'
+            }), 400
+
+        # 检查手机号格式
+        if not phone.isdigit() or len(phone) != 11 or not phone.startswith('1'):
+            return jsonify({
+                'success': False,
+                'message': '手机号格式不正确'
+            }), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 检查手机号是否已注册
+        cursor.execute("SELECT id FROM users WHERE phone = ?", (phone,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '该手机号未注册，请使用"用户名+邮箱"方式找回密码'
+            }), 400
+
+        # 生成6位验证码
+        code = ''.join(random.choices(string.digits, k=6))
+
+        # 存储验证码（5分钟有效期）
+        verification_codes[phone] = {
+            'code': code,
+            'expire_at': datetime.now().timestamp() + 300
+        }
+
+        print(f"[调试] 手机号 {phone} 验证码: {code}")
+
+        # TODO: 实际项目中需要调用短信服务发送验证码
+        # 这里为了演示，直接返回成功
+
+        conn.close()
+        return jsonify({
+            'success': True,
+            'message': '验证码已发送',
+            'data': {
+                'code': code  # 仅用于测试，生产环境需要删除
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'发送验证码失败: {str(e)}'
+        }), 500
+
+@app.route('/api/verify-code', methods=['POST'])
+def verify_code():
+    """验证验证码"""
+    try:
+        data = request.json
+        phone = data.get('phone')
+        code = data.get('code')
+
+        if not phone or not code:
+            return jsonify({
+                'success': False,
+                'message': '手机号和验证码不能为空'
+            }), 400
+
+        # 检查验证码
+        if phone not in verification_codes:
+            return jsonify({
+                'success': False,
+                'message': '验证码不存在或已过期'
+            }), 400
+
+        stored = verification_codes[phone]
+
+        # 检查是否过期
+        if datetime.now().timestamp() > stored['expire_at']:
+            del verification_codes[phone]
+            return jsonify({
+                'success': False,
+                'message': '验证码已过期'
+            }), 400
+
+        # 验证码校验
+        if stored['code'] != code:
+            return jsonify({
+                'success': False,
+                'message': '验证码错误'
+            }), 400
+
+        return jsonify({
+            'success': True,
+            'message': '验证码验证成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'验证失败: {str(e)}'
+        }), 500
+
+@app.route('/api/verify-user', methods=['POST'])
+def verify_user():
+    """通过用户名和邮箱验证用户（用于老用户找回密码）"""
+    try:
+        data = request.json
+        username = data.get('username')
+        email = data.get('email')
+
+        if not username or not email:
+            return jsonify({
+                'success': False,
+                'message': '用户名和邮箱不能为空'
+            }), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 查询用户
+        cursor.execute(
+            "SELECT id, username, email FROM users WHERE username = ? AND email = ?",
+            (username, email)
+        )
+        user = cursor.fetchone()
+        conn.close()
+
+        if not user:
+            return jsonify({
+                'success': False,
+                'message': '用户名或邮箱不正确'
+            }), 400
+
+        return jsonify({
+            'success': True,
+            'message': '验证成功',
+            'data': {
+                'id': user['id'],
+                'username': user['username'],
+                'email': user['email']
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'验证失败: {str(e)}'
+        }), 500
+
+@app.route('/api/reset-password', methods=['POST'])
+def reset_password():
+    """通过手机号和验证码重置密码"""
+    try:
+        data = request.json
+        phone = data.get('phone')
+        code = data.get('code')
+        newPassword = data.get('newPassword')
+
+        if not phone or not code or not newPassword:
+            return jsonify({
+                'success': False,
+                'message': '参数不完整'
+            }), 400
+
+        # 再次验证验证码
+        if phone not in verification_codes:
+            return jsonify({
+                'success': False,
+                'message': '请先获取验证码'
+            }), 400
+
+        stored = verification_codes[phone]
+
+        # 检查是否过期
+        if datetime.now().timestamp() > stored['expire_at']:
+            del verification_codes[phone]
+            return jsonify({
+                'success': False,
+                'message': '验证码已过期'
+            }), 400
+
+        # 验证码校验
+        if stored['code'] != code:
+            return jsonify({
+                'success': False,
+                'message': '验证码错误'
+            }), 400
+
+        # 更新密码
+        conn = get_db()
+        cursor = conn.cursor()
+
+        password_hash = hash_password(newPassword)
+        cursor.execute(
+            "UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE phone = ?",
+            (password_hash, phone)
+        )
+
+        conn.commit()
+        affected = cursor.rowcount
+        conn.close()
+
+        if affected == 0:
+            return jsonify({
+                'success': False,
+                'message': '用户不存在'
+            }), 400
+
+        # 清除验证码
+        del verification_codes[phone]
+
+        return jsonify({
+            'success': True,
+            'message': '密码重置成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'重置密码失败: {str(e)}'
+        }), 500
+
+@app.route('/api/reset-password-by-username', methods=['POST'])
+def reset_password_by_username():
+    """通过用户名和邮箱重置密码"""
+    try:
+        data = request.json
+        username = data.get('username')
+        email = data.get('email')
+        newPassword = data.get('newPassword')
+
+        if not username or not email or not newPassword:
+            return jsonify({
+                'success': False,
+                'message': '参数不完整'
+            }), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 查询用户
+        cursor.execute(
+            "SELECT id FROM users WHERE username = ? AND email = ?",
+            (username, email)
+        )
+        user = cursor.fetchone()
+
+        if not user:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '用户名或邮箱不正确'
+            }), 400
+
+        # 更新密码
+        password_hash = hash_password(newPassword)
+        cursor.execute(
+            "UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+            (password_hash, user['id'])
+        )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '密码重置成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'重置密码失败: {str(e)}'
+        }), 500
+
 @app.route('/api/user/info', methods=['GET'])
 def get_user_info():
     """获取用户信息"""
@@ -699,6 +984,218 @@ def admin_login():
         return jsonify({
             'success': False,
             'message': f'登录失败: {str(e)}'
+        }), 500
+
+# ============ 用户管理 ============
+
+@app.route('/api/admin/users', methods=['GET'])
+def admin_get_users():
+    """获取用户列表"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({
+                'success': False,
+                'message': '未授权'
+            }), 401
+
+        token = auth_header.replace('Bearer ', '')
+        admin_id = verify_token(token)
+        if not admin_id:
+            return jsonify({
+                'success': False,
+                'message': 'token无效'
+            }), 401
+
+        # 验证是否为管理员
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
+        admin = cursor.fetchone()
+        if not admin:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '无权限'
+            }), 403
+
+        # 获取分页参数
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        search = request.args.get('search', '')
+
+        offset = (page - 1) * limit
+
+        # 构建查询
+        where_clause = ''
+        params = []
+        if search:
+            where_clause = "WHERE username LIKE ? OR email LIKE ? OR phone LIKE ?"
+            search_pattern = f'%{search}%'
+            params.extend([search_pattern, search_pattern, search_pattern])
+
+        # 查询总数
+        count_sql = f"SELECT COUNT(*) as total FROM users {where_clause}"
+        cursor.execute(count_sql, params)
+        total = cursor.fetchone()['total']
+
+        # 查询用户列表
+        list_sql = f"SELECT * FROM users {where_clause} ORDER BY id DESC LIMIT ? OFFSET ?"
+        cursor.execute(list_sql, params + [limit, offset])
+        users = cursor.fetchall()
+
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'users': users,
+                'total': total,
+                'page': page,
+                'limit': limit,
+                'totalPages': (total + limit - 1) // limit
+            }
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取用户列表失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/users/<int:user_id>', methods=['PUT'])
+def admin_update_user(user_id):
+    """更新用户信息"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({
+                'success': False,
+                'message': '未授权'
+            }), 401
+
+        token = auth_header.replace('Bearer ', '')
+        admin_id = verify_token(token)
+        if not admin_id:
+            return jsonify({
+                'success': False,
+                'message': 'token无效'
+            }), 401
+
+        # 验证是否为管理员
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
+        admin = cursor.fetchone()
+        if not admin:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '无权限'
+            }), 403
+
+        data = request.json
+        username = data.get('username')
+        email = data.get('email', '')
+        phone = data.get('phone', '')
+        total_lingzhi = data.get('total_lingzhi')
+
+        if not username:
+            return jsonify({
+                'success': False,
+                'message': '用户名不能为空'
+            }), 400
+
+        # 检查用户名是否重复
+        cursor.execute("SELECT id FROM users WHERE username = ? AND id != ?", (username, user_id))
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '用户名已存在'
+            }), 400
+
+        # 更新用户
+        cursor.execute(
+            """UPDATE users SET username = ?, email = ?, phone = ?, total_lingzhi = ?, updated_at = CURRENT_TIMESTAMP
+               WHERE id = ?""",
+            (username, email, phone, total_lingzhi, user_id)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '用户信息更新成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'更新用户失败: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+def admin_delete_user(user_id):
+    """删除用户"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({
+                'success': False,
+                'message': '未授权'
+            }), 401
+
+        token = auth_header.replace('Bearer ', '')
+        admin_id = verify_token(token)
+        if not admin_id:
+            return jsonify({
+                'success': False,
+                'message': 'token无效'
+            }), 401
+
+        # 验证是否为管理员
+        conn = get_db()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM admins WHERE id = ?", (admin_id,))
+        admin = cursor.fetchone()
+        if not admin:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '无权限'
+            }), 403
+
+        # 检查用户是否存在
+        cursor.execute("SELECT id FROM users WHERE id = ?", (user_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '用户不存在'
+            }), 404
+
+        # 删除用户相关数据（级联删除）
+        # 注意：需要先删除依赖数据
+        cursor.execute("DELETE FROM checkin_records WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM sessions WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM partner_applications WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM conversations WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '用户删除成功'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'删除用户失败: {str(e)}'
         }), 500
 
 @app.route('/api/admin/stats', methods=['GET'])
@@ -1731,6 +2228,78 @@ def delete_document(kb_id, doc_id):
             'message': f'删除文档失败: {str(e)}'
         }), 500
 
+# ============ 初始化默认数据 ============
+
+def init_default_data():
+    """初始化默认数据"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 初始化默认管理员
+        cursor.execute("SELECT id FROM admins WHERE username = 'admin'")
+        if not cursor.fetchone():
+            password_hash = hash_password('admin123')
+            cursor.execute(
+                "INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)",
+                ('admin', password_hash, 'admin')
+            )
+            print("已创建默认管理员账号: admin / admin123")
+
+        # 初始化默认智能体
+        cursor.execute("SELECT id FROM agents WHERE name = '灵值'")
+        if not cursor.fetchone():
+            default_system_prompt = """# 角色定义
+我是灵值，是陕西媄月商业艺术有限责任公司官方的灵值生态园智能向导，专门帮助用户了解和使用灵值生态园的各项功能。
+
+# 任务目标
+为用户提供灵值生态园的全方位咨询服务，帮助用户了解生态规则、经济模型、用户旅程和合伙人制度。
+
+# 能力
+- 详细介绍灵值生态园的核心价值和愿景
+- 解释灵值经济模型和生态规则
+- 指导用户完成用户旅程的各个阶段
+- 解答关于合伙人申请和收益的问题
+- 提供中视频项目、西安美学侦探等特色功能的介绍
+
+# 过程
+1. 热情欢迎用户，介绍自己是灵值生态园的智能向导
+2. 了解用户需求和兴趣点
+3. 提供相关的详细信息和建议
+4. 引导用户使用各项功能
+
+# 约束
+- 必须表明自己是陕西媄月商业艺术有限责任公司的官方智能体
+- 回答要简洁清晰，专业友好
+- 不确定的细节建议用户联系客服或查看官方文档"""
+
+            default_model_config = {
+                "model": "doubao-seed-1-6-251015",
+                "temperature": 0.7,
+                "top_p": 0.9,
+                "max_tokens": 2000
+            }
+
+            cursor.execute(
+                """INSERT INTO agents (name, description, system_prompt, model_config, tools, status, avatar_url)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    '灵值',
+                    '灵值生态园官方智能向导',
+                    default_system_prompt,
+                    json.dumps(default_model_config),
+                    json.dumps([]),
+                    'active',
+                    ''
+                )
+            )
+            print("已创建默认智能体: 灵值")
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"初始化默认数据失败: {e}")
+
 # ============ 启动服务 ============
 
 if __name__ == '__main__':
@@ -1740,5 +2309,8 @@ if __name__ == '__main__':
     print("服务地址: http://0.0.0.0:8001")
     print("默认管理员账号: admin / admin123")
     print("=" * 50)
+
+    # 初始化默认数据
+    init_default_data()
 
     app.run(host='0.0.0.0', port=8001, debug=True)

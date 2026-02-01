@@ -15,6 +15,7 @@ import XianAesthetics from './pages/XianAesthetics'
 import AdminDashboard from './pages/AdminDashboard'
 import AgentManagement from './pages/AgentManagement'
 import KnowledgeManagement from './pages/KnowledgeManagement'
+import UserManagement from './pages/UserManagement'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -42,6 +43,7 @@ function App() {
       </Route>
 
       <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/admin/users" element={<UserManagement />} />
       <Route path="/admin/agents" element={<AgentManagement />} />
       <Route path="/admin/knowledge" element={<KnowledgeManagement />} />
     </Routes>

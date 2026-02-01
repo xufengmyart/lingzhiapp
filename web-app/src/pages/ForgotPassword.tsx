@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowLeft, Lock, Smartphone } from 'lucide-react'
+import { ArrowLeft, Lock, Smartphone, Mail, User, CheckCircle2 } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 const ForgotPassword = () => {
@@ -7,8 +7,11 @@ const ForgotPassword = () => {
   const location = useLocation()
   const fromAdmin = location.pathname.startsWith('/admin')
 
-  const [step, setStep] = useState(1) // 1: 输入手机号, 2: 输入验证码, 3: 重置密码
+  const [method, setMethod] = useState<'phone' | 'email'>('phone') // 找回方式
+  const [step, setStep] = useState(1) // 1: 输入信息, 2: 验证码/确认, 3: 重置密码
   const [phone, setPhone] = useState('')
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -16,17 +19,20 @@ const ForgotPassword = () => {
   const [countdown, setCountdown] = useState(0)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const [userInfo, setUserInfo] = useState<any>(null)
 
   const apiPrefix = fromAdmin ? '/api/admin' : '/api'
 
   const sendCode = async () => {
-    if (!phone) {
-      setError('请输入手机号')
-      return
-    }
-    if (!/^1[3-9]\d{9}$/.test(phone)) {
-      setError('请输入正确的手机号')
-      return
+    if (method === 'phone') {
+      if (!phone) {
+        setError('请输入手机号')
+        return
+      }
+      if (!/^1[3-9]\d{9}$/.test(phone)) {
+        setError('请输入正确的手机号')
+        return
+      }
     }
 
     setLoading(true)
@@ -48,6 +54,41 @@ const ForgotPassword = () => {
         startCountdown()
       } else {
         setError(data.message || '发送失败')
+        if (data.message?.includes('未注册')) {
+          setError('该手机号未注册。如果是老用户，请尝试使用"用户名+邮箱"方式找回密码')
+        }
+      }
+    } catch (err) {
+      setError('网络错误，请重试')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const verifyUser = async () => {
+    if (!username || !email) {
+      setError('请输入用户名和邮箱')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch(`${apiPrefix}/verify-user`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setUserInfo(data.data)
+        setMessage(`验证成功！用户：${data.data.username}`)
+        setStep(3)
+      } else {
+        setError(data.message || '验证失败')
       }
     } catch (err) {
       setError('网络错误，请重试')
@@ -118,21 +159,42 @@ const ForgotPassword = () => {
     setError('')
 
     try {
-      const response = await fetch(`${apiPrefix}/reset-password`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code, newPassword }),
-      })
+      if (method === 'phone') {
+        // 通过手机号重置
+        const response = await fetch(`${apiPrefix}/reset-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone, code, newPassword }),
+        })
 
-      const data = await response.json()
+        const data = await response.json()
 
-      if (data.success) {
-        setMessage('密码重置成功')
-        setTimeout(() => {
-          navigate(fromAdmin ? '/admin/login' : '/login')
-        }, 2000)
+        if (data.success) {
+          setMessage('密码重置成功')
+          setTimeout(() => {
+            navigate(fromAdmin ? '/admin/login' : '/login')
+          }, 2000)
+        } else {
+          setError(data.message || '重置失败')
+        }
       } else {
-        setError(data.message || '重置失败')
+        // 通过用户名重置
+        const response = await fetch(`${apiPrefix}/reset-password-by-username`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, email, newPassword }),
+        })
+
+        const data = await response.json()
+
+        if (data.success) {
+          setMessage('密码重置成功')
+          setTimeout(() => {
+            navigate(fromAdmin ? '/admin/login' : '/login')
+          }, 2000)
+        } else {
+          setError(data.message || '重置失败')
+        }
       }
     } catch (err) {
       setError('网络错误，请重试')
@@ -159,31 +221,92 @@ const ForgotPassword = () => {
             <Lock className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">找回密码</h1>
-          <p className="text-gray-600">通过手机号验证重置密码</p>
+          <p className="text-gray-600">通过手机号或用户名验证重置密码</p>
         </div>
 
-        {/* 步骤1: 输入手机号 */}
+        {/* 步骤1: 选择找回方式并输入信息 */}
         {step === 1 && (
           <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+            {/* 找回方式选择 */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">选择找回方式</label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() => setMethod('phone')}
+                  className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
+                    method === 'phone'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <Smartphone className={`w-6 h-6 mb-2 ${method === 'phone' ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span className={`text-sm ${method === 'phone' ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
+                    手机号找回
+                  </span>
+                </button>
+                <button
+                  onClick={() => setMethod('email')}
+                  className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
+                    method === 'email'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <Mail className={`w-6 h-6 mb-2 ${method === 'email' ? 'text-blue-600' : 'text-gray-400'}`} />
+                  <span className={`text-sm ${method === 'email' ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
+                    用户名+邮箱
+                  </span>
+                </button>
+              </div>
+              {method === 'email' && (
+                <p className="text-xs text-gray-500 mt-2">适用于老用户（未绑定手机号）</p>
+              )}
+            </div>
+
+            {/* 输入表单 */}
             <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  手机号
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Smartphone className="w-5 h-5 text-gray-400" />
-                  </div>
+              {method === 'phone' ? (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    手机号
+                  </label>
                   <input
                     type="tel"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     placeholder="请输入手机号"
                     maxLength={11}
                   />
                 </div>
-              </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      用户名
+                    </label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="请输入用户名"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      邮箱
+                    </label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="请输入注册邮箱"
+                    />
+                  </div>
+                </>
+              )}
 
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">
@@ -198,18 +321,18 @@ const ForgotPassword = () => {
               )}
 
               <button
-                onClick={sendCode}
+                onClick={method === 'phone' ? sendCode : verifyUser}
                 disabled={loading}
                 className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {loading ? '发送中...' : '发送验证码'}
+                {loading ? '验证中...' : (method === 'phone' ? '发送验证码' : '验证身份')}
               </button>
             </div>
           </div>
         )}
 
-        {/* 步骤2: 输入验证码 */}
-        {step === 2 && (
+        {/* 步骤2: 输入验证码（仅手机号方式） */}
+        {step === 2 && method === 'phone' && (
           <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
             <div className="space-y-6">
               <div>
@@ -254,6 +377,16 @@ const ForgotPassword = () => {
         {/* 步骤3: 重置密码 */}
         {step === 3 && (
           <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
+            {method === 'email' && userInfo && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center">
+                <CheckCircle2 className="w-5 h-5 text-green-600 mr-3" />
+                <div>
+                  <p className="text-green-800 font-medium">身份验证成功</p>
+                  <p className="text-green-700 text-sm">用户：{userInfo.username}</p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -308,7 +441,7 @@ const ForgotPassword = () => {
 
         {/* 提示 */}
         <p className="text-center text-gray-500 text-sm mt-6">
-          验证码有效期为5分钟
+          {method === 'phone' ? '验证码有效期为5分钟' : '验证通过后即可重置密码'}
         </p>
       </div>
     </div>

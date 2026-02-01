@@ -14,7 +14,8 @@ import {
   Upload,
   Terminal,
   Monitor,
-  Zap
+  Zap,
+  Users
 } from 'lucide-react'
 
 interface DeployStatus {
@@ -152,6 +153,7 @@ const AdminDashboard = () => {
 
   const sidebarItems = [
     { id: 'dashboard', icon: LayoutDashboard, label: '仪表盘' },
+    { id: 'users', icon: Users, label: '用户管理', path: '/admin/users' },
     { id: 'agents', icon: Zap, label: '智能体管理', path: '/admin/agents' },
     { id: 'knowledge', icon: Monitor, label: '知识库管理', path: '/admin/knowledge' },
     { id: 'code', icon: Code, label: '代码编辑' },

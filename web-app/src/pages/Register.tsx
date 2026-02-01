@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Mail, Phone, Lock, User, ArrowRight } from 'lucide-react'
+import { userApi } from '../services/api'
 
 const Register = () => {
   const navigate = useNavigate()
@@ -28,6 +29,15 @@ const Register = () => {
     }
 
     try {
+      // 调用注册 API
+      await userApi.register({
+        username: formData.username,
+        email: formData.email,
+        phone: formData.phone, // 手机号可以为空
+        password: formData.password
+      })
+      
+      // 注册成功后自动登录
       await login(formData.username, formData.password)
       navigate('/')
     } catch (err: any) {
@@ -91,7 +101,7 @@ const Register = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">手机号</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">手机号（选填）</label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -99,8 +109,7 @@ const Register = () => {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-                  placeholder="请输入手机号"
-                  required
+                  placeholder="请输入手机号（用于找回密码）"
                 />
               </div>
             </div>
