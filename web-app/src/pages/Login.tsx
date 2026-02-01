@@ -78,7 +78,8 @@ const Login = () => {
   const handleWeChatLogin = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://localhost:8001/api/wechat/login')
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiBase}/api/wechat/login`)
       const data = await response.json()
 
       if (data.success && data.data.auth_url) {

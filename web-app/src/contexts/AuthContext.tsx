@@ -72,7 +72,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const token = localStorage.getItem('token')
       if (!token) return false
 
-      const response = await fetch('http://localhost:8001/api/user/require-complete', {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001'
+      const response = await fetch(`${apiBase}/api/user/require-complete`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

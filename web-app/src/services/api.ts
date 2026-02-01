@@ -5,7 +5,7 @@ import { mockApi } from './mockApi'
 // 生产环境使用真实API，开发环境根据需要切换
 const USE_MOCK_API = false
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || window.location.origin
 
 const api = axios.create({
   baseURL: API_BASE_URL,
