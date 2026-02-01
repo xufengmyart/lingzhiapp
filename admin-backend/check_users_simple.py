@@ -12,17 +12,17 @@ ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 ssh.connect(hostname, port, username, password)
 
 stdin, stdout, stderr = ssh.exec_command(
-    'sqlite3 /var/www/backend/lingzhi_ecosystem.db ".tables"'
+    'sqlite3 /var/www/backend/lingzhi_ecosystem.db "SELECT * FROM users"'
 )
 output = stdout.read().decode('utf-8')
-print("数据库中的表:")
+print("users表数据:")
 print(output)
 
 stdin, stdout, stderr = ssh.exec_command(
-    'sqlite3 /var/www/backend/lingzhi_ecosystem.db ".schema"'
+    'sqlite3 /var/www/backend/lingzhi_ecosystem.db ".schema users"'
 )
 output = stdout.read().decode('utf-8')
-print("\n数据库结构:")
+print("\nusers表结构:")
 print(output)
 
 ssh.close()

@@ -11,18 +11,16 @@ ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 ssh.connect(hostname, port, username, password)
 
-stdin, stdout, stderr = ssh.exec_command(
-    'sqlite3 /var/www/backend/lingzhi_ecosystem.db ".tables"'
-)
+# 查找旧数据库
+stdin, stdout, stderr = ssh.exec_command('find /var/www -name "auth.db" 2>/dev/null')
 output = stdout.read().decode('utf-8')
-print("数据库中的表:")
+print("查找旧数据库文件:")
 print(output)
 
-stdin, stdout, stderr = ssh.exec_command(
-    'sqlite3 /var/www/backend/lingzhi_ecosystem.db ".schema"'
-)
+# 查看后端目录下的数据库文件
+stdin, stdout, stderr = ssh.exec_command('find /var/www/backend -name "*.db" 2>/dev/null')
 output = stdout.read().decode('utf-8')
-print("\n数据库结构:")
+print("\n后端目录下的数据库文件:")
 print(output)
 
 ssh.close()
