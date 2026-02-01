@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import sqlite3
 import hashlib
 import jwt
@@ -2728,6 +2728,839 @@ def init_default_data():
         conn.close()
     except Exception as e:
         print(f"初始化默认数据失败: {e}")
+
+# ============ 智能体管理 API ============
+
+@app.route('/api/admin/agents', methods=['GET'])
+def get_agents():
+    """获取智能体列表"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id, name, description, model_config, tools, status, avatar_url, created_at, updated_at
+            FROM agents
+            WHERE status != 'deleted'
+            ORDER BY created_at DESC
+        """)
+        agents = cursor.fetchall()
+        conn.close()
+
+        result = []
+        for agent in agents:
+            result.append({
+                'id': agent['id'],
+                'name': agent['name'],
+                'description': agent['description'],
+                'model_config': json.loads(agent['model_config']) if agent['model_config'] else {},
+                'tools': json.loads(agent['tools']) if agent['tools'] else [],
+                'status': agent['status'],
+                'avatar_url': agent['avatar_url'],
+                'created_at': agent['created_at'],
+                'updated_at': agent['updated_at']
+            })
+
+        return jsonify({'success': True, 'data': result})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取智能体列表失败: {str(e)}'}), 500
+
+@app.route('/api/admin/agents/<int:agent_id>', methods=['GET'])
+def get_agent_detail(agent_id):
+    """获取智能体详情"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id, name, description, system_prompt, model_config, tools, status, avatar_url, created_at, updated_at
+            FROM agents
+            WHERE id = ?
+        """, (agent_id,))
+        agent = cursor.fetchone()
+
+        if not agent:
+            conn.close()
+            return jsonify({'success': False, 'message': '智能体不存在'}), 404
+
+        # 获取关联的知识库
+        cursor.execute("""
+            SELECT kb.id, kb.name, kb.description, kb.vector_db_id, kb.document_count
+            FROM knowledge_bases kb
+            INNER JOIN agent_knowledge_bases akb ON kb.id = akb.knowledge_base_id
+            WHERE akb.agent_id = ?
+        """, (agent_id,))
+        knowledge_bases = cursor.fetchall()
+
+        conn.close()
+
+        result = {
+            'id': agent['id'],
+            'name': agent['name'],
+            'description': agent['description'],
+            'system_prompt': agent['system_prompt'],
+            'model_config': json.loads(agent['model_config']) if agent['model_config'] else {},
+            'tools': json.loads(agent['tools']) if agent['tools'] else [],
+            'status': agent['status'],
+            'avatar_url': agent['avatar_url'],
+            'knowledge_bases': [{'id': kb['id'], 'name': kb['name'], 'description': kb['description'],
+                                'vector_db_id': kb['vector_db_id'], 'document_count': kb['document_count']}
+                               for kb in knowledge_bases],
+            'created_at': agent['created_at'],
+            'updated_at': agent['updated_at']
+        }
+
+        return jsonify({'success': True, 'data': result})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取智能体详情失败: {str(e)}'}), 500
+
+@app.route('/api/admin/agents', methods=['POST'])
+def create_agent():
+    """创建智能体"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        data = request.json
+        name = data.get('name')
+        description = data.get('description', '')
+        system_prompt = data.get('system_prompt', '')
+        model_config = data.get('model_config', {})
+        tools = data.get('tools', [])
+        avatar_url = data.get('avatar_url', '')
+
+        if not name:
+            return jsonify({'success': False, 'message': '智能体名称不能为空'}), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """INSERT INTO agents (name, description, system_prompt, model_config, tools, status, avatar_url, created_by)
+               VALUES (?, ?, ?, ?, ?, 'active', ?, ?)""",
+            (name, description, system_prompt, json.dumps(model_config), json.dumps(tools), avatar_url, user_id)
+        )
+
+        agent_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '智能体创建成功',
+            'data': {'id': agent_id}
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'创建智能体失败: {str(e)}'}), 500
+
+@app.route('/api/admin/agents/<int:agent_id>', methods=['PUT'])
+def update_agent(agent_id):
+    """更新智能体"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        data = request.json
+        name = data.get('name')
+        description = data.get('description')
+        system_prompt = data.get('system_prompt')
+        model_config = data.get('model_config')
+        tools = data.get('tools')
+        avatar_url = data.get('avatar_url')
+        status = data.get('status')
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 检查智能体是否存在
+        cursor.execute("SELECT id FROM agents WHERE id = ?", (agent_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': '智能体不存在'}), 404
+
+        # 构建更新语句
+        updates = []
+        params = []
+
+        if name is not None:
+            updates.append("name = ?")
+            params.append(name)
+        if description is not None:
+            updates.append("description = ?")
+            params.append(description)
+        if system_prompt is not None:
+            updates.append("system_prompt = ?")
+            params.append(system_prompt)
+        if model_config is not None:
+            updates.append("model_config = ?")
+            params.append(json.dumps(model_config))
+        if tools is not None:
+            updates.append("tools = ?")
+            params.append(json.dumps(tools))
+        if avatar_url is not None:
+            updates.append("avatar_url = ?")
+            params.append(avatar_url)
+        if status is not None:
+            updates.append("status = ?")
+            params.append(status)
+
+        updates.append("updated_at = CURRENT_TIMESTAMP")
+        params.append(agent_id)
+
+        cursor.execute(f"UPDATE agents SET {', '.join(updates)} WHERE id = ?", params)
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'message': '智能体更新成功'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'更新智能体失败: {str(e)}'}), 500
+
+@app.route('/api/admin/agents/<int:agent_id>', methods=['DELETE'])
+def delete_agent(agent_id):
+    """删除智能体"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 检查智能体是否存在
+        cursor.execute("SELECT id FROM agents WHERE id = ?", (agent_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': '智能体不存在'}), 404
+
+        # 软删除
+        cursor.execute("UPDATE agents SET status = 'deleted' WHERE id = ?", (agent_id,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'message': '智能体删除成功'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'删除智能体失败: {str(e)}'}), 500
+
+# ============ 智能体监控 API ============
+
+@app.route('/api/admin/agents/<int:agent_id>/stats', methods=['GET'])
+def get_agent_stats(agent_id):
+    """获取智能体统计数据"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        # 获取时间范围（默认7天）
+        days = request.args.get('days', 7, type=int)
+        start_date = datetime.now() - timedelta(days=days)
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 总对话数
+        cursor.execute("""
+            SELECT COUNT(*) as total_conversations
+            FROM conversations
+            WHERE agent_id = ? AND created_at >= ?
+        """, (agent_id, start_date))
+        total_conversations = cursor.fetchone()['total_conversations']
+
+        # 总消息数
+        cursor.execute("""
+            SELECT SUM(json_array_length(messages)) as total_messages
+            FROM conversations
+            WHERE agent_id = ? AND created_at >= ?
+        """, (agent_id, start_date))
+        result = cursor.fetchone()
+        total_messages = result['total_messages'] or 0
+
+        # 平均响应长度
+        cursor.execute("""
+            SELECT AVG(json_extract(messages, '$[#-1].content')) as avg_response
+            FROM conversations
+            WHERE agent_id = ? AND created_at >= ?
+        """, (agent_id, start_date))
+        # 这里的查询需要调整，因为json_extract不能直接处理数组
+
+        # 获取反馈统计
+        cursor.execute("""
+            SELECT type, AVG(rating) as avg_rating, COUNT(*) as count
+            FROM feedback
+            WHERE agent_id = ? AND created_at >= ?
+            GROUP BY type
+        """, (agent_id, start_date))
+        feedback_stats = cursor.fetchall()
+
+        # 每日对话趋势
+        cursor.execute("""
+            SELECT DATE(created_at) as date, COUNT(*) as count
+            FROM conversations
+            WHERE agent_id = ? AND created_at >= ?
+            GROUP BY DATE(created_at)
+            ORDER BY date
+        """, (agent_id, start_date))
+        daily_trends = cursor.fetchall()
+
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'total_conversations': total_conversations,
+                'total_messages': total_messages,
+                'feedback_stats': [{'type': fs['type'], 'avg_rating': fs['avg_rating'], 'count': fs['count']}
+                                   for fs in feedback_stats],
+                'daily_trends': [{'date': dt['date'], 'count': dt['count']} for dt in daily_trends]
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取统计数据失败: {str(e)}'}), 500
+
+@app.route('/api/admin/agents/<int:agent_id>/conversations', methods=['GET'])
+def get_agent_conversations(agent_id):
+    """获取智能体对话历史"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        # 分页参数
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 20, type=int)
+        offset = (page - 1) * page_size
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取对话列表
+        cursor.execute("""
+            SELECT id, user_id, conversation_id, title, created_at, updated_at
+            FROM conversations
+            WHERE agent_id = ?
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+        """, (agent_id, page_size, offset))
+        conversations = cursor.fetchall()
+
+        # 获取总数
+        cursor.execute("""
+            SELECT COUNT(*) as total
+            FROM conversations
+            WHERE agent_id = ?
+        """, (agent_id,))
+        total = cursor.fetchone()['total']
+
+        conn.close()
+
+        result = []
+        for conv in conversations:
+            result.append({
+                'id': conv['id'],
+                'user_id': conv['user_id'],
+                'conversation_id': conv['conversation_id'],
+                'title': conv['title'],
+                'created_at': conv['created_at'],
+                'updated_at': conv['updated_at']
+            })
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'conversations': result,
+                'total': total,
+                'page': page,
+                'page_size': page_size
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取对话历史失败: {str(e)}'}), 500
+
+@app.route('/api/admin/conversations/<int:conversation_id>', methods=['GET'])
+def get_conversation_detail(conversation_id):
+    """获取对话详情"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id, agent_id, user_id, conversation_id, messages, title, created_at, updated_at
+            FROM conversations
+            WHERE id = ?
+        """, (conversation_id,))
+        conversation = cursor.fetchone()
+
+        if not conversation:
+            conn.close()
+            return jsonify({'success': False, 'message': '对话不存在'}), 404
+
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'id': conversation['id'],
+                'agent_id': conversation['agent_id'],
+                'user_id': conversation['user_id'],
+                'conversation_id': conversation['conversation_id'],
+                'messages': json.loads(conversation['messages']) if conversation['messages'] else [],
+                'title': conversation['title'],
+                'created_at': conversation['created_at'],
+                'updated_at': conversation['updated_at']
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取对话详情失败: {str(e)}'}), 500
+
+# ============ 智能体优化建议 API ============
+
+@app.route('/api/admin/agents/<int:agent_id>/optimization', methods=['GET'])
+def get_agent_optimization_suggestions(agent_id):
+    """获取智能体优化建议"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取智能体信息
+        cursor.execute("""
+            SELECT id, name, system_prompt, model_config, tools
+            FROM agents
+            WHERE id = ?
+        """, (agent_id,))
+        agent = cursor.fetchone()
+
+        if not agent:
+            conn.close()
+            return jsonify({'success': False, 'message': '智能体不存在'}), 404
+
+        # 获取反馈统计
+        cursor.execute("""
+            SELECT type, AVG(rating) as avg_rating, COUNT(*) as count
+            FROM feedback
+            WHERE agent_id = ?
+            GROUP BY type
+        """, (agent_id,))
+        feedback_stats = cursor.fetchall()
+
+        suggestions = []
+
+        # 基于反馈统计生成建议
+        helpful_avg = None
+        unhelpful_avg = None
+
+        for fs in feedback_stats:
+            if fs['type'] == 'helpful':
+                helpful_avg = fs['avg_rating']
+            elif fs['type'] == 'unhelpful':
+                unhelpful_avg = fs['avg_rating']
+
+        if helpful_avg and helpful_avg < 3.5:
+            suggestions.append({
+                'category': '回答质量',
+                'priority': 'high',
+                'suggestion': '用户对回答质量评分较低，建议优化系统提示词，提高回答的准确性和完整性',
+                'action': '调整system_prompt，增加对回答质量的明确要求'
+            })
+
+        if unhelpful_avg and unhelpful_avg > 3.0:
+            suggestions.append({
+                'category': '用户满意度',
+                'priority': 'medium',
+                'suggestion': '部分用户反馈回答不够有用，建议增加知识库的覆盖范围',
+                'action': '向知识库添加更多相关文档'
+            })
+
+        # 检查模型配置
+        model_config = json.loads(agent['model_config']) if agent['model_config'] else {}
+        temperature = model_config.get('temperature', 0.7)
+
+        if temperature > 0.9:
+            suggestions.append({
+                'category': '模型配置',
+                'priority': 'low',
+                'suggestion': '当前温度设置较高，可能导致回答不够稳定',
+                'action': '考虑将temperature调整为0.7-0.8之间'
+            })
+
+        # 检查工具配置
+        tools = json.loads(agent['tools']) if agent['tools'] else []
+        if not tools:
+            suggestions.append({
+                'category': '工具配置',
+                'priority': 'medium',
+                'suggestion': '智能体未配置任何工具，建议添加知识库搜索等工具以增强能力',
+                'action': '为智能体添加相关工具'
+            })
+
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'suggestions': suggestions,
+                'agent_name': agent['name']
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取优化建议失败: {str(e)}'}), 500
+
+# ============ 知识库管理 API ============
+
+@app.route('/api/admin/knowledge-bases', methods=['GET'])
+def get_knowledge_bases():
+    """获取知识库列表"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            SELECT id, name, description, vector_db_id, document_count, created_at, updated_at
+            FROM knowledge_bases
+            ORDER BY created_at DESC
+        """)
+        kbs = cursor.fetchall()
+        conn.close()
+
+        result = []
+        for kb in kbs:
+            result.append({
+                'id': kb['id'],
+                'name': kb['name'],
+                'description': kb['description'],
+                'vector_db_id': kb['vector_db_id'],
+                'document_count': kb['document_count'],
+                'created_at': kb['created_at'],
+                'updated_at': kb['updated_at']
+            })
+
+        return jsonify({'success': True, 'data': result})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取知识库列表失败: {str(e)}'}), 500
+
+@app.route('/api/admin/knowledge-bases', methods=['POST'])
+def create_knowledge_base():
+    """创建知识库"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        data = request.json
+        name = data.get('name')
+        description = data.get('description', '')
+
+        if not name:
+            return jsonify({'success': False, 'message': '知识库名称不能为空'}), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """INSERT INTO knowledge_bases (name, description, created_by)
+               VALUES (?, ?, ?)""",
+            (name, description, user_id)
+        )
+
+        kb_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'message': '知识库创建成功',
+            'data': {'id': kb_id}
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'创建知识库失败: {str(e)}'}), 500
+
+@app.route('/api/admin/agents/<int:agent_id>/knowledge-bases/<int:kb_id>', methods=['POST'])
+def bind_knowledge_base(agent_id, kb_id):
+    """绑定知识库到智能体"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 检查是否已绑定
+        cursor.execute(
+            "SELECT id FROM agent_knowledge_bases WHERE agent_id = ? AND knowledge_base_id = ?",
+            (agent_id, kb_id)
+        )
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': '知识库已绑定'}), 400
+
+        cursor.execute(
+            """INSERT INTO agent_knowledge_bases (agent_id, knowledge_base_id)
+               VALUES (?, ?)""",
+            (agent_id, kb_id)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'message': '知识库绑定成功'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'绑定知识库失败: {str(e)}'}), 500
+
+@app.route('/api/admin/agents/<int:agent_id>/knowledge-bases/<int:kb_id>', methods=['DELETE'])
+def unbind_knowledge_base(agent_id, kb_id):
+    """解绑知识库"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "DELETE FROM agent_knowledge_bases WHERE agent_id = ? AND knowledge_base_id = ?",
+            (agent_id, kb_id)
+        )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'message': '知识库解绑成功'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'解绑知识库失败: {str(e)}'}), 500
+
+# ============ 智能体对话 API ============
+
+@app.route('/api/chat', methods=['POST'])
+def chat_with_agent():
+    """与智能体对话"""
+    try:
+        data = request.json
+        message = data.get('message')
+        conversation_id = data.get('conversation_id')
+        agent_id = data.get('agent_id', 1)  # 默认使用第一个智能体
+
+        if not message:
+            return jsonify({'success': False, 'message': '消息内容不能为空'}), 400
+
+        # 可选：验证用户身份
+        auth_header = request.headers.get('Authorization')
+        user_id = None
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.replace('Bearer ', '')
+            user_id = verify_token(token)
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 获取智能体配置
+        cursor.execute("SELECT * FROM agents WHERE id = ?", (agent_id,))
+        agent = cursor.fetchone()
+
+        if not agent:
+            conn.close()
+            return jsonify({'success': False, 'message': '智能体不存在'}), 404
+
+        # 调用大模型
+        if LLM_AVAILABLE:
+            try:
+                llm_client = LLMClient(
+                    model=json.loads(agent['model_config']).get('model', 'deepseek-v3-2'),
+                    api_key=os.getenv('COZE_WORKLOAD_IDENTITY_API_KEY'),
+                    base_url=os.getenv('COZE_INTEGRATION_MODEL_BASE_URL')
+                )
+
+                ctx = new_context(method="chat")
+
+                messages = [
+                    SystemMessage(content=agent['system_prompt']),
+                    HumanMessage(content=message)
+                ]
+
+                response = llm_client.invoke(messages, ctx=ctx)
+
+                if response and hasattr(response, 'content'):
+                    ai_message = response.content
+                else:
+                    ai_message = "抱歉，我现在无法回答您的问题。"
+            except Exception as e:
+                print(f"LLM调用失败: {e}")
+                ai_message = "抱歉，服务暂时不可用，请稍后再试。"
+        else:
+            ai_message = f"智能体已收到您的消息：{message}"
+
+        # 保存对话记录
+        if conversation_id:
+            cursor.execute("SELECT messages FROM conversations WHERE conversation_id = ?", (conversation_id,))
+            conv = cursor.fetchone()
+            if conv:
+                messages = json.loads(conv['messages']) if conv['messages'] else []
+                messages.append({
+                    'role': 'user',
+                    'content': message,
+                    'timestamp': datetime.now().isoformat()
+                })
+                messages.append({
+                    'role': 'assistant',
+                    'content': ai_message,
+                    'timestamp': datetime.now().isoformat()
+                })
+                cursor.execute(
+                    "UPDATE conversations SET messages = ?, updated_at = CURRENT_TIMESTAMP WHERE conversation_id = ?",
+                    (json.dumps(messages), conversation_id)
+                )
+            else:
+                messages = [
+                    {
+                        'role': 'user',
+                        'content': message,
+                        'timestamp': datetime.now().isoformat()
+                    },
+                    {
+                        'role': 'assistant',
+                        'content': ai_message,
+                        'timestamp': datetime.now().isoformat()
+                    }
+                ]
+                cursor.execute(
+                    """INSERT INTO conversations (agent_id, user_id, conversation_id, messages, title)
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (agent_id, user_id, conversation_id, json.dumps(messages), message[:50])
+                )
+        else:
+            # 创建新对话
+            conversation_id = str(int(datetime.now().timestamp()))
+            messages = [
+                {
+                    'role': 'user',
+                    'content': message,
+                    'timestamp': datetime.now().isoformat()
+                },
+                {
+                    'role': 'assistant',
+                    'content': ai_message,
+                    'timestamp': datetime.now().isoformat()
+                }
+            ]
+            cursor.execute(
+                """INSERT INTO conversations (agent_id, user_id, conversation_id, messages, title)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (agent_id, user_id, conversation_id, json.dumps(messages), message[:50])
+            )
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'data': {
+                'message': ai_message,
+                'conversation_id': conversation_id
+            }
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'对话失败: {str(e)}'}), 500
 
 # ============ 启动服务 ============
 
