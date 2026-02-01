@@ -2,10 +2,10 @@ import axios from 'axios'
 import type { User, ApiResponse, IncomeLevel, JourneyStage, PartnerInfo } from '../types'
 import { mockApi } from './mockApi'
 
-// 开发模式下使用Mock API
-const USE_MOCK_API = true
+// 生产环境使用真实API，开发环境根据需要切换
+const USE_MOCK_API = false
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
 const api = axios.create({
   baseURL: API_BASE_URL,

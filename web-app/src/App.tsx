@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import AdminLogin from './pages/AdminLogin'
 import Dashboard from './pages/Dashboard'
 import Chat from './pages/Chat'
 import ChatTest from './pages/ChatTest'
@@ -10,6 +11,7 @@ import Profile from './pages/Profile'
 import UserGuide from './pages/UserGuide'
 import MediumVideoProject from './pages/MediumVideoProject'
 import XianAesthetics from './pages/XianAesthetics'
+import AdminDashboard from './pages/AdminDashboard'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -18,6 +20,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
 
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
@@ -32,6 +35,8 @@ function App() {
           <Route path="/profile" element={<Profile />} />
         </Route>
       </Route>
+
+      <Route path="/admin" element={<AdminDashboard />} />
     </Routes>
   )
 }

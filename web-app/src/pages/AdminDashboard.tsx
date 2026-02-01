@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   Code,
@@ -15,7 +16,6 @@ import {
   Monitor,
   Zap
 } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
 
 interface DeployStatus {
   status: 'idle' | 'running' | 'success' | 'error'
@@ -31,7 +31,7 @@ interface SystemStats {
 }
 
 const AdminDashboard = () => {
-  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [activeTab, setActiveTab] = useState('dashboard')
   const [deployStatus, setDeployStatus] = useState<DeployStatus>({
@@ -47,6 +47,14 @@ const AdminDashboard = () => {
   })
   const [logs, setLogs] = useState<string[]>([])
   const [autoDeployEnabled, setAutoDeployEnabled] = useState(false)
+
+  // 检查管理员登录状态
+  useEffect(() => {
+    const adminToken = localStorage.getItem('adminToken')
+    if (!adminToken) {
+      navigate('/admin/login')
+    }
+  }, [navigate])
 
   // 加载系统状态
   useEffect(() => {
@@ -78,6 +86,12 @@ const AdminDashboard = () => {
       '[2024-02-01 14:30:25] [SUCCESS] 部署完成',
     ]
     setLogs(mockLogs)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminToken')
+    localStorage.removeItem('adminUser')
+    navigate('/admin/login')
   }
 
   const handleQuickDeploy = async () => {
@@ -166,10 +180,10 @@ const AdminDashboard = () => {
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">欢迎，</span>
-                <span className="font-semibold text-gray-900">{user?.username}</span>
+                <span className="font-semibold text-gray-900">管理员</span>
               </div>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
               >
                 <LogOut className="w-5 h-5" />
