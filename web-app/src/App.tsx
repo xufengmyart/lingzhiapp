@@ -9,6 +9,7 @@ import ChatTest from './pages/ChatTest'
 import Economy from './pages/Economy'
 import Partner from './pages/Partner'
 import Profile from './pages/Profile'
+import SecuritySettings from './pages/SecuritySettings'
 import UserGuide from './pages/UserGuide'
 import MediumVideoProject from './pages/MediumVideoProject'
 import XianAesthetics from './pages/XianAesthetics'
@@ -43,6 +44,7 @@ function App() {
           <Route path="/medium-video" element={<MediumVideoProject />} />
           <Route path="/xian-aesthetics" element={<XianAesthetics />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/security" element={<SecuritySettings />} />
           <Route path="/recharge" element={<Recharge />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
         </Route>

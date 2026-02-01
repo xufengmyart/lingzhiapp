@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { userApi } from '../services/api'
-import { Mail, Phone, Calendar, Wallet, Target, Settings, LogOut, Lock } from 'lucide-react'
+import { Mail, Phone, Calendar, Wallet, Target, Settings, LogOut, Lock, Key } from 'lucide-react'
 
 const Profile = () => {
   const { user, logout, updateUser } = useAuth()
@@ -174,6 +174,19 @@ const Profile = () => {
                 </div>
                 <span className="text-gray-400">→</span>
               </button>
+
+              <Link to="/security" className="w-full flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Shield className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-semibold">安全设置</div>
+                    <div className="text-sm text-gray-500">管理设备和登录安全</div>
+                  </div>
+                </div>
+                <span className="text-gray-400">→</span>
+              </Link>
 
               <button className="w-full flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                 <div className="flex items-center space-x-3">
