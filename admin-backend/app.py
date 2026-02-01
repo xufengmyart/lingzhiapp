@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from datetime import datetime, date, timedelta
 import sqlite3
@@ -27,8 +27,19 @@ except ImportError:
     LLM_AVAILABLE = False
     print("警告: coze_coding_dev_sdk 未安装，智能对话功能将不可用")
 
+import os
+
 app = Flask(__name__)
-CORS(app)
+
+# 配置静态文件路径
+public_dir = os.path.join(os.path.dirname(__file__), '../public')
+if os.path.exists(public_dir):
+    app.static_folder = public_dir
+    app.static_url_path = '/'
+    print(f"静态文件目录: {public_dir}")
+
+# 配置CORS，允许所有来源
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # 配置
 SECRET_KEY = os.getenv('SECRET_KEY', 'lingzhi-ecosystem-secret-key-2026')
@@ -660,6 +671,29 @@ migrate_old_users()
 # ============ 路由定义 ============
 
 @app.route('/')
+def serve_index():
+    """提供主页"""
+    public_dir = os.path.join(os.path.dirname(__file__), '../public')
+    index_file = os.path.join(public_dir, 'index.html')
+    if os.path.exists(index_file):
+        with open(index_file, 'r', encoding='utf-8') as f:
+            return f.read(), 200, {'Content-Type': 'text/html; charset=utf-8'}
+    return jsonify({'error': 'index.html not found'}), 404
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """提供静态文件"""
+    # 不处理API路径
+    if filename.startswith('api/'):
+        return jsonify({'error': 'Not Found'}), 404
+
+    public_dir = os.path.join(os.path.dirname(__file__), '../public')
+    file_path = os.path.join(public_dir, filename)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return send_from_directory(public_dir, filename)
+    return jsonify({'error': 'File not found'}), 404
+
+@app.route('/api/status')
 def index():
     """健康检查"""
     return jsonify({
