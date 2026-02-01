@@ -4683,6 +4683,85 @@ def get_user_profile():
     except Exception as e:
         return jsonify({'success': False, 'message': f'获取用户信息失败: {str(e)}'}), 500
 
+@app.route('/api/user/profile', methods=['PUT'])
+def update_user_profile():
+    """更新用户基本信息（username, email, phone）"""
+    try:
+        auth_header = request.headers.get('Authorization')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        token = auth_header.replace('Bearer ', '')
+        user_id = verify_token(token)
+
+        if not user_id:
+            return jsonify({'success': False, 'message': 'token无效'}), 401
+
+        data = request.json
+        username = data.get('username')
+        email = data.get('email')
+        phone = data.get('phone')
+
+        if not any([username, email, phone]):
+            return jsonify({'success': False, 'message': '至少需要更新一个字段'}), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT username, email, phone FROM users WHERE id = ?", (user_id,))
+        current_user = cursor.fetchone()
+
+        if not current_user:
+            conn.close()
+            return jsonify({'success': False, 'message': '用户不存在'}), 404
+
+        if username and username != current_user['username']:
+            cursor.execute("SELECT id FROM users WHERE username = ? AND id != ?", (username, user_id))
+            if cursor.fetchone():
+                conn.close()
+                return jsonify({'success': False, 'message': '用户名已被使用'}), 400
+
+        if email and email != current_user['email']:
+            cursor.execute("SELECT id FROM users WHERE email = ? AND id != ?", (email, user_id))
+            if cursor.fetchone():
+                conn.close()
+                return jsonify({'success': False, 'message': '邮箱已被使用'}), 400
+
+        if phone and phone != current_user['phone']:
+            cursor.execute("SELECT id FROM users WHERE phone = ? AND id != ?", (phone, user_id))
+            if cursor.fetchone():
+                conn.close()
+                return jsonify({'success': False, 'message': '手机号已被使用'}), 400
+
+        update_fields = []
+        update_values = []
+
+        if username:
+            update_fields.append("username = ?")
+            update_values.append(username)
+        if email is not None:
+            update_fields.append("email = ?")
+            update_values.append(email)
+        if phone is not None:
+            update_fields.append("phone = ?")
+            update_values.append(phone)
+
+        update_fields.append("updated_at = CURRENT_TIMESTAMP")
+        update_values.append(user_id)
+
+        update_sql = f"UPDATE users SET {', '.join(update_fields)} WHERE id = ?"
+        cursor.execute(update_sql, update_values)
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'message': '用户信息更新成功'})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'message': f'更新用户信息失败: {str(e)}'}), 500
+
 @app.route('/api/user/profile', methods=['POST'])
 def complete_user_profile():
     """完善用户信息"""

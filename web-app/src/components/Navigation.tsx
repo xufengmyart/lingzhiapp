@@ -11,6 +11,7 @@ const Navigation = () => {
     { path: '/chat', icon: MessageSquare, label: '智能对话' },
     { path: '/economy', icon: TrendingUp, label: '经济模型' },
     { path: '/partner', icon: Award, label: '合伙人' },
+    { path: '/recharge', icon: Wallet, label: '购买灵值' },
     { path: '/profile', icon: User, label: '个人中心' },
   ]
 

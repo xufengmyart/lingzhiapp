@@ -14,6 +14,7 @@ import MediumVideoProject from './pages/MediumVideoProject'
 import XianAesthetics from './pages/XianAesthetics'
 import CompleteProfile from './pages/CompleteProfile'
 import WeChatCallback from './pages/WeChatCallback'
+import Recharge from './pages/Recharge'
 import AdminDashboard from './pages/AdminDashboard'
 import AgentManagement from './pages/AgentManagement'
 import KnowledgeManagement from './pages/KnowledgeManagement'
@@ -42,6 +43,7 @@ function App() {
           <Route path="/medium-video" element={<MediumVideoProject />} />
           <Route path="/xian-aesthetics" element={<XianAesthetics />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/recharge" element={<Recharge />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
         </Route>
       </Route>

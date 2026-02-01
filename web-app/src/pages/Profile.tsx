@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { userApi } from '../services/api'
 import { Mail, Phone, Calendar, Wallet, Target, Settings, LogOut, Lock } from 'lucide-react'
 
 const Profile = () => {
-  const { user, logout } = useAuth()
+  const { user, logout, updateUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     username: user?.username || '',
@@ -11,10 +13,29 @@ const Profile = () => {
     phone: user?.phone || '',
   })
 
-  const handleSave = () => {
-    // 这里应该调用API更新用户信息
-    setIsEditing(false)
-    alert('个人信息已更新')
+  const handleSave = async () => {
+    try {
+      const response = await userApi.updateProfile({
+        username: formData.username,
+        email: formData.email,
+        phone: formData.phone,
+      })
+
+      if (response.success) {
+        // 更新 AuthContext 中的用户信息
+        if (user) {
+          const updatedUser = { ...user, ...formData }
+          updateUser(updatedUser)
+        }
+        setIsEditing(false)
+        alert('个人信息已更新')
+      } else {
+        alert('更新失败')
+      }
+    } catch (error: any) {
+      console.error('更新用户信息失败:', error)
+      alert(error?.response?.data?.message || '更新失败，请重试')
+    }
   }
 
   return (
@@ -244,15 +265,26 @@ const Profile = () => {
           <div className="bg-white rounded-xl shadow-lg p-6">
             <h3 className="font-bold mb-4">快捷操作</h3>
             <div className="space-y-2">
+              <Link
+                to="/recharge"
+                className="w-full text-left p-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg hover:from-primary-600 hover:to-secondary-600 transition-all flex items-center justify-between"
+              >
+                <span>购买灵值</span>
+                <Wallet className="w-5 h-5" />
+              </Link>
               <button className="w-full text-left p-3 bg-primary-50 text-primary-700 rounded-lg hover:bg-primary-100 transition-colors">
                 查看收入预测
               </button>
               <button className="w-full text-left p-3 bg-secondary-50 text-secondary-700 rounded-lg hover:bg-secondary-100 transition-colors">
                 查看里程碑
               </button>
-              <button className="w-full text-left p-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors">
-                申请成为合伙人
-              </button>
+              <Link
+                to="/partner"
+                className="w-full text-left p-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors flex items-center justify-between"
+              >
+                <span>申请成为合伙人</span>
+                <Target className="w-5 h-5" />
+              </Link>
             </div>
           </div>
         </div>
