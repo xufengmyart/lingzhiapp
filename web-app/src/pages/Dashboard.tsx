@@ -218,17 +218,26 @@ const Dashboard = () => {
 
       {/* 快速入口 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border border-pink-200 hover:shadow-lg transition-shadow cursor-pointer">
+        <div
+          onClick={() => window.location.href = '/chat'}
+          className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border border-pink-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+        >
           <h3 className="text-lg font-semibold text-pink-800 mb-2">💬 开始对话</h3>
           <p className="text-pink-600 text-sm">与智能体对话，探索文化价值，获得灵值</p>
         </div>
 
-        <div className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-6 border border-teal-200 hover:shadow-lg transition-shadow cursor-pointer">
+        <div
+          onClick={() => window.location.href = '/economy'}
+          className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-6 border border-teal-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+        >
           <h3 className="text-lg font-semibold text-teal-800 mb-2">💰 经济模型</h3>
           <p className="text-teal-600 text-sm">查看收入预测，规划财富增长路径</p>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200 hover:shadow-lg transition-shadow cursor-pointer">
+        <div
+          onClick={() => window.location.href = '/partner'}
+          className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+        >
           <h3 className="text-lg font-semibold text-purple-800 mb-2">🏆 合伙人计划</h3>
           <p className="text-purple-600 text-sm">了解合伙人权益，申请成为合伙人</p>
         </div>
