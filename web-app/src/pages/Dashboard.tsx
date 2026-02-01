@@ -217,7 +217,15 @@ const Dashboard = () => {
       </div>
 
       {/* 快速入口 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div
+          onClick={() => window.location.href = '/guide'}
+          className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+        >
+          <h3 className="text-lg font-semibold text-blue-800 mb-2">📖 用户指南</h3>
+          <p className="text-blue-600 text-sm">了解系统价值，快速开始赚钱</p>
+        </div>
+
         <div
           onClick={() => window.location.href = '/chat'}
           className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border border-pink-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"

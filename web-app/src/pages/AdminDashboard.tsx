@@ -8,12 +8,9 @@ import {
   LogOut,
   Menu,
   X,
-  Play,
-  Pause,
   RefreshCw,
   Download,
   Upload,
-  FileText,
   Terminal,
   Monitor,
   Zap
@@ -458,7 +455,7 @@ const LogsViewer = ({ logs, onLoadLogs }: any) => (
 
     <div className="bg-gray-900 rounded-xl p-4 min-h-[500px] overflow-y-auto">
       <pre className="text-gray-400 text-sm font-mono">
-        {logs.map((log, index) => (
+        {logs.map((log: string, index: number) => (
           <div key={index} className="mb-1">{log}</div>
         ))}
       </pre>

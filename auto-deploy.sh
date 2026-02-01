@@ -1,303 +1,245 @@
 #!/bin/bash
 
-# ============================================
-# 智能体自动化系统
-# 功能：监控代码变化，自动部署
-# 使用方法：./auto-deploy.sh &
-# ============================================
+# 智能体自动化部署系统 v1.0
+# 功能：监控代码变化，自动提交、推送并部署到服务器
 
 set -e
 
-# 颜色定义
+# 加载环境变量
+if [ -f ".env" ]; then
+    export $(cat .env | grep -v '^#' | xargs)
+else
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [ERROR] 未找到 .env 文件，请从 .env.example 复制并配置"
+    exit 1
+fi
+
+# 配置
+PROJECT_PATH="/workspace/projects"
+SERVER_USER="${SERVER_USER:-root}"
+SERVER_HOST="${SERVER_HOST:-your-server-ip}"
+SERVER_PATH="${SERVER_PATH:-/var/www/html}"
+BACKUP_PATH="${SERVER_PATH}/backup"
+LOG_FILE="/app/work/logs/bypass/app.log"
+MONITOR_INTERVAL="${MONITOR_INTERVAL:-30}"  # 监控间隔（秒）
+
+# GitHub 配置
+GITHUB_USERNAME="${GITHUB_USERNAME:-}"
+GITHUB_TOKEN="${GITHUB_TOKEN:-}"
+GITHUB_REPO="https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/xufengmyart/lingzhiapp.git"
+
+# SSH 配置
+SSH_PASSWORD="${SERVER_PASSWORD:-}"
+SSH_CMD="sshpass -p '${SSH_PASSWORD}' ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST}"
+
+# 颜色输出
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m'
+NC='\033[0m' # No Color
 
-# 配置
-WATCH_DIR="/workspace/projects"
-SERVER_HOST="123.56.142.143"
-LOG_FILE="/workspace/projects/auto-deploy.log"
-PID_FILE="/workspace/projects/auto-deploy.pid"
-
-# 监控间隔（秒）
-WATCH_INTERVAL=30
-# 部署冷却时间（秒）
-DEPLOY_COOLDOWN=300
-
-# 部署冷却时间戳
-LAST_DEPLOY_TIME=0
-
-# ============================================
-# 函数定义
-# ============================================
-
+# 日志函数
 log() {
-    local level=$1
-    local message=$2
-    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-
-    echo -e "[$timestamp] [$level] $message" | tee -a "$LOG_FILE"
+    echo -e "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $1" | tee -a "$LOG_FILE"
 }
 
-log_info() {
-    log "INFO" "$1"
+error() {
+    echo -e "${RED}$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $1${NC}" | tee -a "$LOG_FILE"
 }
 
-log_success() {
-    log -e "${GREEN}SUCCESS${NC}" "$1"
+success() {
+    echo -e "${GREEN}$(date '+%Y-%m-%d %H:%M:%S') [SUCCESS] $1${NC}" | tee -a "$LOG_FILE"
 }
 
-log_error() {
-    log -e "${RED}ERROR${NC}" "$1"
+warn() {
+    echo -e "${YELLOW}$(date '+%Y-%m-%d %H:%M:%S') [WARN] $1${NC}" | tee -a "$LOG_FILE"
 }
 
-log_warning() {
-    log -e "${YELLOW}WARN${NC}" "$1"
+# 检查 Git 状态
+check_git_status() {
+    cd "$PROJECT_PATH"
+    git status --porcelain
 }
 
-# 获取文件的哈希值
-get_file_hash() {
-    find "$WATCH_DIR" -type f \( -name "*.tsx" -o -name "*.ts" -o -name "*.jsx" -o -name "*.js" -o -name "*.json" \) -not -path "*/node_modules/*" -not -path "*/.git/*" -not -path "*/dist/*" -not -path "*/build/*" -exec md5sum {} \; | md5sum | cut -d' ' -f1
-}
+# 提交代码
+commit_changes() {
+    cd "$PROJECT_PATH"
 
-# 执行快速部署
-perform_deploy() {
-    local current_time=$(date +%s)
-
-    # 检查冷却时间
-    if [ $((current_time - LAST_DEPLOY_TIME)) -lt $DEPLOY_COOLDOWN ]; then
-        local remaining=$((DEPLOY_COOLDOWN - (current_time - LAST_DEPLOY_TIME)))
-        log_warning "部署冷却中，还需等待 ${remaining} 秒"
-        return 1
+    # 检查是否有变更
+    if [ -z "$(check_git_status)" ]; then
+        warn "没有检测到代码变更"
+        return 0
     fi
 
-    log_info "检测到代码变化，开始自动部署..."
+    log "检测到代码变更，准备提交..."
 
-    cd "$WATCH_DIR"
+    # 添加所有变更
+    git add .
 
-    # 1. 检查是否有未提交的更改
-    if [ -n "$(git status --porcelain)" ]; then
-        log_info "发现未提交的更改，自动提交..."
+    # 提交
+    commit_msg="Auto deploy: $(date '+%Y-%m-%d %H:%M:%S')"
+    git commit -m "$commit_msg"
 
-        git add -A
-        local commit_message="auto-deploy: $(date '+%Y-%m-%d %H:%M:%S')"
-        git commit -m "$commit_message" --no-verify
+    success "代码已提交: $commit_msg"
+}
 
-        log_success "代码已自动提交"
-    fi
+# 推送到远程仓库
+push_to_remote() {
+    cd "$PROJECT_PATH"
 
-    # 2. 推送到 GitHub
-    log_info "推送到 GitHub..."
-    if git push origin main 2>&1 | tee -a "$LOG_FILE"; then
-        log_success "已推送到 GitHub"
+    log "推送到远程仓库..."
+
+    if git push "$GITHUB_REPO" 2>&1; then
+        success "代码已推送到远程仓库"
     else
-        log_error "推送到 GitHub 失败"
+        error "推送失败"
         return 1
     fi
-
-    # 3. 同步到服务器
-    log_info "同步到服务器..."
-    if ssh root@"$SERVER_HOST" "
-        set -e
-        cd /var/www/lingzhiapp
-        git pull origin main
-        sudo systemctl restart nginx
-    " 2>&1 | tee -a "$LOG_FILE"; then
-        log_success "已同步到服务器"
-    else
-        log_error "同步到服务器失败"
-        return 1
-    fi
-
-    # 4. 验证部署
-    log_info "验证部署..."
-    if ssh root@"$SERVER_HOST" "systemctl is-active nginx" > /dev/null 2>&1; then
-        log_success "部署验证通过"
-    else
-        log_error "部署验证失败"
-        return 1
-    fi
-
-    # 更新最后部署时间
-    LAST_DEPLOY_TIME=$(date +%s)
-
-    log_success "自动部署完成！"
-
-    return 0
 }
 
-# 监控循环
-watch_loop() {
-    log_info "智能体自动化系统启动"
-    log_info "监控目录: $WATCH_DIR"
-    log_info "监控间隔: ${WATCH_INTERVAL} 秒"
-    log_info "部署冷却时间: ${DEPLOY_COOLDOWN} 秒"
-    log_info "日志文件: $LOG_FILE"
+# 部署到服务器
+deploy_to_server() {
+    log "部署到服务器..."
 
-    local last_hash=""
+    # 备份当前版本
+    $SSH_CMD "mkdir -p $BACKUP_PATH && cp -r $SERVER_PATH/* $BACKUP_PATH/backup-$(date +%Y%m%d-%H%M%S)/ 2>/dev/null || true"
+
+    # 同步文件
+    export SSHPASS="$SSH_PASSWORD"
+    rsync -avz --delete -e "sshpass -e ssh -o StrictHostKeyChecking=no" "$PROJECT_PATH/public/" "$SERVER_USER@$SERVER_HOST:$SERVER_PATH/"
+    unset SSHPASS
+
+    # 重启 Nginx
+    export SSHPASS="$SSH_PASSWORD"
+    $SSH_CMD "systemctl reload nginx"
+    unset SSHPASS
+
+    success "部署成功！"
+}
+
+# 执行完整部署流程
+full_deploy() {
+    log "开始完整部署流程..."
+
+    commit_changes
+    push_to_remote
+    deploy_to_server
+
+    success "完整部署流程完成！"
+}
+
+# 监控代码变化
+monitor_changes() {
+    log "开始监控代码变化（间隔: ${MONITOR_INTERVAL}秒）..."
 
     while true; do
-        # 获取当前文件哈希
-        local current_hash=$(get_file_hash)
-
-        # 比较哈希值
-        if [ "$last_hash" != "" ] && [ "$last_hash" != "$current_hash" ]; then
-            log_warning "检测到文件变化"
-            perform_deploy
+        if [ -n "$(check_git_status)" ]; then
+            log "检测到代码变更"
+            full_deploy
         fi
 
-        # 更新哈希值
-        last_hash=$current_hash
-
-        # 等待
-        sleep $WATCH_INTERVAL
+        sleep "$MONITOR_INTERVAL"
     done
 }
 
-# 信号处理
-cleanup() {
-    log_info "收到退出信号，正在清理..."
+# PID 文件
+PID_FILE="/tmp/auto-deploy.pid"
+
+# 启动监控
+start() {
     if [ -f "$PID_FILE" ]; then
-        rm -f "$PID_FILE"
+        warn "监控已在运行中 (PID: $(cat $PID_FILE))"
+        exit 1
     fi
-    log_info "智能体自动化系统已停止"
-    exit 0
+
+    log "启动自动化部署系统..."
+
+    # 在后台运行监控
+    monitor_changes &
+    echo $! > "$PID_FILE"
+
+    success "自动化部署系统已启动 (PID: $(cat $PID_FILE))"
+    log "使用 '$0 stop' 停止监控"
+}
+
+# 停止监控
+stop() {
+    if [ ! -f "$PID_FILE" ]; then
+        warn "监控未运行"
+        exit 1
+    fi
+
+    log "停止自动化部署系统..."
+
+    kill $(cat "$PID_FILE")
+    rm "$PID_FILE"
+
+    success "自动化部署系统已停止"
+}
+
+# 查看状态
+status() {
+    if [ -f "$PID_FILE" ]; then
+        success "监控正在运行 (PID: $(cat $PID_FILE))"
+    else
+        warn "监控未运行"
+    fi
+}
+
+# 快速部署（不监控）
+quick_deploy() {
+    log "执行快速部署..."
+    full_deploy
 }
 
 # 显示帮助
 show_help() {
-    echo "智能体自动化系统"
+    echo "智能体自动化部署系统 v1.0"
     echo ""
-    echo "使用方法:"
-    echo "  ./auto-deploy.sh start    - 启动自动化系统"
-    echo "  ./auto-deploy.sh stop     - 停止自动化系统"
-    echo "  ./auto-deploy.sh status   - 查看系统状态"
-    echo "  ./auto-deploy.sh logs     - 查看日志"
-    echo "  ./auto-deploy.sh deploy   - 手动触发部署"
-    echo "  ./auto-deploy.sh help     - 显示帮助信息"
+    echo "用法: $0 [命令]"
     echo ""
-    echo "功能说明:"
-    echo "  - 自动监控代码变化"
-    echo "  - 检测到变化后自动提交并推送"
-    echo "  - 自动同步到服务器"
-    echo "  - 支持部署冷却时间"
+    echo "命令:"
+    echo "  start      启动自动化监控"
+    echo "  stop       停止自动化监控"
+    echo "  status     查看监控状态"
+    echo "  deploy     执行一次完整部署"
+    echo "  quick      快速部署（不备份）"
+    echo "  help       显示此帮助信息"
+    echo ""
+    echo "示例:"
+    echo "  $0 start          # 启动自动化监控"
+    echo "  $0 deploy         # 手动触发一次部署"
+    echo "  $0 stop           # 停止监控"
 }
 
-# 查看状态
-show_status() {
-    if [ -f "$PID_FILE" ]; then
-        local pid=$(cat "$PID_FILE")
-        if ps -p "$pid" > /dev/null 2>&1; then
-            echo -e "${GREEN}✓ 智能体自动化系统正在运行${NC}"
-            echo "  PID: $pid"
-            echo "  日志: $LOG_FILE"
+# 主函数
+main() {
+    case "$1" in
+        start)
+            start
+            ;;
+        stop)
+            stop
+            ;;
+        status)
+            status
+            ;;
+        deploy)
+            full_deploy
+            ;;
+        quick)
+            quick_deploy
+            ;;
+        help|--help|-h)
+            show_help
+            ;;
+        *)
+            echo "错误: 未知命令 '$1'"
             echo ""
-            echo "最近日志："
-            tail -n 10 "$LOG_FILE"
-        else
-            echo -e "${RED}✗ PID 文件存在但进程未运行${NC}"
-            rm -f "$PID_FILE"
-        fi
-    else
-        echo -e "${YELLOW}✗ 智能体自动化系统未运行${NC}"
-    fi
-}
-
-# 查看日志
-show_logs() {
-    if [ -f "$LOG_FILE" ]; then
-        tail -n 50 -f "$LOG_FILE"
-    else
-        echo "日志文件不存在"
-    fi
-}
-
-# 启动系统
-start_system() {
-    # 检查是否已经在运行
-    if [ -f "$PID_FILE" ]; then
-        local pid=$(cat "$PID_FILE")
-        if ps -p "$pid" > /dev/null 2>&1; then
-            echo -e "${YELLOW}⚠ 智能体自动化系统已经在运行 (PID: $pid)${NC}"
+            show_help
             exit 1
-        else
-            rm -f "$PID_FILE"
-        fi
-    fi
-
-    # 后台运行监控循环
-    echo "启动智能体自动化系统..."
-    watch_loop &
-    local pid=$!
-
-    # 保存 PID
-    echo $pid > "$PID_FILE"
-
-    echo -e "${GREEN}✓ 智能体自动化系统已启动 (PID: $pid)${NC}"
-    echo "  日志文件: $LOG_FILE"
-    echo ""
-    echo "使用以下命令查看状态:"
-    echo "  ./auto-deploy.sh status"
-    echo ""
-    echo "使用以下命令查看日志:"
-    echo "  ./auto-deploy.sh logs"
-    echo ""
-    echo "使用以下命令停止系统:"
-    echo "  ./auto-deploy.sh stop"
+            ;;
+    esac
 }
 
-# 停止系统
-stop_system() {
-    if [ -f "$PID_FILE" ]; then
-        local pid=$(cat "$PID_FILE")
-        if ps -p "$pid" > /dev/null 2>&1; then
-            echo "停止智能体自动化系统..."
-            kill "$pid"
-            rm -f "$PID_FILE"
-            echo -e "${GREEN}✓ 智能体自动化系统已停止${NC}"
-        else
-            echo -e "${YELLOW}⚠ 进程未运行${NC}"
-            rm -f "$PID_FILE"
-        fi
-    else
-        echo -e "${YELLOW}⚠ 智能体自动化系统未运行${NC}"
-    fi
-}
-
-# ============================================
-# 主流程
-# ============================================
-
-# 注册信号处理
-trap cleanup SIGINT SIGTERM
-
-# 处理命令行参数
-case "${1:-start}" in
-    start)
-        start_system
-        ;;
-    stop)
-        stop_system
-        ;;
-    status)
-        show_status
-        ;;
-    logs)
-        show_logs
-        ;;
-    deploy)
-        perform_deploy
-        ;;
-    help|--help|-h)
-        show_help
-        ;;
-    *)
-        echo -e "${RED}✗ 未知选项: $1${NC}"
-        echo ""
-        show_help
-        exit 1
-        ;;
-esac
+# 执行主函数
+main "$@"

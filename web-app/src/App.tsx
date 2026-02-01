@@ -7,6 +7,7 @@ import ChatTest from './pages/ChatTest'
 import Economy from './pages/Economy'
 import Partner from './pages/Partner'
 import Profile from './pages/Profile'
+import UserGuide from './pages/UserGuide'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -23,6 +24,7 @@ function App() {
           <Route path="/chat-test" element={<ChatTest />} />
           <Route path="/economy" element={<Economy />} />
           <Route path="/partner" element={<Partner />} />
+          <Route path="/guide" element={<UserGuide />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
       </Route>
