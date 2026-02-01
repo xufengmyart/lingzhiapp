@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵值生态园 - 访问问题诊断</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            background: #f8d7da;
+            color: #721c24;
+            margin-bottom: 20px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 18px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .status-unknown {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .status-ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+            padding: 25px;
+        }
+
+        .warning-box h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .warning-box p {
+            color: #856404;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .steps {
+            background: #e7f3ff;
+            border-left-color: #007bff;
+            padding: 25px;
+        }
+
+        .steps h3 {
+            color: #004085;
+            margin-bottom: 15px;
+        }
+
+        .steps ol {
+            color: #004085;
+            padding-left: 25px;
+            line-height: 2;
+        }
+
+        .steps li {
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .important {
+            background: #ffebee;
+            border-left-color: #f44336;
+            padding: 25px;
+        }
+
+        .important h3 {
+            color: #c62828;
+            margin-bottom: 15px;
+        }
+
+        .important p {
+            color: #c62828;
+            line-height: 1.6;
+        }
+
+        .contact {
+            background: #e8f5e9;
+            border-left-color: #4caf50;
+            padding: 25px;
+        }
+
+        .contact h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+
+        .contact p {
+            color: #2e7d32;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 灵值生态园 - 访问问题诊断</h1>
+        <div class="status-badge">当前状态: 公网访问受限</div>
+
+        <!-- 当前访问信息 -->
+        <div class="section">
+            <h2>当前访问信息</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">访问URL</div>
+                    <div class="info-value" id="currentUrl">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">协议</div>
+                    <div class="info-value" id="protocol">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">主机名</div>
+                    <div class="info-value" id="hostname">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">端口</div>
+                    <div class="info-value" id="port">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 诊断结果 -->
+        <div class="section important">
+            <h3>⚠️ 诊断结果</h3>
+            <p><strong>问题:</strong> 当前服务器的所有端口都被ByteFaaS环境拦截，无法直接通过公网IP访问。</p>
+            <p><strong>原因:</strong> ByteFaaS环境的安全策略阻止了所有端口的公网访问。</p>
+            <p><strong>影响:</strong> 无法使用以下访问方式：
+                <ul style="margin-top: 10px; padding-left: 25px;">
+                    <li>http://123.56.142.143/ (80端口 - 返回403)</li>
+                    <li>http://123.56.142.143:8080/ (8080端口 - 连接超时)</li>
+                    <li>http://123.56.142.143:8088/ (8088端口 - 连接超时)</li>
+                    <li>http://123.56.142.143:8443/ (8443端口 - 连接超时)</li>
+                </ul>
+            </p>
+        </div>
+
+        <!-- 解决方案 -->
+        <div class="section steps">
+            <h3>💡 可能的解决方案</h3>
+            <p>请尝试以下方案：</p>
+            <ol>
+                <li><strong>方案1: 使用Coze域名（如果可用）</strong>
+                    <div class="code-block">https://f8ab8c28-f515-4fa3-9fb4-0ca0c3a0d34f.dev.coze.site/</div>
+                    <p>注意：目前返回502错误，可能需要配置FaaS服务</p>
+                </li>
+                <li><strong>方案2: 联系Coze技术支持</strong>
+                    <p>报告ByteFaaS环境拦截端口访问的问题，请求协助解决。</p>
+                </li>
+                <li><strong>方案3: 检查昨天访问方式</strong>
+                    <p>如果您昨天可以正常访问，请确认昨天使用的具体URL和访问方式。</p>
+                </li>
+            </ol>
+        </div>
+
+        <!-- 昨天的情况 -->
+        <div class="section warning-box">
+            <h3>❓ 关于昨天的访问</h3>
+            <p>您提到昨天可以正常访问，请帮助确认：</p>
+            <ol>
+                <li>昨天访问的URL是什么？</li>
+                <li>昨天看到的是完整的灵值生态园应用吗？</li>
+                <li>昨天使用的设备或网络环境是否与今天不同？</li>
+                <li>昨天是否使用了代理、VPN或其他工具？</li>
+            </ol>
+        </div>
+
+        <!-- 需要确认 -->
+        <div class="section">
+            <h2>📋 需要您确认的信息</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">昨天访问URL</div>
+                    <div class="info-value status-unknown">待确认</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">昨天访问状态</div>
+                    <div class="info-value status-unknown">待确认</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">今天看到的页面</div>
+                    <div class="info-value status-unknown">待确认</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">浏览器缓存</div>
+                    <div class="info-value status-unknown">待确认</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 技术详情 -->
+        <div class="section">
+            <h2>🔧 技术详情</h2>
+            <p><strong>服务状态:</strong></p>
+            <ul style="margin-top: 10px; padding-left: 25px; line-height: 1.8;">
+                <li>✅ Flask后端 (8001端口) - 正常运行</li>
+                <li>✅ FaaS服务 (9000端口) - 正常运行</li>
+                <li>✅ Nginx (80端口) - 正常运行（内部可访问）</li>
+                <li>✅ Nginx (8088端口) - 正常运行（内部可访问）</li>
+                <li>✅ Nginx (8443端口) - 正常运行（内部可访问）</li>
+                <li>❌ 公网访问 - 被ByteFaaS拦截</li>
+            </ul>
+        </div>
+
+        <!-- 联系方式 -->
+        <div class="section contact">
+            <h3>📞 需要帮助？</h3>
+            <p>如果您遇到任何问题，请提供以下信息：</p>
+            <ol>
+                <li>您看到的具体页面内容</li>
+                <li>浏览器控制台的错误信息（按F12查看）</li>
+                <li>您尝试访问的具体URL和时间</li>
+                <li>昨天访问时的具体情况</li>
+            </ol>
+        </div>
+
+        <div class="footer">
+            <p>灵值生态园 - 智能体应用 v2.0</p>
+            <p>诊断页面生成时间: <span id="currentTime"></span></p>
+        </div>
+    </div>
+
+    <script>
+        // 显示当前访问信息
+        function showCurrentInfo() {
+            document.getElementById('currentUrl').textContent = window.location.href;
+            document.getElementById('protocol').textContent = window.location.protocol;
+            document.getElementById('hostname').textContent = window.location.hostname;
+            document.getElementById('port').textContent = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+            document.getElementById('currentTime').textContent = new Date().toLocaleString('zh-CN');
+        }
+
+        // 初始化
+        showCurrentInfo();
+    </script>
+</body>
+</html>
