@@ -5450,10 +5450,13 @@ from urllib.parse import urlencode
 # ============ 启动服务 ============
 
 if __name__ == '__main__':
+    # 固定使用8001端口，Flask后端服务
+    port = 8001
+    
     print("=" * 50)
     print("灵值生态园 API 服务启动中...")
     print("=" * 50)
-    print("服务地址: http://0.0.0.0:8001")
+    print(f"服务地址: http://0.0.0.0:{port}")
     print("默认管理员账号: admin / admin123")
     print("=" * 50)
 
@@ -5464,4 +5467,4 @@ if __name__ == '__main__':
     # 初始化默认数据
     init_default_data()
 
-    app.run(host='0.0.0.0', port=8001, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=True)

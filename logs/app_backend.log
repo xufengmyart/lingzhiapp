@@ -37,3 +37,6 @@
 127.0.0.1 - - [02/Feb/2026 04:58:33] "GET /api/health HTTP/1.1" 200 -
 127.0.0.1 - - [02/Feb/2026 04:58:43] "GET /api/health HTTP/1.1" 200 -
 127.0.0.1 - - [02/Feb/2026 04:58:43] "POST /api/login HTTP/1.1" 200 -
+127.0.0.1 - - [02/Feb/2026 05:22:08] "GET /api/health HTTP/1.1" 200 -
+ * Detected change in '/workspace/projects/admin-backend/app.py', reloading
+ * Restarting with watchdog (inotify)
