@@ -1,7 +1,27 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵值生态园 - 智能体APP</title>
+    <script>
+        // 配置API地址
+        localStorage.setItem('apiBaseURL', '/api');
+
+        // 自动检测访问方式并给出提示
+        (function() {
+            const currentUrl = window.location.href;
+
+            // 如果是IP地址访问，显示提示
+            if (currentUrl.includes('123.56.142.143') || currentUrl.match(/^https?:\/\/\d+\.\d+\.\d+\.\d+/)) {
+                // IP访问，重定向到域名
+                setTimeout(function() {
+                    alert('检测到您正在通过IP地址访问。\n\n为获得最佳体验，建议使用域名访问：\nhttps://f8ab8c28-f515-4fa3-9fb4-0ca0c3a0d34f.dev.coze.site/\n\n点击确定后将自动跳转。');
+                    window.location.href = 'https://f8ab8c28-f515-4fa3-9fb4-0ca0c3a0d34f.dev.coze.site/';
+                }, 500);
+            }
+        })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#4F46E5" />
@@ -9,24 +29,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="灵值生态园" />
-    <meta name="format-detection" content="telephone=no" />
-    <meta name="msapplication-TileColor" content="#4F46E5" />
-    <meta name="msapplication-tap-highlight" content="no" />
     <title>灵值生态园 - 智能体APP</title>
-
-    <!-- API配置脚本：设置相对路径API地址 -->
-    <script>
-      (function() {
-        // 设置API基础地址为相对路径，配合Nginx反向代理
-        localStorage.setItem('apiBaseURL', '/api');
-        console.log('API地址已设置为: /api (相对路径)');
-      })();
-    </script>
-
     <script type="module" crossorigin src="/assets/index-JklDmC0r.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-Dt-LoNni.css">
-  </head>
-  <body>
+</head>
+<body>
     <div id="root"></div>
-  </body>
+</body>
 </html>
