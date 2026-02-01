@@ -405,6 +405,34 @@ def init_db():
         )
     ''')
 
+    # 系统通知表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS system_notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            notification_type TEXT DEFAULT 'info',
+            is_read BOOLEAN DEFAULT 0,
+            target_user_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (target_user_id) REFERENCES users(id)
+        )
+    ''')
+
+    # 用户已读通知记录表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_read_notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            notification_id INTEGER NOT NULL,
+            read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, notification_id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (notification_id) REFERENCES system_notifications(id)
+        )
+    ''')
+
     conn.commit()
     conn.close()
 
@@ -425,16 +453,19 @@ def hash_password_bcrypt(password):
 
 def verify_password(password, password_hash):
     """验证密码（支持 SHA256 和 bcrypt）"""
-    # 先尝试 SHA256
-    if password_hash == hashlib.sha256(password.encode()).hexdigest():
-        return True
-    
-    # 再尝试 bcrypt
+    # 先尝试 bcrypt
     try:
         if password_hash.startswith('$2b$'):
             return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
-    except:
-        pass
+    except Exception as e:
+        print(f"bcrypt 验证失败: {e}")
+    
+    # 再尝试 SHA256
+    try:
+        if password_hash == hashlib.sha256(password.encode()).hexdigest():
+            return True
+    except Exception as e:
+        print(f"SHA256 验证失败: {e}")
     
     return False
 
@@ -473,13 +504,71 @@ def create_default_admin():
 
 create_default_admin()
 
-# 迁移旧用户数据
+# 迁移旧用户数据（仅在首次启动时执行）
+MIGRATED = False
+
+def backup_database():
+    """备份数据库"""
+    try:
+        import shutil
+        from datetime import datetime
+        
+        # 创建备份目录
+        backup_dir = os.path.join(os.path.dirname(__file__), 'backups')
+        if not os.path.exists(backup_dir):
+            os.makedirs(backup_dir)
+        
+        # 备份文件名
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_file = os.path.join(backup_dir, f'lingzhi_ecosystem_backup_{timestamp}.db')
+        
+        # 复制数据库
+        shutil.copy2(DATABASE, backup_file)
+        print(f"数据库备份成功: {backup_file}")
+        
+        # 清理旧备份（保留最近 7 天）
+        import time
+        current_time = time.time()
+        for filename in os.listdir(backup_dir):
+            file_path = os.path.join(backup_dir, filename)
+            file_time = os.path.getmtime(file_path)
+            if current_time - file_time > 7 * 24 * 3600:  # 7天
+                os.remove(file_path)
+                print(f"删除旧备份: {filename}")
+        
+        return True
+    except Exception as e:
+        print(f"数据库备份失败: {e}")
+        return False
+
 def migrate_old_users():
     """从旧数据库迁移用户数据"""
+    global MIGRATED
+    
+    # 防止重复迁移
+    if MIGRATED:
+        print("用户数据已迁移，跳过")
+        return
+    
     old_db_path = os.path.join(os.path.dirname(__file__), OLD_DATABASE)
     if not os.path.exists(old_db_path):
         print("旧数据库不存在，跳过迁移")
+        MIGRATED = True
         return
+    
+    # 检查新数据库是否已有用户
+    conn_new = get_db()
+    cursor_new = conn_new.cursor()
+    cursor_new.execute("SELECT COUNT(*) FROM users")
+    new_user_count = cursor_new.fetchone()[0]
+    conn_new.close()
+    
+    if new_user_count > 0:
+        print(f"新数据库已有 {new_user_count} 个用户，跳过迁移")
+        MIGRATED = True
+        return
+    
+    print("开始迁移用户数据...")
     
     conn_old = sqlite3.connect(old_db_path)
     cursor_old = conn_old.cursor()
@@ -491,6 +580,7 @@ def migrate_old_users():
     if not old_users:
         print("旧数据库中没有用户数据")
         conn_old.close()
+        MIGRATED = True
         return
     
     conn_new = get_db()
@@ -500,25 +590,39 @@ def migrate_old_users():
     for old_user in old_users:
         old_id, name, email, phone, password_hash, created_at = old_user
         
-        # 检查是否已存在（按邮箱）
-        cursor_new.execute("SELECT id FROM users WHERE email = ?", (email,))
+        # 处理重复邮箱：添加后缀
+        username = name
+        if email:
+            # 检查是否已存在相同邮箱的用户
+            cursor_new.execute("SELECT COUNT(*) FROM users WHERE email = ?", (email,))
+            email_count = cursor_new.fetchone()[0]
+            if email_count > 0:
+                # 添加序号后缀
+                username = f"{name}_{old_id}"
+        
+        # 检查是否已存在相同用户名的用户
+        cursor_new.execute("SELECT id FROM users WHERE username = ?", (username,))
         if cursor_new.fetchone():
             continue
         
         # 插入新用户（使用 name 作为 username）
         try:
             cursor_new.execute(
-                "INSERT INTO users (username, email, phone, password_hash, total_lingzhi, created_at) VALUES (?, ?, ?, ?, 0, ?)",
-                (name, email, phone or '', password_hash, created_at)
+                """INSERT INTO users 
+                   (username, email, phone, password_hash, total_lingzhi, status, login_type, created_at) 
+                   VALUES (?, ?, ?, ?, 0, 'active', 'phone', ?)""",
+                (username, email or '', phone or '', password_hash, created_at)
             )
             migrated_count += 1
-            print(f"迁移用户: {name} ({email})")
+            print(f"迁移用户: {username} ({email or '无邮箱'})")
         except Exception as e:
-            print(f"迁移用户失败 {name}: {e}")
+            print(f"迁移用户失败 {username}: {e}")
     
     conn_new.commit()
     conn_new.close()
     conn_old.close()
+    
+    MIGRATED = True
     
     if migrated_count > 0:
         print(f"成功迁移 {migrated_count} 个用户")
@@ -4700,6 +4804,135 @@ def check_require_complete():
     except Exception as e:
         return jsonify({'success': False, 'message': f'检查失败: {str(e)}'}), 500
 
+# ============ 系统通知 ============
+
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    """获取用户的通知"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取全局通知和用户专属通知
+        cursor.execute('''
+            SELECT n.id, n.title, n.content, n.notification_type, n.created_at,
+                   CASE WHEN r.read_at IS NOT NULL THEN 1 ELSE 0 END as is_read
+            FROM system_notifications n
+            LEFT JOIN user_read_notifications r ON n.id = r.notification_id AND r.user_id = ?
+            WHERE n.target_user_id IS NULL OR n.target_user_id = ?
+            ORDER BY n.created_at DESC
+            LIMIT 50
+        ''', (user_id, user_id))
+        
+        notifications = cursor.fetchall()
+        
+        result = []
+        for notif in notifications:
+            result.append({
+                'id': notif['id'],
+                'title': notif['title'],
+                'content': notif['content'],
+                'type': notif['notification_type'],
+                'isRead': bool(notif['is_read']),
+                'createdAt': notif['created_at']
+            })
+        
+        # 统计未读数量
+        cursor.execute('''
+            SELECT COUNT(*)
+            FROM system_notifications n
+            LEFT JOIN user_read_notifications r ON n.id = r.notification_id AND r.user_id = ?
+            WHERE (n.target_user_id IS NULL OR n.target_user_id = ?) 
+              AND r.read_at IS NULL
+        ''', (user_id, user_id))
+        
+        unread_count = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'notifications': result,
+                'unreadCount': unread_count
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取通知失败: {str(e)}'}), 500
+
+@app.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
+def mark_notification_read(notification_id):
+    """标记通知为已读"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 检查通知是否存在
+        cursor.execute("SELECT id FROM system_notifications WHERE id = ?", (notification_id,))
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': '通知不存在'}), 404
+        
+        # 标记为已读
+        cursor.execute('''
+            INSERT OR IGNORE INTO user_read_notifications (user_id, notification_id)
+            VALUES (?, ?)
+        ''', (user_id, notification_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': '已标记为已读'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'操作失败: {str(e)}'}), 500
+
+@app.route('/api/notifications/read-all', methods=['POST'])
+def mark_all_notifications_read():
+    """标记所有通知为已读"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取所有未读通知
+        cursor.execute('''
+            SELECT n.id
+            FROM system_notifications n
+            LEFT JOIN user_read_notifications r ON n.id = r.notification_id AND r.user_id = ?
+            WHERE (n.target_user_id IS NULL OR n.target_user_id = ?) 
+              AND r.read_at IS NULL
+        ''', (user_id, user_id))
+        
+        notifications = cursor.fetchall()
+        
+        # 标记为已读
+        for notif in notifications:
+            cursor.execute('''
+                INSERT OR IGNORE INTO user_read_notifications (user_id, notification_id)
+                VALUES (?, ?)
+            ''', (user_id, notif['id']))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'success': True, 'message': '已全部标记为已读'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'操作失败: {str(e)}'}), 500
+
 # 需要导入requests和urlencode
 import requests
 from urllib.parse import urlencode
@@ -4713,6 +4946,10 @@ if __name__ == '__main__':
     print("服务地址: http://0.0.0.0:8001")
     print("默认管理员账号: admin / admin123")
     print("=" * 50)
+
+    # 备份数据库
+    print("正在备份数据库...")
+    backup_database()
 
     # 初始化默认数据
     init_default_data()
