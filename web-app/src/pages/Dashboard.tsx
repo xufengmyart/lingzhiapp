@@ -216,38 +216,66 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* 项目入口 */}
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">🎯 项目入口</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            onClick={() => window.location.href = '/medium-video'}
+            className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <div className="text-3xl mb-3">🎬</div>
+            <h3 className="text-lg font-semibold text-orange-800 mb-2">中视频项目</h3>
+            <p className="text-orange-600 text-sm">创作 1-30 分钟视频，获取播放收益</p>
+          </div>
+
+          <div
+            onClick={() => window.location.href = '/xian-aesthetics'}
+            className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <div className="text-3xl mb-3">🔍</div>
+            <h3 className="text-lg font-semibold text-purple-800 mb-2">西安美学侦探</h3>
+            <p className="text-purple-600 text-sm">探索城市美学，发现西安之美</p>
+          </div>
+
+          <div
+            onClick={() => window.location.href = '/partner'}
+            className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-6 border border-amber-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <div className="text-3xl mb-3">🏆</div>
+            <h3 className="text-lg font-semibold text-amber-800 mb-2">合伙人计划</h3>
+            <p className="text-amber-600 text-sm">成为合伙人，享受更高收益</p>
+          </div>
+        </div>
+      </div>
+
       {/* 快速入口 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div
-          onClick={() => window.location.href = '/guide'}
-          className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
-        >
-          <h3 className="text-lg font-semibold text-blue-800 mb-2">📖 用户指南</h3>
-          <p className="text-blue-600 text-sm">了解系统价值，快速开始赚钱</p>
-        </div>
+      <div>
+        <h2 className="text-xl font-bold text-gray-900 mb-4">⚡ 快速入口</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div
+            onClick={() => window.location.href = '/guide'}
+            className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <h3 className="text-lg font-semibold text-blue-800 mb-2">📖 用户指南</h3>
+            <p className="text-blue-600 text-sm">了解系统价值，快速开始赚钱</p>
+          </div>
 
-        <div
-          onClick={() => window.location.href = '/chat'}
-          className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border border-pink-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
-        >
-          <h3 className="text-lg font-semibold text-pink-800 mb-2">💬 开始对话</h3>
-          <p className="text-pink-600 text-sm">与智能体对话，探索文化价值，获得灵值</p>
-        </div>
+          <div
+            onClick={() => window.location.href = '/chat'}
+            className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border border-pink-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <h3 className="text-lg font-semibold text-pink-800 mb-2">💬 智能对话</h3>
+            <p className="text-pink-600 text-sm">与智能体对话，探索文化价值</p>
+          </div>
 
-        <div
-          onClick={() => window.location.href = '/economy'}
-          className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-6 border border-teal-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
-        >
-          <h3 className="text-lg font-semibold text-teal-800 mb-2">💰 经济模型</h3>
-          <p className="text-teal-600 text-sm">查看收入预测，规划财富增长路径</p>
-        </div>
-
-        <div
-          onClick={() => window.location.href = '/partner'}
-          className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
-        >
-          <h3 className="text-lg font-semibold text-purple-800 mb-2">🏆 合伙人计划</h3>
-          <p className="text-purple-600 text-sm">了解合伙人权益，申请成为合伙人</p>
+          <div
+            onClick={() => window.location.href = '/economy'}
+            className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-6 border border-teal-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+          >
+            <h3 className="text-lg font-semibold text-teal-800 mb-2">💰 经济模型</h3>
+            <p className="text-teal-600 text-sm">查看收入预测，规划财富增长</p>
+          </div>
         </div>
       </div>
     </div>
