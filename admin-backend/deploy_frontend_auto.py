@@ -39,8 +39,8 @@ try:
     stdin, stdout, stderr = ssh.exec_command('rm -rf /var/www/html/*')
     stdout.read()
 
-    # 上传 dist 目录下的所有文件
-    local_dist = '/workspace/projects/web-app/dist'
+    # 上传 public 目录下的所有文件（构建输出目录）
+    local_dist = '/workspace/projects/public'
     remote_html = '/var/www/html'
 
     # 确保远程目录存在
