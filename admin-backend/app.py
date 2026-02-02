@@ -5484,8 +5484,8 @@ from urllib.parse import urlencode
 # ============ 启动服务 ============
 
 if __name__ == '__main__':
-    # 固定使用8001端口，Flask后端服务
-    port = 8001
+    # 使用8080端口，配置所有CORS头部
+    port = 8080
     
     print("=" * 50)
     print("灵值生态园 API 服务启动中...")
@@ -5500,5 +5500,16 @@ if __name__ == '__main__':
 
     # 初始化默认数据
     init_default_data()
+
+    # 添加自定义响应头
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        response.headers.add('Access-Control-Max-Age', '86400')
+        response.headers.add('X-Content-Type-Options', 'nosniff')
+        response.headers.add('X-Frame-Options', 'SAMEORIGIN')
+        return response
 
     app.run(host='0.0.0.0', port=port, debug=True)
