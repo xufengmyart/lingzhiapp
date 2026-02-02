@@ -947,6 +947,95 @@ def get_user_info():
             'message': f'获取用户信息失败: {str(e)}'
         }), 500
 
+# ============ 个性化欢迎词 ============
+
+@app.route('/api/user/welcome', methods=['GET'])
+def get_welcome_message():
+    """获取个性化欢迎词（登录页使用）"""
+    try:
+        username = request.args.get('username', '')
+
+        if not username:
+            return jsonify({
+                'success': False,
+                'message': '用户名不能为空'
+            }), 400
+
+        conn = get_db()
+        cursor = conn.cursor()
+
+        # 查找用户
+        cursor.execute(
+            "SELECT * FROM users WHERE username = ? OR email = ?",
+            (username, username)
+        )
+        user = cursor.fetchone()
+        conn.close()
+
+        # 如果用户不存在，返回默认欢迎词
+        if not user:
+            return jsonify({
+                'success': True,
+                'welcome_text': '欢迎来到灵值生态园',
+                'is_personalized': False
+            })
+
+        # 获取时间段
+        hour = datetime.now().hour
+        if 5 <= hour < 12:
+            time_period = 'morning'
+        elif 12 <= hour < 18:
+            time_period = 'afternoon'
+        else:
+            time_period = 'evening'
+
+        # 情绪价值文案库
+        welcome_texts = {
+            'morning': [
+                f'早安，{user["username"]}，新的开始',
+                f'{user["username"]}，早晨的阳光为你而来',
+                f'你好呀，{user["username"]}',
+            ],
+            'afternoon': [
+                f'下午好，{user["username"]}',
+                f'{user["username"]}，保持好心情',
+                f'忙碌之中别忘了休息，{user["username"]}',
+            ],
+            'evening': [
+                f'晚上好，{user["username"]}',
+                f'{user["username"]}，辛苦了',
+                f'放松一下，{user["username"]}',
+            ],
+        }
+
+        # 随机选择一个欢迎词
+        import random
+        texts = welcome_texts.get(time_period, welcome_texts['evening'])
+        welcome_text = random.choice(texts)
+
+        # 如果用户有灵值，添加鼓励文案
+        if user['total_lingzhi'] > 0:
+            encouragement = [
+                '继续加油，你的努力值得被看见',
+                '每一分灵值都是你的骄傲',
+                '你的成长之路，我们一直陪伴',
+            ]
+            welcome_text += ' · ' + random.choice(encouragement)
+
+        return jsonify({
+            'success': True,
+            'welcome_text': welcome_text,
+            'is_personalized': True,
+            'time_period': time_period,
+            'user_lingzhi': user['total_lingzhi']
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'获取欢迎词失败: {str(e)}'
+        }), 500
+
 # ============ 签到功能 ============
 
 @app.route('/api/checkin', methods=['POST'])
