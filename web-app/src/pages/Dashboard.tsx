@@ -10,8 +10,7 @@ import {
   Clock,
   Star
 } from 'lucide-react'
-import { checkInApi } from '../services/api'
-import { mockApi } from '../services/mockApi'
+import { checkInApi, userApi } from '../services/api'
 
 interface DashboardStats {
   todayLingzhi: number
@@ -22,7 +21,7 @@ interface DashboardStats {
 }
 
 const Dashboard = () => {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const [stats, setStats] = useState<DashboardStats>({
     todayLingzhi: 0,
     checkedIn: false,
@@ -72,17 +71,16 @@ const Dashboard = () => {
         const result = await checkInApi.checkIn()
         if (result.success) {
           // 更新用户信息（总灵值）
-          const userInfo = await mockApi.getUserInfo()
-          // 这里需要更新用户上下文
+          const userInfo = await userApi.getUserInfo()
+          // 更新 AuthContext 中的用户信息
           if (userInfo.success && userInfo.data) {
-            // 临时存储更新后的总灵值用于显示
+            updateUser(userInfo.data)
+            // 更新统计数据
             setStats(prev => ({
               ...prev,
               todayLingzhi: result.data.lingzhi,
               checkedIn: true
             }))
-            // 刷新页面数据以更新总灵值显示
-            window.location.reload()
           }
         }
       } catch (error) {
@@ -105,10 +103,10 @@ const Dashboard = () => {
     <div className="space-y-6 animate-fade-in">
       {/* 欢迎消息 */}
       <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-2xl p-8 text-white shadow-xl">
-        <h1 className="text-3xl font-bold mb-2">
+        <h1 className="text-3xl font-bold mb-2 break-words whitespace-normal">
           欢迎回来，{user?.username}！
         </h1>
-        <p className="opacity-90">
+        <p className="opacity-90 break-words whitespace-normal">
           今天也是创造价值的一天，{user?.totalLingzhi} 灵值正在增长中
         </p>
       </div>
