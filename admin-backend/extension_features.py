@@ -90,7 +90,11 @@ def register_video_routes(app, get_db, verify_token):
     def get_video_projects():
         """获取用户的中视频项目列表"""
         try:
-            user_id = verify_token(request.headers.get('Authorization'))
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return jsonify({'success': False, 'message': '未授权'}), 401
+            token = auth_header.replace('Bearer ', '')
+            user_id = verify_token(token)
             if not user_id:
                 return jsonify({'success': False, 'message': '未授权'}), 401
             
@@ -126,7 +130,11 @@ def register_video_routes(app, get_db, verify_token):
     def create_video_project():
         """创建中视频项目"""
         try:
-            user_id = verify_token(request.headers.get('Authorization'))
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return jsonify({'success': False, 'message': '未授权'}), 401
+            token = auth_header.replace('Bearer ', '')
+            user_id = verify_token(token)
             if not user_id:
                 return jsonify({'success': False, 'message': '未授权'}), 401
             
@@ -163,7 +171,11 @@ def register_video_routes(app, get_db, verify_token):
     def update_video_project(project_id):
         """更新中视频项目"""
         try:
-            user_id = verify_token(request.headers.get('Authorization'))
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return jsonify({'success': False, 'message': '未授权'}), 401
+            token = auth_header.replace('Bearer ', '')
+            user_id = verify_token(token)
             if not user_id:
                 return jsonify({'success': False, 'message': '未授权'}), 401
             
@@ -201,7 +213,11 @@ def register_aesthetic_routes(app, get_db, verify_token):
     def get_aesthetic_projects():
         """获取用户的西安美学侦探项目列表"""
         try:
-            user_id = verify_token(request.headers.get('Authorization'))
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return jsonify({'success': False, 'message': '未授权'}), 401
+            token = auth_header.replace('Bearer ', '')
+            user_id = verify_token(token)
             if not user_id:
                 return jsonify({'success': False, 'message': '未授权'}), 401
             
@@ -238,7 +254,11 @@ def register_aesthetic_routes(app, get_db, verify_token):
     def create_aesthetic_project():
         """创建西安美学侦探项目"""
         try:
-            user_id = verify_token(request.headers.get('Authorization'))
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return jsonify({'success': False, 'message': '未授权'}), 401
+            token = auth_header.replace('Bearer ', '')
+            user_id = verify_token(token)
             if not user_id:
                 return jsonify({'success': False, 'message': '未授权'}), 401
             
@@ -279,7 +299,11 @@ def register_enhanced_partner_routes(app, get_db, verify_token):
     def get_partner_projects():
         """获取合伙人项目列表"""
         try:
-            user_id = verify_token(request.headers.get('Authorization'))
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return jsonify({'success': False, 'message': '未授权'}), 401
+            token = auth_header.replace('Bearer ', '')
+            user_id = verify_token(token)
             if not user_id:
                 return jsonify({'success': False, 'message': '未授权'}), 401
             
@@ -315,7 +339,11 @@ def register_enhanced_partner_routes(app, get_db, verify_token):
     def create_partner_project():
         """创建合伙人项目申请"""
         try:
-            user_id = verify_token(request.headers.get('Authorization'))
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return jsonify({'success': False, 'message': '未授权'}), 401
+            token = auth_header.replace('Bearer ', '')
+            user_id = verify_token(token)
             if not user_id:
                 return jsonify({'success': False, 'message': '未授权'}), 401
             
@@ -352,7 +380,11 @@ def register_enhanced_partner_routes(app, get_db, verify_token):
     def get_partner_earnings():
         """获取合伙人收益记录"""
         try:
-            user_id = verify_token(request.headers.get('Authorization'))
+            auth_header = request.headers.get('Authorization')
+            if not auth_header or not auth_header.startswith('Bearer '):
+                return jsonify({'success': False, 'message': '未授权'}), 401
+            token = auth_header.replace('Bearer ', '')
+            user_id = verify_token(token)
             if not user_id:
                 return jsonify({'success': False, 'message': '未授权'}), 401
             

@@ -180,6 +180,81 @@ export const partnerApi = {
   },
 }
 
+// 中视频项目API
+export const videoApi = {
+  getProjects: async () => {
+    const response = await api.get<ApiResponse<any[]>>('/api/video/projects')
+    return response.data
+  },
+
+  createProject: async (data: {
+    title: string
+    description?: string
+    video_url?: string
+    cover_image?: string
+    lingzhi_cost?: number
+  }) => {
+    const response = await api.post<ApiResponse<{ id: number }>>('/api/video/projects', data)
+    return response.data
+  },
+
+  updateProject: async (id: number, data: {
+    title?: string
+    description?: string
+    video_url?: string
+    cover_image?: string
+    lingzhi_cost?: number
+    status?: string
+  }) => {
+    const response = await api.put<ApiResponse<any>>(`/api/video/projects/${id}`, data)
+    return response.data
+  },
+}
+
+// 西安美学侦探API
+export const aestheticApi = {
+  getProjects: async () => {
+    const response = await api.get<ApiResponse<any[]>>('/api/aesthetic/projects')
+    return response.data
+  },
+
+  createProject: async (data: {
+    project_name: string
+    location?: string
+    theme?: string
+    discovery_data?: string
+    images?: string
+    lingzhi_cost?: number
+  }) => {
+    const response = await api.post<ApiResponse<{ id: number }>>('/api/aesthetic/projects', data)
+    return response.data
+  },
+}
+
+// 合伙人项目API
+export const partnerProjectApi = {
+  getProjects: async () => {
+    const response = await api.get<ApiResponse<any[]>>('/api/partner/projects')
+    return response.data
+  },
+
+  createProject: async (data: {
+    project_name: string
+    project_type: string
+    investment_amount?: number
+    expected_return?: number
+    description?: string
+  }) => {
+    const response = await api.post<ApiResponse<{ id: number }>>('/api/partner/projects', data)
+    return response.data
+  },
+
+  getEarnings: async () => {
+    const response = await api.get<ApiResponse<any[]>>('/api/partner/earnings')
+    return response.data
+  },
+}
+
 // 签到API
 export const checkInApi = {
   checkIn: async () => {
