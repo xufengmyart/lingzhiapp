@@ -1,10 +1,58 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Lock, Mail, ArrowRight, Smartphone, RefreshCw } from 'lucide-react'
+import { Lock, Mail, ArrowRight, TrendingUp, Clock, Zap, Smartphone, RefreshCw } from 'lucide-react'
+
+const FeatureCard = ({ icon: Icon, title, value, subtitle, color, delay }: any) => {
+  const [count, setCount] = useState(0)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsVisible(true), delay)
+    return () => clearTimeout(timer)
+  }, [delay])
+
+  useEffect(() => {
+    if (isVisible && typeof value === 'number') {
+      let start = 0
+      const end = value
+      const duration = 1500
+      const increment = end / (duration / 16)
+
+      const timer = setInterval(() => {
+        start += increment
+        if (start >= end) {
+          setCount(end)
+          clearInterval(timer)
+        } else {
+          setCount(Math.floor(start))
+        }
+      }, 16)
+
+      return () => clearInterval(timer)
+    } else if (isVisible && typeof value === 'string') {
+      setCount(1)
+    }
+  }, [isVisible, value])
+
+  return (
+    <div
+      className={`bg-white rounded-xl p-4 text-center shadow-md hover:shadow-xl transform hover:-translate-y-2 transition-all duration-500 cursor-default ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+    >
+      <div className={`w-12 h-12 ${color} bg-opacity-10 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse`}>
+        <Icon className={`w-6 h-6 ${color}`} />
+      </div>
+      <div className={`text-2xl font-bold ${color} mb-1`}>
+        {typeof value === 'number' ? count : value}
+      </div>
+      <div className="text-xs text-gray-600">{subtitle}</div>
+    </div>
+  )
+}
 
 const Login = () => {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -22,6 +70,15 @@ const Login = () => {
     setError('')
 
     try {
+      // 先尝试原来的登录方式
+      try {
+        await login(formData.username, formData.password)
+        navigate('/')
+        return
+      } catch (err) {
+        // 如果需要手机验证码，则继续
+      }
+
       const apiBase = import.meta.env.VITE_API_BASE_URL || ''
       const response = await fetch(`${apiBase}/api/login`, {
         method: 'POST',
@@ -132,19 +189,21 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl">
-            <Lock className="w-10 h-10 text-white" />
+        {/* Logo和标题 - 添加悬浮动画 */}
+        <div className="text-center mb-8 animate-bounce">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 cursor-pointer">
+            <Lock className="w-10 h-10 text-white animate-pulse" />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent animate-gradient-x">
             欢迎回到灵值生态园
           </h1>
           <p className="text-gray-600 mt-2">登录您的账户，开启价值创造之旅</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        {/* 登录表单 */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-shadow duration-300">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm animate-shake">
               {error}
             </div>
           )}
@@ -158,7 +217,7 @@ const Login = () => {
                   type="text"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all hover:border-primary-300"
                   placeholder="请输入用户名"
                   required
                 />
@@ -173,7 +232,7 @@ const Login = () => {
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all hover:border-primary-300"
                   placeholder="请输入密码"
                   required
                 />
@@ -190,7 +249,7 @@ const Login = () => {
                       type="text"
                       value={formData.phoneCode}
                       onChange={(e) => setFormData({ ...formData, phoneCode: e.target.value })}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all hover:border-primary-300"
                       placeholder="请输入验证码"
                       required
                     />
@@ -217,7 +276,7 @@ const Login = () => {
             <div className="flex items-center justify-between">
               <Link
                 to="/forgot-password"
-                className="text-sm text-primary-600 hover:text-primary-700 transition-colors"
+                className="text-sm text-primary-600 hover:text-primary-700 transition-colors hover:underline"
               >
                 忘记密码？
               </Link>
@@ -232,7 +291,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-3 rounded-lg font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+              className="w-full bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-3 rounded-lg font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0"
             >
               {loading ? (
                 <>
@@ -271,11 +330,39 @@ const Login = () => {
           </div>
 
           <div className="mt-6 text-center text-sm text-gray-600">
-            还没有账号？{' '}
-            <Link to="/register" className="text-primary-600 hover:text-primary-700 font-semibold">
+            还没有账户？{' '}
+            <Link to="/register" className="text-primary-600 hover:text-primary-700 font-semibold hover:underline">
               立即注册
             </Link>
           </div>
+        </div>
+
+        {/* 功能亮点 - 动画卡片 */}
+        <div className="mt-8 grid grid-cols-3 gap-4">
+          <FeatureCard
+            icon={TrendingUp}
+            title="价值确定性"
+            value={100}
+            subtitle="价值确定性"
+            color="text-primary-600"
+            delay={0}
+          />
+          <FeatureCard
+            icon={Clock}
+            title="快速到账"
+            value="T+1"
+            subtitle="快速到账"
+            color="text-secondary-600"
+            delay={200}
+          />
+          <FeatureCard
+            icon={Zap}
+            title="零手续费"
+            value="0"
+            subtitle="0手续费"
+            color="text-teal-600"
+            delay={400}
+          />
         </div>
 
         <div className="mt-6 text-center text-xs text-gray-500">
