@@ -5481,9 +5481,25 @@ def mark_all_notifications_read():
 import requests
 from urllib.parse import urlencode
 
+# ============ 扩展功能初始化 ============
+try:
+    from extension_features import init_extension_features
+    EXTENSION_AVAILABLE = True
+except ImportError:
+    EXTENSION_AVAILABLE = False
+    print("警告: extension_features 模块未找到")
+
 # ============ 启动服务 ============
 
 if __name__ == '__main__':
+    # 初始化扩展功能
+    if EXTENSION_AVAILABLE:
+        try:
+            init_extension_features(app, get_db, verify_token)
+            print("✅ 扩展功能初始化成功")
+        except Exception as e:
+            print(f"❌ 扩展功能初始化失败: {e}")
+
     # 使用8080端口，配置所有CORS头部
     port = 8080
     
