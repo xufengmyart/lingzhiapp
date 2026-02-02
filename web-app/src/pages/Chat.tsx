@@ -150,7 +150,8 @@ const ChatContent = () => {
                   }`}
                 >
                   {/* 文字加大两号 - 从 text-sm 改为 text-base */}
-                  <p className="text-base whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                  {/* 添加 break-all 和 break-words 确保长字符串自动换行 */}
+                  <p className="text-base whitespace-pre-wrap leading-relaxed break-all break-words">{message.content}</p>
                   <span className="text-xs opacity-60 mt-2 block">
                     {new Date(message.timestamp).toLocaleTimeString()}
                   </span>
