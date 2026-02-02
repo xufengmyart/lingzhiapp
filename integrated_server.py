@@ -10,9 +10,7 @@ import urllib.request
 import urllib.parse
 
 class IntegratedHandler(BaseHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.public_dir = '/workspace/projects/public'
+    public_dir = '/workspace/projects/public'
     
     server_version = "IntegratedServer/1.0"
     
