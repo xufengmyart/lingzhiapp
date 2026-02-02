@@ -1,33 +1,7 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>灵值生态园 - 智能体APP</title>
-    <script>
-        // 配置API地址
-        localStorage.setItem('apiBaseURL', '/api');
-
-        // 自动检测访问方式并给出提示
-        (function() {
-            const currentUrl = window.location.href;
-
-            // 检测端口
-            const portMatch = currentUrl.match(/:(\d+)\//);
-            const port = portMatch ? portMatch[1] : (currentUrl.startsWith('https') ? '443' : '80');
-
-            // 如果是8088端口访问（备用方案）
-            if (port === '8088') {
-                console.log('正在使用备用端口8088访问');
-                // 不再重定向，直接使用当前访问方式
-            }
-            // 如果是80端口的IP地址访问，显示提示（但不重定向）
-            else if (currentUrl.includes('123.56.142.143') || currentUrl.match(/^https?:\/\/\d+\.\d+\.\d+\.\d+/)) {
-                console.log('检测到IP访问，使用当前访问方式');
-                // 不再自动重定向，用户可以正常使用
-            }
-        })();
-    </script>
+  <head>
+    <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#4F46E5" />
@@ -35,11 +9,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="灵值生态园" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-TileColor" content="#4F46E5" />
+    <meta name="msapplication-tap-highlight" content="no" />
     <title>灵值生态园 - 智能体APP</title>
     <script type="module" crossorigin src="/assets/index-JklDmC0r.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-Dt-LoNni.css">
-</head>
-<body>
+  </head>
+  <body>
     <div id="root"></div>
-</body>
+  </body>
 </html>
