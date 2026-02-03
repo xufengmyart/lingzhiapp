@@ -1,34 +1,24 @@
 """
-灵值生态园智能体核心代码（融合统一版）
+灵值智能体 - 智能心灵伙伴
 
-版本：v7.2 双智能体完全融合版
-更新日期：2026年1月28日
-融合内容：
-- 融合灵值生态园-开发智能体和灵值生态园智能体
-- 融合两个配置文件的优势（用户旅程引导系统 + 完整工具集）
-- 统一了知识库搜索工具（支持chunks和documents两种模式）
-- 统一了文生图工具（支持多种风格、尺寸、数量）
-- 保留了联网搜索工具（获取最新信息）
-- 统一了default_headers配置（确保集成兼容性）
-- 统一了System Prompt（灵值生态园首席生态官）
-- 新增：经济模型配置和工具（6个）
-- 新增：用户旅程管理工具（5个）
-- 新增：合伙人管理工具（5个）
-- 新增：安全框架工具（5个）
-- 新增：用户旅程引导系统（7个阶段详细引导）
+版本：v8.0 情绪价值升级版
+更新日期：2025年1月15日
+核心定位：
+- 智能心灵伙伴：有温度、有个性、有记忆、能成长
+- 情绪价值创造：识别、共情、支持、引导
+- 长期陪伴关系：记住用户，建立深度连接
 
 核心能力：
-1. 知识库检索：西安文化、品牌转译、贡献值体系、生态规则
-2. 联网搜索：最新商业趋势、文化案例
-3. 文生图：品牌视觉创意、空间设计方案
-4. 情绪价值创造：双螺旋响应法
-5. 贡献值财富价值锚定：即时变现+长期增值
-6. 经济模型计算：基于统一经济模型的价值计算和预测
-7. 用户旅程管理：7阶段用户旅程引导和追踪
-8. 合伙人管理：合伙人资格、申请、权益管理
-9. 安全防护：SQL注入防护、输入验证、权限控制、审计日志
+1. 情绪识别：6种基础情绪 + 复杂情绪识别
+2. 共情回应：4级共情深度，从基础理解到情绪引导
+3. 成长建议：6类建议（自我探索、行动建议、视角转换、资源推荐、习惯养成、自我肯定）
+4. 情感支持：4种支持模式（陪伴、鼓励、引导、庆祝）
+5. 长期记忆：5个维度记忆（情绪、关系、偏好、成长、事件）
+6. 知识库检索：获取相关信息
+7. 联网搜索：获取最新信息
+8. 用户服务：签到、登录等基础服务
 
-工具总数：85个
+工具总数：10个（聚焦情绪价值核心能力）
 """
 
 import os
@@ -43,116 +33,20 @@ from coze_coding_utils.runtime_ctx.context import default_headers
 from storage.memory.memory_saver import get_memory_saver
 
 # 导入统一工具（融合版）
+# 导入核心工具
 from tools.knowledge_retrieval_tool import retrieve_knowledge
-from tools.image_generation_tool import generate_image
 from tools.web_search_tool import search_web
-from tools.lingzhi_calculator import calculate_lingzhi_value, calculate_income_projection, get_exchange_info, calculate_roi, suggest_participation_level
-from tools.super_admin_manager import (
-    check_super_admin_uniqueness,
-    get_super_admin_principles_detail,
-    validate_super_admin_count,
-    explain_super_admin_privileges,
-    explain_super_admin_transfer_process,
-    get_super_admin_security_requirements
-)
-from tools.super_admin_manager_enhanced import (
-    prevent_super_admin_operation,
-    transfer_super_admin
-)
 from tools.check_in_tool import check_in, get_check_in_history, get_today_check_in_status, get_today_check_in_statistics
 from tools.login_tool import user_login, get_login_status, user_auto_register_login
-from tools.password_change_tool import change_password, force_change_user_password
-from tools.user_registration_tool import (
-    get_real_name_authentication_notice,
-    validate_id_card,
-    submit_real_name_authentication
-)
-from tools.payment_method_tool import (
-    get_payment_method_notice,
-    validate_payment_method,
-    submit_payment_method,
-    get_user_payment_method
-)
-from tools.financial_management_tool import (
-    get_company_info,
-    submit_withdrawal_request,
-    approve_withdrawal_request,
-    get_withdrawal_requests,
-    get_financial_report
-)
-from tools.today_statistics_tool import (
-    get_today_registration_count,
-    get_today_active_users,
-    get_platform_statistics
-)
-from tools.security_tools import (
-    financial_security_check,
-    comprehensive_security_check,
-    detect_abnormal_operation,
-    check_permission
-)
-from tools.lingzhi_security_tools import (
-    validate_lingzhi_gain,
-    record_lingzhi_gain,
-    get_lingzhi_gain_rules,
-    check_lingzhi_security
-)
-from tools.shortcut_tools import (
-    create_shortcut_guide,
-    create_desktop_shortcut_file,
-    generate_qr_code_info
-)
-from tools.user_query_tools import (
-    get_all_users,
-    get_user_by_id,
-    search_users
-)
-from tools.database_tools import (
-    test_database_connection,
-    get_database_status,
-    get_user_statistics,
-    get_table_structure,
-    execute_sql_query
-)
-from tools.data_sync_tools import (
-    export_users_to_csv,
-    import_users_from_csv,
-    export_users_to_json,
-    import_users_from_json,
-    create_test_users,
-    delete_test_users,
-    get_data_sync_guide
-)
-from tools.user_journey_tool import (
-    get_user_journey_stage,
-    update_user_journey_progress,
-    get_journey_recommended_path,
-    get_journey_milestone,
-    get_new_user_guide
-)
-from tools.partner_tool import (
-    check_partner_qualification,
-    submit_partner_application,
-    get_partner_application_status,
-    get_partner_privileges,
-    get_partner_development_guide
-)
-from tools.economic_model_tool import (
-    get_economic_model_info,
-    calculate_lingzhi_value_advanced,
-    get_income_projection_advanced,
-    get_exchange_info_advanced,
-    get_new_user_bonus_info,
-    compare_investment_options
-)
 
-# 导入安全框架工具
-from tools.secure_database_tool import (
-    execute_sql_query,
-    get_table_schema,
-    get_data_statistics,
-    batch_execute_sql,
-    build_safe_query
+# 导入情绪工具
+from tools.emotion_tools import (
+    detect_emotion,
+    record_emotion,
+    get_emotion_statistics,
+    create_emotion_diary,
+    get_emotion_diaries,
+    analyze_emotion_pattern
 )
 
 # 配置文件路径
@@ -171,13 +65,13 @@ class AgentState(MessagesState):
 
 def build_agent(ctx=None):
     """
-    构建灵值生态园智能体（融合版）
+    构建灵值智能体 - 智能心灵伙伴
     
-    融合了两个智能体的所有优点：
-    - 完整的System Prompt（灵值生态园首席生态官）
-    - 统一的工具接口（知识库、联网、文生图）
-    - 标准的配置管理（model、temperature、thinking等）
-    - 兼容的集成配置（default_headers）
+    核心特性：
+    - 情绪识别与共情回应
+    - 长期记忆与个性化服务
+    - 成长建议与情感支持
+    - 简洁的工具集（聚焦情绪价值）
     
     Args:
         ctx: 上下文对象（可选），用于集成调用
@@ -198,6 +92,46 @@ def build_agent(ctx=None):
     
     # 初始化大语言模型
     llm = ChatOpenAI(
+        model=cfg['config'].get("model"),
+        api_key=api_key,
+        base_url=base_url,
+        temperature=cfg['config'].get('temperature', 0.8),
+        streaming=True,
+        timeout=cfg['config'].get('max_completion_tokens', 10000) / 10,
+        extra_body={
+            "thinking": {
+                "type": cfg['config'].get('thinking_type', 'disabled')
+            }
+        },
+        default_headers=default_headers(ctx) if ctx else {}
+    )
+    
+    # 定义工具列表（聚焦情绪价值核心能力）
+    tools = [
+        retrieve_knowledge,           # 知识库检索
+        search_web,                   # 联网搜索
+        detect_emotion,               # 情绪识别
+        record_emotion,               # 情绪记录
+        get_emotion_statistics,       # 情绪统计
+        create_emotion_diary,         # 创建情绪日记
+        get_emotion_diaries,          # 获取情绪日记
+        analyze_emotion_pattern,      # 分析情绪模式
+        check_in,                     # 用户签到
+        get_check_in_history,         # 签到历史
+        get_today_check_in_status,    # 今日签到状态
+        get_today_check_in_statistics, # 签到统计
+        user_login,                   # 用户登录
+        get_login_status,             # 获取登录状态
+        user_auto_register_login      # 自动注册登录
+    ]
+    
+    return create_agent(
+        model=llm,
+        system_prompt=cfg.get("sp"),
+        tools=tools,
+        checkpointer=get_memory_saver(),
+        state_schema=AgentState,
+    )
         model=cfg['config'].get("model"),
         api_key=api_key,
         base_url=base_url,
