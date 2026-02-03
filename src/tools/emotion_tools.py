@@ -30,6 +30,27 @@ _user_emotion_records = {}
 _user_emotion_diaries = {}
 
 
+# 内部函数：记录情绪（供其他工具调用）
+def _record_emotion_internal(user_id: str, emotion: str, intensity: float, context: Optional[str] = None):
+    """内部函数：记录情绪"""
+    if user_id not in _user_emotion_records:
+        _user_emotion_records[user_id] = []
+    record = {
+        "emotion": emotion,
+        "emotion_name": EMOTION_TYPES.get(emotion, {}).get('name', emotion),
+        "intensity": intensity,
+        "context": context,
+        "timestamp": datetime.now().isoformat()
+    }
+    _user_emotion_records[user_id].append(record)
+    return {
+        "success": True,
+        "message": "情绪记录成功",
+        "emotion": EMOTION_TYPES.get(emotion, {}).get('name', emotion),
+        "total_records": len(_user_emotion_records[user_id])
+    }
+
+
 @tool
 def detect_emotion(text: str, user_id: Optional[str] = None) -> str:
     """识别用户文本中的情绪"""
@@ -149,7 +170,8 @@ def create_emotion_diary(user_id: str, content: str, emotion: str, intensity: fl
         "timestamp": datetime.now().isoformat()
     }
     _user_emotion_diaries[user_id].append(diary)
-    record_emotion(user_id, emotion, intensity, content)
+    # 使用内部函数记录情绪
+    _record_emotion_internal(user_id, emotion, intensity, content)
     return json.dumps({"success": True, "message": "情绪日记创建成功", "total_diaries": len(_user_emotion_diaries[user_id])}, ensure_ascii=False)
 
 
