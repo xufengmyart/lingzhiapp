@@ -509,8 +509,6 @@ def submit_real_name_authentication(
         user.id_card = id_card.upper()  # 转换为大写
         user.is_registered = True
         user.registration_time = datetime.now(pytz.timezone('Asia/Shanghai'))
-        user.real_name_verified = True
-        user.id_card_verified = True
 
         # 如果有推荐人，创建推荐关系
         if referrer:

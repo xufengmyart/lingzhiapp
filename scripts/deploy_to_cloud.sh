@@ -1,9 +1,13 @@
 #!/bin/bash
 
-# 灵值生态园云服务器部署脚本
-# 使用方法：./scripts/deploy_to_cloud.sh
+# 灵值智能体 v8.1 - 云服务器部署脚本
+# 功能：将情绪系统数据库持久化代码同步到云服务器
 
 set -e  # 遇到错误立即退出
+
+echo "=========================================="
+echo "灵值智能体 v8.1 - 云服务器部署脚本"
+echo "=========================================="
 
 # 颜色定义
 RED='\033[0;31m'
@@ -11,170 +15,109 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# 云服务器配置（请根据实际情况修改）
-CLOUD_SERVER_IP="123.56.142.143"
-CLOUD_SERVER_USER="root"
-CLOUD_SERVER_PATH="/root/lingzhi-ecosystem"
+# 配置变量（请根据实际情况修改）
+REMOTE_USER="your_username"        # 云服务器用户名
+REMOTE_HOST="your_server_ip"       # 云服务器IP
+REMOTE_PATH="/var/www/backend"     # 云服务器项目路径
+SERVICE_NAME="lingzhi-backend"     # 服务名称
 
-echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  灵值生态园 - 云服务器部署脚本${NC}"
-echo -e "${GREEN}========================================${NC}"
-echo ""
+# 需要同步的文件
+FILES=(
+    "src/storage/database/shared/model.py"
+    "src/storage/database/emotion_manager.py"
+    "src/tools/emotion_tools.py"
+    "scripts/test_emotion_database.py"
+)
 
-# 检查本地环境
-echo -e "${YELLOW}[1/6] 检查本地环境...${NC}"
-if [ ! -f "admin-backend/app.py" ]; then
-    echo -e "${RED}错误：未找到后端代码，请确保在项目根目录执行此脚本${NC}"
-    exit 1
-fi
-echo -e "${GREEN}✓ 本地环境检查通过${NC}"
-
-# 构建前端
-echo -e "${YELLOW}[2/6] 构建前端...${NC}"
-cd web-app
-npm run build
-if [ $? -ne 0 ]; then
-    echo -e "${RED}错误：前端构建失败${NC}"
-    exit 1
-fi
-echo -e "${GREEN}✓ 前端构建成功${NC}"
-cd ..
-
-# 打包代码
-echo -e "${YELLOW}[3/6] 打包代码...${NC}"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-ARCHIVE_NAME="lingzhi_ecosystem_${TIMESTAMP}.tar.gz"
-
-# 创建临时目录
-TEMP_DIR=$(mktemp -d)
-mkdir -p ${TEMP_DIR}/{admin-backend,web-app-dist,scripts}
-
-# 复制后端代码
-cp -r admin-backend/* ${TEMP_DIR}/admin-backend/
-cp admin-backend/requirements.txt ${TEMP_DIR}/admin-backend/ 2>/dev/null || true
-
-# 复制前端构建产物
-cp -r web-app/public/* ${TEMP_DIR}/web-app-dist/
-
-# 复制数据库
-cp admin-backend/lingzhi_ecosystem.db ${TEMP_DIR}/admin-backend/ 2>/dev/null || true
-
-# 打包
-cd ${TEMP_DIR}
-tar -czf ${ARCHIVE_NAME} admin-backend web-app-dist
-cd - > /dev/null
-
-echo -e "${GREEN}✓ 代码打包完成：${ARCHIVE_NAME}${NC}"
-
-# 上传到云服务器
-echo -e "${YELLOW}[4/6] 上传到云服务器...${NC}"
-echo -e "${YELLOW}服务器：${CLOUD_SERVER_USER}@${CLOUD_SERVER_IP}${NC}"
-echo -e "${YELLOW}目标路径：${CLOUD_SERVER_PATH}${NC}"
-
-# 检查是否可以SSH连接
-if ! ssh -o ConnectTimeout=5 -o BatchMode=yes ${CLOUD_SERVER_USER}@${CLOUD_SERVER_IP} exit 2>/dev/null; then
-    echo -e "${YELLOW}SSH连接测试失败，请确保：${NC}"
-    echo "  1. 已配置SSH密钥认证"
-    echo "  2. 或输入密码进行连接"
-    echo ""
-    read -p "是否继续上传？(y/n): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo -e "${YELLOW}部署已取消${NC}"
-        exit 0
+echo -e "${YELLOW}[1/5] 检查本地文件...${NC}"
+for file in "${FILES[@]}"; do
+    if [ ! -f "$file" ]; then
+        echo -e "${RED}错误: 文件 $file 不存在${NC}"
+        exit 1
     fi
-fi
+    echo -e "${GREEN}✓ $file${NC}"
+done
 
-# 上传压缩包
-scp ${TEMP_DIR}/${ARCHIVE_NAME} ${CLOUD_SERVER_USER}@${CLOUD_SERVER_IP}:/tmp/
-if [ $? -ne 0 ]; then
-    echo -e "${RED}错误：上传失败${NC}"
-    exit 1
-fi
-echo -e "${GREEN}✓ 上传成功${NC}"
+echo -e "\n${YELLOW}[2/5] 备份本地文件...${NC}"
+BACKUP_DIR="backup_$(date +%Y%m%d_%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+for file in "${FILES[@]}"; do
+    cp "$file" "$BACKUP_DIR/"
+done
+echo -e "${GREEN}✓ 备份完成: $BACKUP_DIR${NC}"
 
-# 在云服务器上部署
-echo -e "${YELLOW}[5/6] 在云服务器上部署...${NC}"
-ssh ${CLOUD_SERVER_USER}@${CLOUD_SERVER_IP} << 'ENDSSH'
-set -e
+echo -e "\n${YELLOW}[3/5] 上传文件到云服务器...${NC}"
+for file in "${FILES[@]}"; do
+    echo "正在上传: $file"
+    scp "$file" "$REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH/$(dirname $file)/"
+done
+echo -e "${GREEN}✓ 文件上传完成${NC}"
 
-# 创建目标目录
-mkdir -p /root/lingzhi-ecosystem
-mkdir -p /root/lingzhi-ecosystem/backup
+echo -e "\n${YELLOW}[4/5] 在云服务器上执行数据库迁移...${NC}"
+ssh "$REMOTE_USER@$REMOTE_HOST" << 'ENDSSH'
+cd /var/www/backend
 
-# 备份当前版本
-if [ -d "/root/lingzhi-ecosystem/admin-backend" ]; then
-    echo "备份当前版本..."
-    BACKUP_NAME="backup_$(date +%Y%m%d_%H%M%S).tar.gz"
-    tar -czf /root/lingzhi-ecosystem/backup/${BACKUP_NAME} \
-        /root/lingzhi-ecosystem/admin-backend \
-        /root/lingzhi-ecosystem/web-app-dist \
-        /root/lingzhi-ecosystem/admin-backend/*.db 2>/dev/null || true
-    echo "备份完成：${BACKUP_NAME}"
-fi
+# 创建数据库迁移SQL
+cat > /tmp/emotion_tables.sql << 'SQLEOF'
+-- 创建情绪记录表
+CREATE TABLE IF NOT EXISTS emotion_records (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    emotion VARCHAR(20) NOT NULL,
+    emotion_name VARCHAR(20) NOT NULL,
+    intensity FLOAT NOT NULL,
+    context TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT now()
+);
 
-# 解压新版本
-echo "解压新版本..."
-cd /tmp
-tar -xzf ${ARCHIVE_NAME}
-cp -r admin-backend /root/lingzhi-ecosystem/
-cp -r web-app-dist /root/lingzhi-ecosystem/
+-- 创建情绪日记表
+CREATE TABLE IF NOT EXISTS emotion_diaries (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    content TEXT NOT NULL,
+    emotion VARCHAR(20) NOT NULL,
+    emotion_name VARCHAR(20) NOT NULL,
+    intensity FLOAT NOT NULL,
+    tags JSON,
+    created_at TIMESTAMP NOT NULL DEFAULT now())
+;
 
-# 安装依赖
-echo "安装Python依赖..."
-cd /root/lingzhi-ecosystem/admin-backend
-pip install -r requirements.txt 2>/dev/null || true
+-- 创建索引
+CREATE INDEX IF NOT EXISTS ix_emotion_records_user_id ON emotion_records(user_id);
+CREATE INDEX IF NOT EXISTS ix_emotion_records_created_at ON emotion_records(created_at);
+CREATE INDEX IF NOT EXISTS ix_emotion_records_emotion ON emotion_records(emotion);
 
-# 停止旧服务
-echo "停止旧服务..."
-pkill -f "python app.py" 2>/dev/null || true
+CREATE INDEX IF NOT EXISTS ix_emotion_diaries_user_id ON emotion_diaries(user_id);
+CREATE INDEX IF NOT EXISTS ix_emotion_diaries_created_at ON emotion_diaries(created_at);
 
-# 启动新服务
-echo "启动后端服务..."
-nohup python app.py > /tmp/backend.log 2>&1 &
+-- 添加表注释
+COMMENT ON TABLE emotion_records IS '情绪记录表';
+COMMENT ON TABLE emotion_diaries IS '情绪日记表';
+SQLEOF
 
-# 检查服务状态
-sleep 3
-if pgrep -f "python app.py" > /dev/null; then
-    echo "✓ 后端服务启动成功"
-else
-    echo "✗ 后端服务启动失败，请检查日志：/tmp/backend.log"
-    exit 1
-fi
+# 执行SQL（请根据实际情况修改数据库连接参数）
+psql -h localhost -U postgres -d lingzhi_db -f /tmp/emotion_tables.sql
 
+echo "数据库表创建完成"
 ENDSSH
+echo -e "${GREEN}✓ 数据库迁移完成${NC}"
 
-if [ $? -ne 0 ]; then
-    echo -e "${RED}错误：云服务器部署失败${NC}"
-    exit 1
-fi
-echo -e "${GREEN}✓ 云服务器部署成功${NC}"
+echo -e "\n${YELLOW}[5/5] 重启服务...${NC}"
+ssh "$REMOTE_USER@$REMOTE_HOST" "sudo systemctl restart $SERVICE_NAME"
+echo -e "${GREEN}✓ 服务重启完成${NC}"
 
-# 清理临时文件
-echo -e "${YELLOW}[6/6] 清理临时文件...${NC}"
-rm -rf ${TEMP_DIR}
-ssh ${CLOUD_SERVER_USER}@${CLOUD_SERVER_IP} "rm -f /tmp/${ARCHIVE_NAME}"
-echo -e "${GREEN}✓ 清理完成${NC}"
+echo -e "\n${GREEN}=========================================="
+echo "部署完成！"
+echo "==========================================${NC}"
 
-# 验证部署
+echo -e "\n${YELLOW}后续验证步骤：${NC}"
+echo "1. 检查服务状态:"
+echo "   ssh $REMOTE_USER@$REMOTE_HOST 'sudo systemctl status $SERVICE_NAME'"
 echo ""
-echo -e "${GREEN}========================================${NC}"
-echo -e "${GREEN}  部署完成！${NC}"
-echo -e "${GREEN}========================================${NC}"
+echo "2. 查看日志:"
+echo "   ssh $REMOTE_USER@$REMOTE_HOST 'tail -f /var/www/backend/logs/app.log'"
 echo ""
-echo -e "${YELLOW}下一步操作：${NC}"
-echo "1. 在阿里云控制台开放以下端口："
-echo "   - 80 (HTTP)"
-echo "   - 443 (HTTPS)"
-echo "   - 8001 (后端API，可选)"
-echo ""
-echo "2. 访问地址："
-echo "   http://${CLOUD_SERVER_IP}"
-echo ""
-echo "3. 查看日志："
-echo "   ssh ${CLOUD_SERVER_USER}@${CLOUD_SERVER_IP} 'tail -f /tmp/backend.log'"
-echo ""
-echo -e "${YELLOW}注意：${NC}"
-echo "- 首次部署可能需要配置Nginx反向代理"
-echo "- 如需使用域名访问，请配置DNS解析"
-echo ""
+echo "3. 运行测试:"
+echo "   ssh $REMOTE_USER@$REMOTE_HOST 'cd /var/www/backend && python scripts/test_emotion_database.py'"
+
+echo -e "\n${GREEN}如果遇到问题，可以从 $BACKUP_DIR 恢复文件${NC}"
