@@ -1,6 +1,7 @@
-import axios from 'axios'
+import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios'
 import type { User, ApiResponse, IncomeLevel, JourneyStage, PartnerInfo } from '../types'
 import { mockApi } from './mockApi'
+import { requestCache, generateCacheKey, clearAuthCache } from './cache'
 
 // 生产环境使用真实API，开发环境根据需要切换
 const USE_MOCK_API = false
@@ -8,6 +9,13 @@ const USE_MOCK_API = false
 // API地址配置：使用相对路径，配合Nginx反向代理
 // Nginx会将 /api/ 请求转发到 http://127.0.0.1:8001/api/
 const API_BASE_URL = '/api'
+
+// 重试配置
+const MAX_RETRY = 3
+const RETRY_DELAY = 1000
+
+// 睡眠函数
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -31,16 +39,37 @@ api.interceptors.request.use(
   }
 )
 
-// 响应拦截器
+// 响应拦截器 - 添加重试机制
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  async (error: AxiosError) => {
+    const config = error.config as InternalAxiosRequestConfig & { __retryCount?: number }
+
+    // 不重试的情况
+    if (!config || !error.response) return Promise.reject(error)
+    if (error.response.status === 401) {
+      // 清除缓存并跳转登录
+      clearAuthCache()
       localStorage.removeItem('token')
       localStorage.removeItem('user')
       window.location.href = '/login'
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
+    if (error.response.status === 404) return Promise.reject(error)
+    if (config.method !== 'get') return Promise.reject(error) // 只重试GET请求
+
+    config.__retryCount = config.__retryCount || 0
+
+    if (config.__retryCount >= MAX_RETRY) {
+      return Promise.reject(error)
+    }
+
+    config.__retryCount += 1
+
+    // 指数退避
+    await sleep(RETRY_DELAY * Math.pow(2, config.__retryCount - 1))
+
+    return api.request(config)
   }
 )
 
@@ -61,18 +90,34 @@ export const userApi = {
     return response.data
   },
 
-  getUserInfo: async () => {
+  getUserInfo: async (useCache: boolean = true) => {
     if (USE_MOCK_API) return mockApi.getUserInfo()
+    
+    const cacheKey = generateCacheKey('GET', '/api/user/info')
+    
+    // 尝试从缓存获取
+    if (useCache) {
+      const cached = requestCache.get(cacheKey)
+      if (cached) return cached
+    }
+    
     const response = await api.get<ApiResponse<User>>('/api/user/info')
+    
+    // 缓存结果
+    requestCache.set(cacheKey, response.data)
+    
     return response.data
   },
 
   updateProfile: async (data: Partial<User>) => {
     if (USE_MOCK_API) return mockApi.updateProfile(data)
     const response = await api.put<ApiResponse<User>>('/api/user/profile', data)
+    
+    // 清除用户信息缓存
+    requestCache.delete(generateCacheKey('GET', '/api/user/info'))
+    
     return response.data
   },
-}
 
 // 智能体相关API
 export const agentApi = {
@@ -265,7 +310,18 @@ export const checkInApi = {
 
   getTodayStatus: async () => {
     if (USE_MOCK_API) return mockApi.getTodayStatus()
+    
+    const cacheKey = generateCacheKey('GET', '/api/checkin/status')
+    
+    // 尝试从缓存获取
+    const cached = requestCache.get(cacheKey)
+    if (cached) return cached
+    
     const response = await api.get<ApiResponse<{ checkedIn: boolean; lingzhi: number }>>('/api/checkin/status')
+    
+    // 缓存结果（1分钟）
+    requestCache.set(cacheKey, response.data, 60 * 1000)
+    
     return response.data
   },
 
