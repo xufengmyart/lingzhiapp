@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵值生态园 - 一键部署工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0a5c36 0%, #d4a437 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #0a5c36;
+            margin-bottom: 10px;
+            font-size: 32px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .status-box {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-left: 4px solid #0a5c36;
+        }
+
+        .status-box h2 {
+            color: #0a5c36;
+            font-size: 20px;
+            margin-bottom: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .status-icon.success {
+            background: #10b981;
+            color: white;
+        }
+
+        .status-icon.pending {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .status-text {
+            flex: 1;
+        }
+
+        .command-box {
+            background: #1e1e1e;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .command-box pre {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .button {
+            display: block;
+            width: 100%;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #0a5c36 0%, #1a7d4e 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            margin-bottom: 15px;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(10, 92, 54, 0.3);
+        }
+
+        .button.secondary {
+            background: linear-gradient(135deg, #d4a437 0%, #e5b95c 100%);
+            color: #1a1a1a;
+        }
+
+        .button.secondary:hover {
+            box-shadow: 0 10px 30px rgba(212, 164, 55, 0.3);
+        }
+
+        .note {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            color: #856404;
+            font-size: 14px;
+        }
+
+        .note strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .instructions {
+            background: #e3f2fd;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+            color: #424242;
+        }
+
+        .instructions li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .copy-button {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .copy-button:hover {
+            background: #d97706;
+        }
+
+        .auto-deploy-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .auto-deploy-section h2 {
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        .auto-deploy-section p {
+            margin-bottom: 20px;
+            line-height: 1.6;
+            opacity: 0.95;
+        }
+
+        .auto-deploy-url {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            word-break: break-all;
+            margin-bottom: 15px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .button {
+                font-size: 16px;
+                padding: 12px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 灵值生态园 - 一键部署工具</h1>
+        <p class="subtitle">自动修复403 Forbidden错误</p>
+
+        <!-- 自动部署部分 -->
+        <div class="auto-deploy-section">
+            <h2>⚡ 最简单的方法（推荐）</h2>
+            <p><strong>SSH登录服务器后，只需复制并执行以下一条命令：</strong></p>
+            <div class="auto-deploy-url">
+curl -fsSL "https://coze-coding-project.tos.coze.site/coze_storage_7597771717536317475/deploy_frontend_from_storage_c62bf332.sh?sign=1770417491-0-0-0" | bash
+            </div>
+            <p>这条命令会自动：<br>
+            ✓ 下载前端文件（12个）<br>
+            ✓ 配置权限<br>
+            ✓ 验证部署<br>
+            ✓ 重启Nginx</p>
+        </div>
+
+        <!-- 部署状态 -->
+        <div class="status-box">
+            <h2>📊 前端文件部署状态</h2>
+
+            <div class="status-item">
+                <div class="status-icon success">✓</div>
+                <div class="status-text">
+                    <strong>前端项目已构建</strong>
+                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
+                        构建产物位置：/workspace/projects/public/
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-item">
+                <div class="status-icon success">✓</div>
+                <div class="status-text">
+                    <strong>文件已上传到对象存储</strong>
+                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
+                        12个文件已上传到S3存储
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-item">
+                <div class="status-icon success">✓</div>
+                <div class="status-text">
+                    <strong>部署脚本已准备</strong>
+                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
+                        自动化部署脚本已生成
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-item">
+                <div class="status-icon pending">⏳</div>
+                <div class="status-text">
+                    <strong>等待服务器部署</strong>
+                    <div style="font-size: 13px; color: #666; margin-top: 4px;">
+                        需要在云服务器上执行部署命令
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 操作步骤 -->
+        <div class="instructions">
+            <h3>📝 部署步骤</h3>
+            <ol>
+                <li><strong>SSH登录服务器</strong>：
+                    <div class="command-box" style="margin-top: 10px;">
+                        <pre>ssh root@123.56.142.143</pre>
+                    </div>
+                </li>
+                <li><strong>执行部署命令</strong>（复制上面的自动部署命令）</li>
+                <li><strong>等待部署完成</strong>（约10-30秒）</li>
+                <li><strong>访问网站</strong>：https://meiyueart.com</li>
+                <li><strong>清除浏览器缓存</strong>：Ctrl + Shift + R</li>
+            </ol>
+        </div>
+
+        <!-- 部署命令（备用） -->
+        <div class="command-box">
+            <h3 style="color: #10b981; margin-bottom: 15px;">🖥️ 完整部署命令（备用方案）</h3>
+            <pre id="deployCommand">curl -fsSL "https://coze-coding-project.tos.coze.site/coze_storage_7597771717536317475/deploy_frontend_from_storage_c62bf332.sh?sign=1770417491-0-0-0" | bash</pre>
+            <button class="copy-button" onclick="copyCommand()">📋 复制命令</button>
+        </div>
+
+        <!-- 验证步骤 -->
+        <div class="instructions">
+            <h3>✅ 部署后验证</h3>
+            <ol>
+                <li>访问 <strong>https://meiyueart.com</strong></li>
+                <li>应该显示登录页面（生态之梦风格）</li>
+                <li>HTTP状态码应为 <strong>200</strong>（不再是403）</li>
+                <li>测试登录：用户名 <code>admin</code>，密码 <code>password123</code></li>
+            </ol>
+        </div>
+
+        <!-- 注意事项 -->
+        <div class="note">
+            <strong>⚠️ 重要提示：</strong>
+            <ul style="margin-top: 10px; padding-left: 20px;">
+                <li>部署前会自动备份现有文件</li>
+                <li>如果部署失败，可以回滚到备份</li>
+                <li>部署后必须清除浏览器缓存</li>
+                <li>如果仍有问题，请查看 Nginx 日志：<code>tail -50 /var/log/nginx/error.log</code></li>
+            </ul>
+        </div>
+
+        <!-- 技术支持 -->
+        <div style="margin-top: 30px; text-align: center; color: #999; font-size: 14px;">
+            <p>📧 技术支持：如遇问题，请提供部署脚本的输出结果</p>
+            <p>🔍 日志位置：/var/log/nginx/error.log</p>
+        </div>
+    </div>
+
+    <script>
+        function copyCommand() {
+            const command = document.getElementById('deployCommand').textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                const button = document.querySelector('.copy-button');
+                button.textContent = '✅ 已复制!';
+                button.style.background = '#10b981';
+
+                setTimeout(() => {
+                    button.textContent = '📋 复制命令';
+                    button.style.background = '#f59e0b';
+                }, 2000);
+            }).catch(err => {
+                alert('复制失败，请手动复制命令');
+            });
+        }
+    </script>
+</body>
+</html>
