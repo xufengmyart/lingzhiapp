@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
+"""
+上传部署脚本到对象存储
+"""
 import os
-import sys
-
-sys.path.insert(0, '/workspace/projects/src')
-
+from pathlib import Path
 from coze_coding_dev_sdk.s3 import S3SyncStorage
 
+# 初始化对象存储
 storage = S3SyncStorage(
     endpoint_url=os.getenv("COZE_BUCKET_ENDPOINT_URL"),
     access_key="",
@@ -14,51 +15,24 @@ storage = S3SyncStorage(
     region="cn-beijing",
 )
 
-# 上传部署脚本
-script_content = """#!/bin/bash
+# 读取部署脚本
+script_path = Path("deploy_frontend_from_storage.sh")
+with open(script_path, 'r', encoding='utf-8') as f:
+    script_content = f.read()
 
-echo "🌿 生态之梦风格部署中..."
-
-cd /root
-wget -q https://coze-coding-project.tos.coze.site/public_v2.tar_df696dc0.gz -O public.tar.gz
-
-if [ $? -ne 0 ]; then
-    echo "❌ 下载失败"
-    exit 1
-fi
-
-echo "✅ 下载完成"
-
-rm -rf /var/www/frontend/*
-tar -xzf public.tar.gz -C /var/www/frontend/
-
-if [ $? -ne 0 ]; then
-    echo "❌ 解压失败"
-    exit 1
-fi
-
-chown -R root:root /var/www/frontend
-chmod -R 755 /var/www/frontend
-
-systemctl reload nginx
-
-if [ $? -ne 0 ]; then
-    echo "❌ Nginx 重启失败"
-    exit 1
-fi
-
-rm -f public.tar.gz
-
-echo "✅ 部署完成！"
-echo "📱 访问地址: https://meiyueart.com"
-echo "💡 请清除浏览器缓存后访问"
-"""
-
+# 上传脚本
 key = storage.upload_file(
     file_content=script_content.encode('utf-8'),
-    file_name='deploy_ecosystem_root.sh',
-    content_type='text/x-shellscript',
+    file_name="deploy_frontend_from_storage.sh",
+    content_type="text/plain; charset=utf-8",
 )
 
-print(f"✅ 上传成功！Key: {key}")
-print(f"URL: https://coze-coding-project.tos.coze.site/{key}")
+print(f"✅ 部署脚本已上传")
+print(f"\n🚀 在服务器上执行以下命令：\n")
+
+# 构建公开URL
+public_url = f"https://coze-coding-project.tos.coze.site/coze_storage_7597771717536317475/{key}?sign=1770417491-0-0-0"
+
+print(f"curl -fsSL \"{public_url}\" | bash")
+print(f"\n或者手动下载后执行：")
+print(f"wget -O deploy.sh \"{public_url}\" && chmod +x deploy.sh && ./deploy.sh")
