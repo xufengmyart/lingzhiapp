@@ -1,7 +1,7 @@
 import React from 'react'
 import { Loader2 } from 'lucide-react'
 
-interface LoadingProps {
+export interface LoadingProps {
   size?: 'sm' | 'md' | 'lg'
   text?: string
   fullScreen?: boolean

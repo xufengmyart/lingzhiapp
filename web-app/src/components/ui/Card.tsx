@@ -1,7 +1,7 @@
 import React from 'react'
 import { ChevronRight } from 'lucide-react'
 
-interface CardProps {
+export interface CardProps {
   children: React.ReactNode
   title?: string
   subtitle?: string

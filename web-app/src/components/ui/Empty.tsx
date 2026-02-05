@@ -1,7 +1,7 @@
 import React from 'react'
 import { Inbox, AlertCircle, FileText, Search } from 'lucide-react'
 
-interface EmptyProps {
+export interface EmptyProps {
   type?: 'default' | 'error' | 'no-data' | 'no-result'
   title?: string
   description?: string

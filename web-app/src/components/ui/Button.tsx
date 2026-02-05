@@ -1,7 +1,7 @@
 import React from 'react'
 import { Loader2 } from 'lucide-react'
 
-interface ButtonProps {
+export interface ButtonProps {
   children: React.ReactNode
   variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost'
   size?: 'sm' | 'md' | 'lg'

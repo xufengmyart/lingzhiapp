@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Lock, Mail, ArrowLeft, Sparkles, Heart, Star, CheckCircle, RefreshCw } from 'lucide-react'
+import { Lock, Mail, ArrowLeft, Sparkles, Heart, Star, CheckCircle, RefreshCw, ArrowRight } from 'lucide-react'
 
 // 梦幻式设计风格配置
 const dreamStyles = {
