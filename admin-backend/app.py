@@ -444,6 +444,222 @@ def init_db():
         )
     ''')
 
+    # ============ v9.0 生态系统升级 - 开始 ============
+
+    # 推荐关系表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS referral_relationships (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            referrer_id INTEGER NOT NULL,
+            referee_id INTEGER NOT NULL UNIQUE,
+            level INTEGER NOT NULL DEFAULT 1,
+            status TEXT DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (referrer_id) REFERENCES users(id),
+            FOREIGN KEY (referee_id) REFERENCES users(id)
+        )
+    ''')
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_referral_referrer ON referral_relationships(referrer_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_referral_referee ON referral_relationships(referee_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_referral_level ON referral_relationships(level)")
+
+    # 推荐分润记录表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS referral_commissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            referrer_id INTEGER NOT NULL,
+            referee_id INTEGER NOT NULL,
+            level INTEGER NOT NULL,
+            transaction_id INTEGER,
+            transaction_type TEXT NOT NULL,
+            original_amount REAL NOT NULL,
+            commission_rate REAL NOT NULL,
+            commission_amount REAL NOT NULL,
+            status TEXT DEFAULT 'pending',
+            settled_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (referrer_id) REFERENCES users(id),
+            FOREIGN KEY (referee_id) REFERENCES users(id)
+        )
+    ''')
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_commission_referrer ON referral_commissions(referrer_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_commission_referee ON referral_commissions(referee_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_commission_status ON referral_commissions(status)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_commission_created_at ON referral_commissions(created_at)")
+
+    # 用户资源表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_resources (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            resource_type TEXT NOT NULL,
+            resource_name TEXT NOT NULL,
+            description TEXT,
+            availability TEXT DEFAULT 'available',
+            estimated_value REAL,
+            status TEXT DEFAULT 'active',
+            tags TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_resource_user ON user_resources(user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_resource_type ON user_resources(resource_type)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_resource_status ON user_resources(status)")
+
+    # 资源匹配记录表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS resource_matches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            resource_id INTEGER NOT NULL,
+            match_score REAL NOT NULL,
+            match_reason TEXT,
+            status TEXT DEFAULT 'pending',
+            user_response TEXT,
+            response_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (resource_id) REFERENCES user_resources(id)
+        )
+    ''')
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_project ON resource_matches(project_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_user ON resource_matches(user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_score ON resource_matches(match_score)")
+
+    # 项目表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT,
+            project_type TEXT NOT NULL,
+            budget REAL,
+            required_skills TEXT,
+            required_assets TEXT,
+            duration INTEGER,
+            location TEXT,
+            status TEXT DEFAULT 'open',
+            creator_id INTEGER,
+            deadline TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (creator_id) REFERENCES users(id)
+        )
+    ''')
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_type ON projects(project_type)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_status ON projects(status)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_project_budget ON projects(budget)")
+
+    # 项目参与者表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS project_participants (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            role TEXT NOT NULL,
+            contribution TEXT,
+            reward REAL,
+            reward_status TEXT DEFAULT 'pending',
+            joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            completed_at TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            UNIQUE(project_id, user_id)
+        )
+    ''')
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_participant_project ON project_participants(project_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_participant_user ON project_participants(user_id)")
+
+    # 资源变现记录表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS resource_realization (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            resource_id INTEGER NOT NULL,
+            project_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            transaction_type TEXT NOT NULL,
+            original_reward REAL NOT NULL,
+            actual_reward REAL NOT NULL,
+            realization_status TEXT DEFAULT 'pending',
+            completed_at TIMESTAMP,
+            FOREIGN KEY (resource_id) REFERENCES user_resources(id),
+            FOREIGN KEY (project_id) REFERENCES projects(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_realization_user ON resource_realization(user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_realization_resource ON resource_realization(resource_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_realization_project ON resource_realization(project_id)")
+
+    # 数字资产表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS digital_assets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            asset_type TEXT NOT NULL,
+            asset_name TEXT NOT NULL,
+            description TEXT,
+            image_url TEXT,
+            metadata TEXT,
+            rarity TEXT DEFAULT 'common',
+            value REAL,
+            is_transferable BOOLEAN DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_asset_user ON digital_assets(user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_asset_type ON digital_assets(asset_type)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_asset_rarity ON digital_assets(rarity)")
+
+    # 资产交易表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS asset_transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_id INTEGER NOT NULL,
+            from_user_id INTEGER NOT NULL,
+            to_user_id INTEGER NOT NULL,
+            transaction_type TEXT NOT NULL,
+            price REAL NOT NULL,
+            fee REAL DEFAULT 0,
+            status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            completed_at TIMESTAMP,
+            FOREIGN KEY (asset_id) REFERENCES digital_assets(id),
+            FOREIGN KEY (from_user_id) REFERENCES users(id),
+            FOREIGN KEY (to_user_id) REFERENCES users(id)
+        )
+    ''')
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tx_asset ON asset_transactions(asset_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tx_from ON asset_transactions(from_user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_tx_to ON asset_transactions(to_user_id)")
+
+    # 资产收益表
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS asset_earnings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            asset_id INTEGER,
+            user_id INTEGER NOT NULL,
+            earning_type TEXT NOT NULL,
+            amount REAL NOT NULL,
+            source_type TEXT,
+            source_id INTEGER,
+            status TEXT DEFAULT 'confirmed',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (asset_id) REFERENCES digital_assets(id),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_earnings_user ON asset_earnings(user_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_earnings_asset ON asset_earnings(asset_id)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_earnings_type ON asset_earnings(earning_type)")
+
+    # ============ v9.0 生态系统升级 - 结束 ============
+
     conn.commit()
     conn.close()
 
@@ -729,13 +945,14 @@ def health():
 
 @app.route('/api/register', methods=['POST'])
 def register():
-    """用户注册"""
+    """用户注册（v9.0升级：支持推荐人关联）"""
     try:
         data = request.json
         username = data.get('username')
         email = data.get('email', '')
         phone = data.get('phone', '')
         password = data.get('password')
+        referrer_id = data.get('referrer_id')  # 推荐人ID（v9.0新增）
 
         if not username or not password:
             return jsonify({
@@ -755,6 +972,16 @@ def register():
                 'message': '用户名已存在'
             }), 400
 
+        # 验证推荐人是否存在（v9.0新增）
+        if referrer_id:
+            cursor.execute("SELECT id FROM users WHERE id = ?", (referrer_id,))
+            if not cursor.fetchone():
+                conn.close()
+                return jsonify({
+                    'success': False,
+                    'message': '推荐人不存在'
+                }), 400
+
         # 创建用户
         password_hash = hash_password(password)
         cursor.execute(
@@ -762,6 +989,16 @@ def register():
             (username, email, phone, password_hash)
         )
         user_id = cursor.lastrowid
+
+        # 创建推荐关系（v9.0新增）
+        if referrer_id:
+            cursor.execute(
+                """INSERT INTO referral_relationships 
+                   (referrer_id, referee_id, level, status) 
+                   VALUES (?, ?, 1, 'active')""",
+                (referrer_id, user_id)
+            )
+
         conn.commit()
 
         # 获取新创建的用户数据
@@ -5494,6 +5731,660 @@ def mark_all_notifications_read():
         
     except Exception as e:
         return jsonify({'success': False, 'message': f'操作失败: {str(e)}'}), 500
+
+# ============ v9.0 生态系统升级 ============
+
+# 推荐分润系统工具函数
+def calculate_commission(user_id, amount, transaction_type, transaction_id=None, conn=None):
+    """
+    计算推荐分润（支持3级分润：5%/3%/2%）
+    
+    Args:
+        user_id: 用户ID（被推荐人）
+        amount: 原始金额
+        transaction_type: 交易类型
+        transaction_id: 交易ID
+        conn: 数据库连接（可选）
+    
+    Returns:
+        分润记录列表
+    """
+    should_close = False
+    if conn is None:
+        conn = get_db()
+        should_close = True
+    
+    try:
+        cursor = conn.cursor()
+        commissions = []
+        
+        # 查找推荐关系链（最多3级）
+        current_referee_id = user_id
+        for level in range(1, 4):  # 1-3级
+            # 查找当前层级的推荐人
+            cursor.execute(
+                "SELECT referrer_id FROM referral_relationships WHERE referee_id = ? AND status = 'active'",
+                (current_referee_id,)
+            )
+            result = cursor.fetchone()
+            
+            if not result:
+                break
+            
+            referrer_id = result['referrer_id']
+            
+            # 计算分润金额
+            commission_rates = {
+                1: 0.05,  # 5%
+                2: 0.03,  # 3%
+                3: 0.02   # 2%
+            }
+            
+            rate = commission_rates.get(level, 0)
+            commission_amount = amount * rate
+            
+            # 创建分润记录
+            cursor.execute('''
+                INSERT INTO referral_commissions
+                (referrer_id, referee_id, level, transaction_id, transaction_type, 
+                 original_amount, commission_rate, commission_amount, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+            ''', (referrer_id, current_referee_id, level, transaction_id, transaction_type,
+                  amount, rate, commission_amount))
+            
+            commissions.append({
+                'referrer_id': referrer_id,
+                'referee_id': current_referee_id,
+                'level': level,
+                'commission_amount': commission_amount
+            })
+            
+            # 继续查找上一级推荐人
+            current_referee_id = referrer_id
+        
+        if should_close:
+            conn.commit()
+        
+        return commissions
+    finally:
+        if should_close:
+            conn.close()
+
+def settle_commission(commission_id, conn=None):
+    """
+    结算分润
+    
+    Args:
+        commission_id: 分润记录ID
+        conn: 数据库连接（可选）
+    """
+    should_close = False
+    if conn is None:
+        conn = get_db()
+        should_close = True
+    
+    try:
+        cursor = conn.cursor()
+        
+        # 获取分润记录
+        cursor.execute(
+            "SELECT * FROM referral_commissions WHERE id = ? AND status = 'pending'",
+            (commission_id,)
+        )
+        commission = cursor.fetchone()
+        
+        if not commission:
+            if should_close:
+                conn.close()
+            return False
+        
+        # 更新推荐人灵值
+        cursor.execute('''
+            UPDATE users 
+            SET total_lingzhi = total_lingzhi + ?
+            WHERE id = ?
+        ''', (int(commission['commission_amount']), commission['referrer_id']))
+        
+        # 更新分润状态
+        cursor.execute('''
+            UPDATE referral_commissions 
+            SET status = 'settled', settled_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ''', (commission_id,))
+        
+        if should_close:
+            conn.commit()
+        
+        return True
+    finally:
+        if should_close:
+            conn.close()
+
+# v9.0 推荐分润系统API
+@app.route('/api/v9/referrals', methods=['GET'])
+def get_user_referrals():
+    """获取用户推荐列表"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取推荐的直推用户列表
+        cursor.execute('''
+            SELECT u.id, u.username, u.email, u.phone, u.created_at,
+                   r.level, r.created_at as referral_created_at
+            FROM referral_relationships r
+            JOIN users u ON r.referee_id = u.id
+            WHERE r.referrer_id = ?
+            ORDER BY r.created_at DESC
+        ''', (user_id,))
+        
+        referrals = [dict(ref) for ref in cursor.fetchall()]
+        
+        # 计算分润总额
+        cursor.execute('''
+            SELECT SUM(commission_amount) as total_commission,
+                   COUNT(*) as total_count
+            FROM referral_commissions
+            WHERE referrer_id = ? AND status = 'settled'
+        ''', (user_id,))
+        stats = cursor.fetchone()
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': {
+                'referrals': referrals,
+                'total_commission': stats['total_commission'] or 0,
+                'total_count': stats['total_count'] or 0
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取失败: {str(e)}'}), 500
+
+@app.route('/api/v9/commissions', methods=['GET'])
+def get_commissions():
+    """获取分润记录"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取分润记录
+        cursor.execute('''
+            SELECT c.*, u1.username as referrer_name, u2.username as referee_name
+            FROM referral_commissions c
+            JOIN users u1 ON c.referrer_id = u1.id
+            JOIN users u2 ON c.referee_id = u2.id
+            WHERE c.referrer_id = ?
+            ORDER BY c.created_at DESC
+            LIMIT 50
+        ''', (user_id,))
+        
+        commissions = [dict(com) for com in cursor.fetchall()]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': commissions
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取失败: {str(e)}'}), 500
+
+# v9.0 用户资源库系统API
+@app.route('/api/v9/resources', methods=['POST'])
+def add_user_resource():
+    """添加用户资源"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        data = request.json
+        resource_type = data.get('resource_type')  # skill, asset, connection, time, data, brand
+        resource_name = data.get('resource_name')
+        description = data.get('description', '')
+        estimated_value = data.get('estimated_value')
+        tags = data.get('tags', '')
+        
+        if not resource_type or not resource_name:
+            return jsonify({
+                'success': False,
+                'message': '资源类型和资源名称不能为空'
+            }), 400
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO user_resources
+            (user_id, resource_type, resource_name, description, estimated_value, tags)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (user_id, resource_type, resource_name, description, estimated_value, tags))
+        
+        resource_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': '资源添加成功',
+            'data': {'resource_id': resource_id}
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'添加失败: {str(e)}'}), 500
+
+@app.route('/api/v9/resources', methods=['GET'])
+def get_user_resources():
+    """获取用户资源库"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取用户资源列表
+        cursor.execute('''
+            SELECT * FROM user_resources
+            WHERE user_id = ? AND status = 'active'
+            ORDER BY created_at DESC
+        ''', (user_id,))
+        
+        resources = [dict(res) for res in cursor.fetchall()]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': resources
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取失败: {str(e)}'}), 500
+
+@app.route('/api/v9/resources/<int:resource_id>', methods=['PUT'])
+def update_user_resource(resource_id):
+    """更新用户资源"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        data = request.json
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 检查资源归属
+        cursor.execute(
+            "SELECT * FROM user_resources WHERE id = ? AND user_id = ?",
+            (resource_id, user_id)
+        )
+        if not cursor.fetchone():
+            conn.close()
+            return jsonify({'success': False, 'message': '资源不存在或无权操作'}), 404
+        
+        # 更新资源
+        update_fields = []
+        update_values = []
+        
+        if 'resource_name' in data:
+            update_fields.append('resource_name = ?')
+            update_values.append(data['resource_name'])
+        if 'description' in data:
+            update_fields.append('description = ?')
+            update_values.append(data['description'])
+        if 'estimated_value' in data:
+            update_fields.append('estimated_value = ?')
+            update_values.append(data['estimated_value'])
+        if 'tags' in data:
+            update_fields.append('tags = ?')
+            update_values.append(data['tags'])
+        if 'availability' in data:
+            update_fields.append('availability = ?')
+            update_values.append(data['availability'])
+        
+        if update_fields:
+            update_fields.append('updated_at = CURRENT_TIMESTAMP')
+            update_values.append(resource_id)
+            
+            cursor.execute(f'''
+                UPDATE user_resources
+                SET {', '.join(update_fields)}
+                WHERE id = ?
+            ''', update_values)
+            conn.commit()
+        
+        conn.close()
+        
+        return jsonify({'success': True, 'message': '更新成功'})
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'更新失败: {str(e)}'}), 500
+
+# v9.0 项目系统API
+@app.route('/api/v9/projects', methods=['POST'])
+def create_project():
+    """创建项目"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        data = request.json
+        title = data.get('title')
+        description = data.get('description', '')
+        project_type = data.get('project_type')
+        budget = data.get('budget')
+        required_skills = data.get('required_skills', '')
+        required_assets = data.get('required_assets', '')
+        duration = data.get('duration')
+        location = data.get('location', '')
+        deadline = data.get('deadline')
+        
+        if not title or not project_type:
+            return jsonify({
+                'success': False,
+                'message': '项目标题和项目类型不能为空'
+            }), 400
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO projects
+            (title, description, project_type, budget, required_skills, required_assets,
+             duration, location, creator_id, deadline)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (title, description, project_type, budget, required_skills, required_assets,
+              duration, location, user_id, deadline))
+        
+        project_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': '项目创建成功',
+            'data': {'project_id': project_id}
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'创建失败: {str(e)}'}), 500
+
+@app.route('/api/v9/projects', methods=['GET'])
+def get_project_list():
+    """获取项目列表"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        project_type = request.args.get('project_type')
+        status = request.args.get('status', 'open')
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 构建查询条件
+        conditions = ["status = ?"]
+        params = [status]
+        
+        if project_type:
+            conditions.append("project_type = ?")
+            params.append(project_type)
+        
+        # 获取项目列表
+        cursor.execute(f'''
+            SELECT p.*, u.username as creator_name
+            FROM projects p
+            JOIN users u ON p.creator_id = u.id
+            WHERE {' AND '.join(conditions)}
+            ORDER BY p.created_at DESC
+            LIMIT 50
+        ''', params)
+        
+        projects = [dict(proj) for proj in cursor.fetchall()]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': projects
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取失败: {str(e)}'}), 500
+
+@app.route('/api/v9/projects/<int:project_id>/match', methods=['POST'])
+def match_resources(project_id):
+    """资源智能匹配"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取项目信息
+        cursor.execute(
+            "SELECT * FROM projects WHERE id = ? AND creator_id = ?",
+            (project_id, user_id)
+        )
+        project = cursor.fetchone()
+        
+        if not project:
+            conn.close()
+            return jsonify({'success': False, 'message': '项目不存在或无权操作'}), 404
+        
+        # 获取项目需求
+        required_skills = project['required_skills'].split(',') if project['required_skills'] else []
+        required_assets = project['required_assets'].split(',') if project['required_assets'] else []
+        
+        # 获取所有可用资源
+        cursor.execute('''
+            SELECT * FROM user_resources
+            WHERE availability = 'available' AND status = 'active'
+        ''')
+        all_resources = cursor.fetchall()
+        
+        # 计算匹配度
+        matches = []
+        for resource in all_resources:
+            match_score = 0.0
+            match_reasons = []
+            
+            # 技能匹配
+            if resource['resource_type'] == 'skill':
+                resource_skills = resource['tags'].split(',') if resource['tags'] else []
+                for skill in required_skills:
+                    if skill.strip() in resource_skills:
+                        match_score += 0.3
+                        match_reasons.append(f"技能匹配: {skill}")
+            
+            # 资产匹配
+            elif resource['resource_type'] == 'asset':
+                resource_assets = resource['tags'].split(',') if resource['tags'] else []
+                for asset in required_assets:
+                    if asset.strip() in resource_assets:
+                        match_score += 0.4
+                        match_reasons.append(f"资产匹配: {asset}")
+            
+            # 限制最大匹配度
+            match_score = min(match_score, 1.0)
+            
+            # 保存匹配结果
+            if match_score > 0.3:  # 最低匹配度30%
+                cursor.execute('''
+                    INSERT INTO resource_matches
+                    (project_id, user_id, resource_id, match_score, match_reason)
+                    VALUES (?, ?, ?, ?, ?)
+                ''', (project_id, resource['user_id'], resource['id'], match_score,
+                      ', '.join(match_reasons)))
+                
+                matches.append({
+                    'project_id': project_id,
+                    'user_id': resource['user_id'],
+                    'resource_id': resource['id'],
+                    'match_score': match_score,
+                    'match_reason': ', '.join(match_reasons)
+                })
+        
+        # 按匹配度排序
+        matches.sort(key=lambda x: x['match_score'], reverse=True)
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': f'匹配到 {len(matches)} 个资源',
+            'data': matches
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'匹配失败: {str(e)}'}), 500
+
+@app.route('/api/v9/projects/<int:project_id>/join', methods=['POST'])
+def join_project(project_id):
+    """参与项目"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        data = request.json
+        resource_id = data.get('resource_id')
+        role = data.get('role', 'participant')
+        
+        if not resource_id:
+            return jsonify({
+                'success': False,
+                'message': '请指定使用的资源'
+            }), 400
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 检查项目状态
+        cursor.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
+        project = cursor.fetchone()
+        
+        if not project or project['status'] != 'open':
+            conn.close()
+            return jsonify({
+                'success': False,
+                'message': '项目不存在或已关闭'
+            }), 404
+        
+        # 添加参与者
+        cursor.execute('''
+            INSERT INTO project_participants
+            (project_id, user_id, role, contribution)
+            VALUES (?, ?, ?, ?)
+        ''', (project_id, user_id, role, f'使用资源ID: {resource_id}'))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': '参与项目成功'
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'参与失败: {str(e)}'}), 500
+
+# v9.0 数字资产系统API
+@app.route('/api/v9/assets', methods=['POST'])
+def create_digital_asset():
+    """创建数字资产"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        data = request.json
+        asset_type = data.get('asset_type')
+        asset_name = data.get('asset_name')
+        description = data.get('description', '')
+        image_url = data.get('image_url', '')
+        metadata = data.get('metadata', '{}')
+        rarity = data.get('rarity', 'common')
+        value = data.get('value')
+        
+        if not asset_type or not asset_name:
+            return jsonify({
+                'success': False,
+                'message': '资产类型和资产名称不能为空'
+            }), 400
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO digital_assets
+            (user_id, asset_type, asset_name, description, image_url, metadata, rarity, value)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, asset_type, asset_name, description, image_url, metadata, rarity, value))
+        
+        asset_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': '资产创建成功',
+            'data': {'asset_id': asset_id}
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'创建失败: {str(e)}'}), 500
+
+@app.route('/api/v9/assets', methods=['GET'])
+def get_user_assets():
+    """获取用户资产列表"""
+    try:
+        user_id = verify_token(request.headers.get('Authorization'))
+        if not user_id:
+            return jsonify({'success': False, 'message': '未授权'}), 401
+        
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 获取用户资产列表
+        cursor.execute('''
+            SELECT * FROM digital_assets
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+        ''', (user_id,))
+        
+        assets = [dict(ast) for ast in cursor.fetchall()]
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'data': assets
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'message': f'获取失败: {str(e)}'}), 500
+
+# ============ v9.0 生态系统升级结束 ============
 
 # 需要导入requests和urlencode
 import requests
