@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Lock, Mail, ArrowRight, TrendingUp, Clock, Zap, Smartphone, RefreshCw } from 'lucide-react'
+import { Lock, Mail, ArrowRight, TrendingUp, Clock, Zap, Smartphone, RefreshCw, Sparkles } from 'lucide-react'
 
 const FeatureCard = ({ icon: Icon, title, value, subtitle, color, delay }: any) => {
   const [count, setCount] = useState(0)
@@ -187,7 +187,16 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-gray-50 to-gray-100 relative">
+      {/* 梦幻版切换按钮 */}
+      <Link
+        to="/design-showcase"
+        className="absolute top-4 right-4 z-50 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center space-x-2 border border-pink-200"
+      >
+        <Sparkles className="w-4 h-4 text-pink-500" />
+        <span className="text-sm font-semibold text-gray-700">切换到梦幻版</span>
+      </Link>
+      
       <div className="w-full max-w-md">
         {/* Logo和标题 - 添加悬浮动画 */}
         <div className="text-center mb-8 animate-bounce">

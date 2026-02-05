@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Mail, Phone, Lock, User, ArrowRight } from 'lucide-react'
+import { Mail, Phone, Lock, User, ArrowRight, Sparkles } from 'lucide-react'
 import { userApi } from '../services/api'
 
 const Register = () => {
@@ -48,7 +48,16 @@ const Register = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 relative">
+      {/* 梦幻版切换按钮 */}
+      <Link
+        to="/design-showcase"
+        className="absolute top-4 right-4 z-50 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center space-x-2 border border-pink-200"
+      >
+        <Sparkles className="w-4 h-4 text-pink-500" />
+        <span className="text-sm font-semibold text-gray-700">切换到梦幻版</span>
+      </Link>
+      
       <div className="w-full max-w-md">
         {/* Logo和标题 */}
         <div className="text-center mb-8">
