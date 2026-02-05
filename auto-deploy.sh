@@ -1,245 +1,174 @@
 #!/bin/bash
 
-# 智能体自动化部署系统 v1.0
-# 功能：监控代码变化，自动提交、推送并部署到服务器
+# ==========================================
+#  梦幻版页面自动部署脚本
+#  在服务器上直接运行此脚本
+# ==========================================
 
 set -e
 
-# 加载环境变量
-if [ -f ".env" ]; then
-    export $(cat .env | grep -v '^#' | xargs)
-else
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [ERROR] 未找到 .env 文件，请从 .env.example 复制并配置"
+echo "=========================================="
+echo "  梦幻版页面自动部署开始"
+echo "  时间: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "=========================================="
+echo ""
+
+# 配置
+FRONTEND_DIR="/var/www/frontend"
+BACKUP_DIR="/var/www/frontend.backup.$(date +%Y%m%d_%H%M%S)"
+EXPECTED_JS="index-CkydMeua.js"
+EXPECTED_CSS="index-CxUAxLXV.css"
+
+# 颜色定义
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+# 步骤1：检查环境
+echo -e "${BLUE}步骤 1/6: 检查环境${NC}"
+echo "----------------------------"
+
+if [ ! -d "$FRONTEND_DIR" ]; then
+    echo -e "${RED}✗${NC} 错误：前端目录不存在: $FRONTEND_DIR"
     exit 1
 fi
 
-# 配置
-PROJECT_PATH="/workspace/projects"
-SERVER_USER="${SERVER_USER:-root}"
-SERVER_HOST="${SERVER_HOST:-your-server-ip}"
-SERVER_PATH="${SERVER_PATH:-/var/www/html}"
-BACKUP_PATH="${SERVER_PATH}/backup"
-LOG_FILE="/app/work/logs/bypass/app.log"
-MONITOR_INTERVAL="${MONITOR_INTERVAL:-30}"  # 监控间隔（秒）
+echo -e "${GREEN}✓${NC} 前端目录存在: $FRONTEND_DIR"
+echo ""
 
-# GitHub 配置
-GITHUB_USERNAME="${GITHUB_USERNAME:-}"
-GITHUB_TOKEN="${GITHUB_TOKEN:-}"
-GITHUB_REPO="https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/xufengmyart/lingzhiapp.git"
+# 步骤2：备份现有文件
+echo -e "${BLUE}步骤 2/6: 备份现有文件${NC}"
+echo "----------------------------"
 
-# SSH 配置
-SSH_PASSWORD="${SERVER_PASSWORD:-}"
-SSH_CMD="sshpass -p '${SSH_PASSWORD}' ssh -o StrictHostKeyChecking=no ${SERVER_USER}@${SERVER_HOST}"
+if [ "$(ls -A $FRONTEND_DIR 2>/dev/null)" ]; then
+    echo "备份现有文件到: $BACKUP_DIR"
+    cp -r "$FRONTEND_DIR" "$BACKUP_DIR"
+    echo -e "${GREEN}✓${NC} 备份完成"
+else
+    echo -e "${YELLOW}⚠${NC} 前端目录为空，跳过备份"
+fi
+echo ""
 
-# 颜色输出
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+# 步骤3：清空目标目录
+echo -e "${BLUE}步骤 3/6: 清空目标目录${NC}"
+echo "----------------------------"
 
-# 日志函数
-log() {
-    echo -e "$(date '+%Y-%m-%d %H:%M:%S') [INFO] $1" | tee -a "$LOG_FILE"
-}
+rm -rf "$FRONTEND_DIR"/*
+echo -e "${GREEN}✓${NC} 目标目录已清空"
+echo ""
 
-error() {
-    echo -e "${RED}$(date '+%Y-%m-%d %H:%M:%S') [ERROR] $1${NC}" | tee -a "$LOG_FILE"
-}
+# 步骤4：复制新构建产物
+echo -e "${BLUE}步骤 4/6: 复制新构建产物${NC}"
+echo "----------------------------"
 
-success() {
-    echo -e "${GREEN}$(date '+%Y-%m-%d %H:%M:%S') [SUCCESS] $1${NC}" | tee -a "$LOG_FILE"
-}
+# 检查构建产物位置
+BUILD_DIR=""
+if [ -d "/workspace/projects/public" ]; then
+    BUILD_DIR="/workspace/projects/public"
+elif [ -d "./public" ]; then
+    BUILD_DIR="./public"
+elif [ -d "./web-app/public" ]; then
+    BUILD_DIR="./web-app/public"
+else
+    echo -e "${RED}✗${NC} 错误：找不到构建产物目录"
+    echo "请将构建产物放在以下位置之一："
+    echo "  - /workspace/projects/public"
+    echo "  - ./public"
+    echo "  - ./web-app/public"
+    exit 1
+fi
 
-warn() {
-    echo -e "${YELLOW}$(date '+%Y-%m-%d %H:%M:%S') [WARN] $1${NC}" | tee -a "$LOG_FILE"
-}
+echo "构建产物位置: $BUILD_DIR"
 
-# 检查 Git 状态
-check_git_status() {
-    cd "$PROJECT_PATH"
-    git status --porcelain
-}
+if [ ! -f "$BUILD_DIR/index.html" ]; then
+    echo -e "${RED}✗${NC} 错误：找不到 index.html"
+    exit 1
+fi
 
-# 提交代码
-commit_changes() {
-    cd "$PROJECT_PATH"
+if [ ! -d "$BUILD_DIR/assets" ]; then
+    echo -e "${RED}✗${NC} 错误：找不到 assets 目录"
+    exit 1
+fi
 
-    # 检查是否有变更
-    if [ -z "$(check_git_status)" ]; then
-        warn "没有检测到代码变更"
-        return 0
-    fi
+echo "复制文件..."
+cp -r "$BUILD_DIR"/* "$FRONTEND_DIR/"
+echo -e "${GREEN}✓${NC} 文件复制完成"
+echo ""
 
-    log "检测到代码变更，准备提交..."
+# 步骤5：设置权限
+echo -e "${BLUE}步骤 5/6: 设置权限${NC}"
+echo "----------------------------"
 
-    # 添加所有变更
-    git add .
+chown -R root:root "$FRONTEND_DIR"
+chmod -R 755 "$FRONTEND_DIR"
+echo -e "${GREEN}✓${NC} 权限设置完成"
+echo ""
 
-    # 提交
-    commit_msg="Auto deploy: $(date '+%Y-%m-%d %H:%M:%S')"
-    git commit -m "$commit_msg"
+# 步骤6：验证部署
+echo -e "${BLUE}步骤 6/6: 验证部署${NC}"
+echo "----------------------------"
 
-    success "代码已提交: $commit_msg"
-}
+# 检查关键文件
+if [ ! -f "$FRONTEND_DIR/index.html" ]; then
+    echo -e "${RED}✗${NC} 错误：index.html 不存在"
+    exit 1
+fi
 
-# 推送到远程仓库
-push_to_remote() {
-    cd "$PROJECT_PATH"
+if [ ! -f "$FRONTEND_DIR/assets/$EXPECTED_JS" ]; then
+    echo -e "${RED}✗${NC} 错误：找不到 $EXPECTED_JS"
+    echo "实际存在的文件："
+    ls -lh "$FRONTEND_DIR/assets/"
+    exit 1
+fi
 
-    log "推送到远程仓库..."
+if [ ! -f "$FRONTEND_DIR/assets/$EXPECTED_CSS" ]; then
+    echo -e "${RED}✗${NC} 错误：找不到 $EXPECTED_CSS"
+    echo "实际存在的文件："
+    ls -lh "$FRONTEND_DIR/assets/"
+    exit 1
+fi
 
-    if git push "$GITHUB_REPO" 2>&1; then
-        success "代码已推送到远程仓库"
-    else
-        error "推送失败"
-        return 1
-    fi
-}
+echo -e "${GREEN}✓${NC} 所有关键文件验证通过"
+echo ""
 
-# 部署到服务器
-deploy_to_server() {
-    log "部署到服务器..."
+# 显示部署结果
+echo "=========================================="
+echo "  ✅ 部署成功！"
+echo "=========================================="
+echo ""
+echo "部署信息："
+echo "  目标目录: $FRONTEND_DIR"
+echo "  备份位置: $BACKUP_DIR"
+echo ""
+echo "部署的文件："
+ls -lh "$FRONTEND_DIR/assets/" | grep -E '\.(js|css)$' | awk '{print "  " $9 " (" $5 ")"}'
+echo ""
 
-    # 备份当前版本
-    $SSH_CMD "mkdir -p $BACKUP_PATH && cp -r $SERVER_PATH/* $BACKUP_PATH/backup-$(date +%Y%m%d-%H%M%S)/ 2>/dev/null || true"
+# 重启Nginx
+echo "正在重启Nginx..."
+if systemctl restart nginx 2>/dev/null; then
+    echo -e "${GREEN}✓${NC} Nginx已重启"
+else
+    echo -e "${YELLOW}⚠${NC} Nginx重启失败，请手动执行："
+    echo "  systemctl restart nginx"
+fi
+echo ""
 
-    # 同步文件
-    export SSHPASS="$SSH_PASSWORD"
-    rsync -avz --delete -e "sshpass -e ssh -o StrictHostKeyChecking=no" "$PROJECT_PATH/public/" "$SERVER_USER@$SERVER_HOST:$SERVER_PATH/"
-    unset SSHPASS
+# 显示访问地址
+echo "=========================================="
+echo "  访问地址"
+echo "=========================================="
+echo ""
+echo -e "  梦幻风格选择器: ${GREEN}https://meiyueart.com/dream-selector${NC}"
+echo -e "  梦幻版登录: ${GREEN}https://meiyueart.com/login-full${NC}"
+echo -e "  梦幻版注册: ${GREEN}https://meiyueart.com/register-full${NC}"
+echo ""
 
-    # 重启 Nginx
-    export SSHPASS="$SSH_PASSWORD"
-    $SSH_CMD "systemctl reload nginx"
-    unset SSHPASS
-
-    success "部署成功！"
-}
-
-# 执行完整部署流程
-full_deploy() {
-    log "开始完整部署流程..."
-
-    commit_changes
-    push_to_remote
-    deploy_to_server
-
-    success "完整部署流程完成！"
-}
-
-# 监控代码变化
-monitor_changes() {
-    log "开始监控代码变化（间隔: ${MONITOR_INTERVAL}秒）..."
-
-    while true; do
-        if [ -n "$(check_git_status)" ]; then
-            log "检测到代码变更"
-            full_deploy
-        fi
-
-        sleep "$MONITOR_INTERVAL"
-    done
-}
-
-# PID 文件
-PID_FILE="/tmp/auto-deploy.pid"
-
-# 启动监控
-start() {
-    if [ -f "$PID_FILE" ]; then
-        warn "监控已在运行中 (PID: $(cat $PID_FILE))"
-        exit 1
-    fi
-
-    log "启动自动化部署系统..."
-
-    # 在后台运行监控
-    monitor_changes &
-    echo $! > "$PID_FILE"
-
-    success "自动化部署系统已启动 (PID: $(cat $PID_FILE))"
-    log "使用 '$0 stop' 停止监控"
-}
-
-# 停止监控
-stop() {
-    if [ ! -f "$PID_FILE" ]; then
-        warn "监控未运行"
-        exit 1
-    fi
-
-    log "停止自动化部署系统..."
-
-    kill $(cat "$PID_FILE")
-    rm "$PID_FILE"
-
-    success "自动化部署系统已停止"
-}
-
-# 查看状态
-status() {
-    if [ -f "$PID_FILE" ]; then
-        success "监控正在运行 (PID: $(cat $PID_FILE))"
-    else
-        warn "监控未运行"
-    fi
-}
-
-# 快速部署（不监控）
-quick_deploy() {
-    log "执行快速部署..."
-    full_deploy
-}
-
-# 显示帮助
-show_help() {
-    echo "智能体自动化部署系统 v1.0"
-    echo ""
-    echo "用法: $0 [命令]"
-    echo ""
-    echo "命令:"
-    echo "  start      启动自动化监控"
-    echo "  stop       停止自动化监控"
-    echo "  status     查看监控状态"
-    echo "  deploy     执行一次完整部署"
-    echo "  quick      快速部署（不备份）"
-    echo "  help       显示此帮助信息"
-    echo ""
-    echo "示例:"
-    echo "  $0 start          # 启动自动化监控"
-    echo "  $0 deploy         # 手动触发一次部署"
-    echo "  $0 stop           # 停止监控"
-}
-
-# 主函数
-main() {
-    case "$1" in
-        start)
-            start
-            ;;
-        stop)
-            stop
-            ;;
-        status)
-            status
-            ;;
-        deploy)
-            full_deploy
-            ;;
-        quick)
-            quick_deploy
-            ;;
-        help|--help|-h)
-            show_help
-            ;;
-        *)
-            echo "错误: 未知命令 '$1'"
-            echo ""
-            show_help
-            exit 1
-            ;;
-    esac
-}
-
-# 执行主函数
-main "$@"
+echo "提示："
+echo "  1. 清除浏览器缓存 (Ctrl+Shift+R)"
+echo "  2. 使用无痕模式测试"
+echo "  3. 如有问题，恢复备份："
+echo "     cp -r $BACKUP_DIR/* $FRONTEND_DIR/"
+echo ""
