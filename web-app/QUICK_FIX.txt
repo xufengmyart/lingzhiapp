@@ -1,0 +1,60 @@
+🚨 梦幻版页面无法访问 - 问题诊断
+=====================================
+
+问题：服务器上的构建产物没有更新！
+
+实际情况：
+- 应该的文件：index-CkydMeua.js (688 KB)
+- 实际的文件：index-9000aff5.js (313 B)
+- 结论：旧文件没有替换
+
+🔥 立即解决方案（3选1）
+
+方案1：一键部署脚本
+---------------------
+chmod +x web-app/deploy-to-server.sh
+./web-app/deploy-to-server.sh
+
+方案2：手动上传tar包
+---------------------
+scp dream-frontend-deploy.tar.gz root@123.56.142.143:/root/
+ssh root@123.56.142.143
+cd /var/www/frontend
+rm -rf *
+tar -xzf /root/dream-frontend-deploy.tar.gz
+systemctl restart nginx
+
+方案3：快速命令
+---------------
+ssh root@123.56.142.143 << 'EOF'
+cd /var/www/frontend
+rm -rf *
+tar -xzf /root/dream-frontend-deploy.tar.gz
+systemctl restart nginx
+EOF
+
+✅ 验证
+------
+1. 检查文件：ssh root@123.56.142.143 "ls -lh /var/www/frontend/assets/"
+   应该看到 index-CkydMeua.js (688 KB)
+
+2. 访问：https://meiyueart.com/dream-selector
+
+3. 清除缓存：Ctrl+Shift+R
+
+📦 部署材料
+----------
+- tar包：dream-frontend-deploy.tar.gz (192 KB)
+- 脚本：web-app/deploy-to-server.sh
+- 文档：web-app/FINAL_SOLUTION.md
+
+🎯 关键点
+--------
+1. 上传tar包到服务器的 /root/ 目录
+2. 解压到 /var/www/frontend/ 目录
+3. 重启Nginx
+4. 清除浏览器缓存
+
+如果还是不行，查看文档：
+- web-app/FINAL_SOLUTION.md
+- web-app/URGENT_DEPLOYMENT.md
