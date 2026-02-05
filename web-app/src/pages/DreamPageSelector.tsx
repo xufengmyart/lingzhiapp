@@ -37,22 +37,22 @@ const dreamStyles = {
     description: '宁静、深邃、自由',
     icon: '🌊',
   },
-  cloud: {
-    bg: 'bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50',
-    cardBg: 'bg-white/90 backdrop-blur-lg',
-    buttonBg: 'from-slate-400 to-zinc-400',
-    buttonHover: 'from-slate-500 to-zinc-500',
-    accent: 'text-slate-600',
-    decorColors: ['bg-slate-200', 'bg-gray-200', 'bg-zinc-200'],
-    name: '云端之梦',
-    description: '轻盈、纯净、梦幻',
-    icon: '☁️',
+  ecosystem: {
+    bg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-amber-50',
+    cardBg: 'bg-white/85 backdrop-blur-lg',
+    buttonBg: 'from-emerald-500 to-amber-500',
+    buttonHover: 'from-emerald-600 to-amber-600',
+    accent: 'text-emerald-600',
+    decorColors: ['bg-emerald-300', 'bg-teal-300', 'bg-amber-300'],
+    name: '生态之梦',
+    description: '资源匹配、价值生态',
+    icon: '🌿',
   },
 }
 
 const DreamPageSelector = () => {
   const navigate = useNavigate()
-  const [selectedStyle, setSelectedStyle] = useState<keyof typeof dreamStyles>('aurora')
+  const [selectedStyle, setSelectedStyle] = useState<keyof typeof dreamStyles>('ecosystem')
   const currentStyle = dreamStyles[selectedStyle]
 
   const handleGoToPage = (page: 'login' | 'register') => {
