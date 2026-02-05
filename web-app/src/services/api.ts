@@ -117,7 +117,8 @@ export const userApi = {
     requestCache.delete(generateCacheKey('GET', '/api/user/info'))
     
     return response.data
-  },
+  }
+}
 
 // 智能体相关API
 export const agentApi = {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Lock, Mail, ArrowRight, User, Sparkles, Heart, Star, RefreshCw, Wechat, CheckCircle, AlertCircle } from 'lucide-react'
+import { Lock, Mail, ArrowRight, User, Sparkles, Heart, Star, RefreshCw, MessageCircle, CheckCircle, AlertCircle } from 'lucide-react'
 
 // 梦幻式设计风格配置
 const dreamStyles = {
@@ -313,7 +313,7 @@ const RegisterFull = () => {
             onClick={handleWechatRegister}
             className="w-full bg-[#07c160] text-white py-3 rounded-xl font-semibold hover:bg-[#06ad56] transition-all flex items-center justify-center space-x-2 shadow-lg transform hover:scale-[1.02]"
           >
-            <Wechat className="w-5 h-5" />
+            <MessageCircle className="w-5 h-5" />
             <span>微信注册</span>
           </button>
 
