@@ -84,9 +84,31 @@ export const userApi = {
     return response.data
   },
 
-  register: async (data: { username: string; email: string; phone: string; password: string }) => {
-    if (USE_MOCK_API) return mockApi.register(data)
-    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/api/register', data)
+  register: async (username: string, email: string, password: string, referrer?: string) => {
+    if (USE_MOCK_API) return mockApi.register({ username, email, phone: '', password, referrer })
+    
+    // 如果有推荐人用户名，先查找推荐人ID
+    let referrerId: number | undefined = undefined
+    if (referrer) {
+      try {
+        const searchResponse = await api.get<{ data: any[] }>(`/api/admin/users?search=${encodeURIComponent(referrer)}`)
+        if (searchResponse.data.data && searchResponse.data.data.length > 0) {
+          referrerId = searchResponse.data.data[0].id
+        } else {
+          throw new Error('推荐人不存在')
+        }
+      } catch (err) {
+        throw new Error('推荐人不存在，请检查推荐人用户名')
+      }
+    }
+
+    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/api/register', {
+      username,
+      email,
+      phone: '',
+      password,
+      referrer_id: referrerId
+    })
     return response.data
   },
 
