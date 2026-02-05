@@ -31,6 +31,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<LoginFull />} />
       <Route path="/login" element={<Login />} />
       <Route path="/login-full" element={<LoginFull />} />
       <Route path="/register" element={<Register />} />
@@ -45,7 +46,7 @@ function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/chat-test" element={<ChatTest />} />
           <Route path="/economy" element={<Economy />} />

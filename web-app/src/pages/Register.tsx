@@ -30,12 +30,11 @@ const Register = () => {
 
     try {
       // 调用注册 API
-      await userApi.register({
-        username: formData.username,
-        email: formData.email,
-        phone: formData.phone, // 手机号可以为空
-        password: formData.password
-      })
+      await userApi.register(
+        formData.username,
+        formData.email,
+        formData.password
+      )
       
       // 注册成功后自动登录
       await login(formData.username, formData.password)
