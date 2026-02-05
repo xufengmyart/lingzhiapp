@@ -1,8 +1,11 @@
 import { Routes, Route } from 'react-router-dom'
 import Login from './pages/Login'
+import LoginFull from './pages/LoginFull'
 import Register from './pages/Register'
+import RegisterFull from './pages/RegisterFull'
 import AdminLogin from './pages/AdminLogin'
 import ForgotPassword from './pages/ForgotPassword'
+import DesignShowcase from './pages/DesignShowcase'
 import ApiConfig from './pages/ApiConfig'
 import Dashboard from './pages/Dashboard'
 import Chat from './pages/Chat'
@@ -28,8 +31,11 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/login-full" element={<LoginFull />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/register-full" element={<RegisterFull />} />
       <Route path="/api-config" element={<ApiConfig />} />
+      <Route path="/design-showcase" element={<DesignShowcase />} />
       <Route path="/wechat/callback" element={<WeChatCallback />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />

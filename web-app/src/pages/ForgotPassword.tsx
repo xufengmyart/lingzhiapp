@@ -1,448 +1,263 @@
 import { useState } from 'react'
-import { ArrowLeft, Lock, Smartphone, Mail, User, CheckCircle2 } from 'lucide-react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { Lock, Mail, ArrowLeft, Sparkles, Heart, Star, CheckCircle, RefreshCw } from 'lucide-react'
+
+// 梦幻式设计风格配置
+const dreamStyles = {
+  dawn: {
+    bg: 'bg-gradient-to-br from-pink-100 via-purple-50 to-orange-50',
+    cardBg: 'bg-white/80 backdrop-blur-lg',
+    buttonBg: 'from-pink-500 to-orange-400',
+    buttonHover: 'from-pink-600 to-orange-500',
+    accent: 'text-pink-600',
+    decorColors: ['bg-pink-300', 'bg-purple-300', 'bg-orange-300'],
+  },
+  galaxy: {
+    bg: 'bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900',
+    cardBg: 'bg-white/90 backdrop-blur-lg',
+    buttonBg: 'from-indigo-500 to-purple-500',
+    buttonHover: 'from-indigo-600 to-purple-600',
+    accent: 'text-indigo-600',
+    decorColors: ['bg-indigo-400', 'bg-purple-400', 'bg-blue-400'],
+  },
+  forest: {
+    bg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50',
+    cardBg: 'bg-white/85 backdrop-blur-lg',
+    buttonBg: 'from-emerald-500 to-teal-500',
+    buttonHover: 'from-emerald-600 to-teal-600',
+    accent: 'text-emerald-600',
+    decorColors: ['bg-emerald-300', 'bg-teal-300', 'bg-cyan-300'],
+  },
+  aurora: {
+    bg: 'bg-gradient-to-br from-rose-100 via-purple-100 to-blue-100',
+    cardBg: 'bg-white/85 backdrop-blur-lg',
+    buttonBg: 'from-rose-500 to-purple-500',
+    buttonHover: 'from-rose-600 to-purple-600',
+    accent: 'text-rose-600',
+    decorColors: ['bg-rose-300', 'bg-purple-300', 'bg-blue-300'],
+  },
+}
 
 const ForgotPassword = () => {
   const navigate = useNavigate()
-  const location = useLocation()
-  const fromAdmin = location.pathname.startsWith('/admin')
-
-  const [method, setMethod] = useState<'phone' | 'email'>('phone') // 找回方式
-  const [step, setStep] = useState(1) // 1: 输入信息, 2: 验证码/确认, 3: 重置密码
-  const [phone, setPhone] = useState('')
-  const [username, setUsername] = useState('')
+  const [styleKey, setStyleKey] = useState<keyof typeof dreamStyles>('dawn')
   const [email, setEmail] = useState('')
-  const [code, setCode] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [countdown, setCountdown] = useState(0)
+  const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
-  const [userInfo, setUserInfo] = useState<any>(null)
+  const [showStyleSwitcher, setShowStyleSwitcher] = useState(false)
 
-  const apiPrefix = fromAdmin ? '/api/admin' : '/api'
+  const currentStyle = dreamStyles[styleKey]
 
-  const sendCode = async () => {
-    if (method === 'phone') {
-      if (!phone) {
-        setError('请输入手机号')
-        return
-      }
-      if (!/^1[3-9]\d{9}$/.test(phone)) {
-        setError('请输入正确的手机号')
-        return
-      }
-    }
-
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
     setLoading(true)
     setError('')
-    setMessage('')
 
     try {
-      const response = await fetch(`${apiPrefix}/send-code`, {
+      const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify({ email }),
       })
 
-      const data = await response.json()
-
-      if (data.success) {
-        setMessage('验证码已发送，请查收')
-        setStep(2)
-        startCountdown()
+      if (response.ok) {
+        setSuccess(true)
       } else {
-        setError(data.message || '发送失败')
-        if (data.message?.includes('未注册')) {
-          setError('该手机号未注册。如果是老用户，请尝试使用"用户名+邮箱"方式找回密码')
-        }
-      }
-    } catch (err) {
-      setError('网络错误，请重试')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const verifyUser = async () => {
-    if (!username || !email) {
-      setError('请输入用户名和邮箱')
-      return
-    }
-
-    setLoading(true)
-    setError('')
-
-    try {
-      const response = await fetch(`${apiPrefix}/verify-user`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email }),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        setUserInfo(data.data)
-        setMessage(`验证成功！用户：${data.data.username}`)
-        setStep(3)
-      } else {
-        setError(data.message || '验证失败')
-      }
-    } catch (err) {
-      setError('网络错误，请重试')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const startCountdown = () => {
-    setCountdown(60)
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }
-
-  const verifyCode = async () => {
-    if (!code) {
-      setError('请输入验证码')
-      return
-    }
-
-    setLoading(true)
-    setError('')
-
-    try {
-      const response = await fetch(`${apiPrefix}/verify-code`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone, code }),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        setStep(3)
-        setMessage('')
-      } else {
-        setError(data.message || '验证码错误')
-      }
-    } catch (err) {
-      setError('网络错误，请重试')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const resetPassword = async () => {
-    if (!newPassword) {
-      setError('请输入新密码')
-      return
-    }
-    if (newPassword.length < 6) {
-      setError('密码长度至少6位')
-      return
-    }
-    if (newPassword !== confirmPassword) {
-      setError('两次输入的密码不一致')
-      return
-    }
-
-    setLoading(true)
-    setError('')
-
-    try {
-      if (method === 'phone') {
-        // 通过手机号重置
-        const response = await fetch(`${apiPrefix}/reset-password`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone, code, newPassword }),
-        })
-
         const data = await response.json()
-
-        if (data.success) {
-          setMessage('密码重置成功')
-          setTimeout(() => {
-            navigate(fromAdmin ? '/admin/login' : '/login')
-          }, 2000)
-        } else {
-          setError(data.message || '重置失败')
-        }
-      } else {
-        // 通过用户名重置
-        const response = await fetch(`${apiPrefix}/reset-password-by-username`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, email, newPassword }),
-        })
-
-        const data = await response.json()
-
-        if (data.success) {
-          setMessage('密码重置成功')
-          setTimeout(() => {
-            navigate(fromAdmin ? '/admin/login' : '/login')
-          }, 2000)
-        } else {
-          setError(data.message || '重置失败')
-        }
+        setError(data.message || '发送失败，请检查邮箱地址')
       }
     } catch (err) {
-      setError('网络错误，请重试')
+      setError('网络错误，请稍后重试')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        {/* 返回按钮 */}
-        <button
-          onClick={() => navigate(fromAdmin ? '/admin/login' : '/login')}
-          className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2" />
-          返回登录
-        </button>
+    <div className={`min-h-screen flex items-center justify-center px-4 relative overflow-hidden ${currentStyle.bg}`}>
+      
+      {/* 装饰性背景元素 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {/* 顶部装饰 */}
+        <div className={`absolute top-20 left-20 w-32 h-32 ${currentStyle.decorColors[0]} rounded-full blur-3xl opacity-30 animate-pulse`}></div>
+        <div className={`absolute top-40 right-32 w-24 h-24 ${currentStyle.decorColors[1]} rounded-full blur-3xl opacity-30 animate-pulse delay-1000`}></div>
+        
+        {/* 中部装饰 */}
+        <div className={`absolute top-1/2 left-10 w-40 h-40 ${currentStyle.decorColors[2]} rounded-full blur-3xl opacity-20 animate-pulse delay-500`}></div>
+        
+        {/* 底部装饰 */}
+        <div className="absolute bottom-20 left-1/4 w-16 h-16 bg-white/30 backdrop-blur rounded-2xl rotate-12 transform hover:scale-110 transition-transform duration-500"></div>
+        <div className="absolute bottom-32 right-1/4 w-20 h-20 bg-white/40 backdrop-blur rounded-3xl -rotate-6 transform hover:scale-110 transition-transform duration-700"></div>
+        <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-12 h-24 bg-white/20 backdrop-blur rounded-full transform hover:scale-110 transition-transform duration-600"></div>
+        
+        {/* 飘动的星星 */}
+        {[...Array(6)].map((_, i) => (
+          <Star
+            key={i}
+            className="absolute text-white/40 animate-pulse"
+            style={{
+              top: `${20 + Math.random() * 60}%`,
+              left: `${10 + Math.random() * 80}%`,
+              width: `${8 + Math.random() * 12}px`,
+              height: `${8 + Math.random() * 12}px`,
+              animationDelay: `${Math.random() * 3}s`,
+            }}
+          />
+        ))}
+      </div>
 
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
-            <Lock className="w-8 h-8 text-white" />
+      {/* 返回按钮 */}
+      <button
+        onClick={() => navigate('/login')}
+        className="absolute top-4 left-4 z-50 p-2 bg-white/50 backdrop-blur rounded-full hover:bg-white/70 transition-all shadow-lg"
+      >
+        <ArrowLeft className="w-6 h-6 text-gray-700" />
+      </button>
+
+      {/* 风格切换按钮 */}
+      <button
+        onClick={() => setShowStyleSwitcher(!showStyleSwitcher)}
+        className="absolute top-4 right-4 z-50 p-2 bg-white/50 backdrop-blur rounded-full hover:bg-white/70 transition-all shadow-lg"
+        title="切换设计风格"
+      >
+        <RefreshCw className="w-6 h-6 text-gray-700" />
+      </button>
+
+      {/* 风格切换器 */}
+      {showStyleSwitcher && (
+        <div className="absolute top-16 right-4 z-50 bg-white/90 backdrop-blur-lg rounded-2xl p-4 shadow-2xl border border-white/30">
+          <div className="text-sm font-semibold text-gray-700 mb-3">选择梦幻风格</div>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(dreamStyles).map(([key, style]) => (
+              <button
+                key={key}
+                onClick={() => setStyleKey(key as keyof typeof dreamStyles)}
+                className={`p-2 rounded-lg border-2 transition-all ${
+                  styleKey === key
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-transparent hover:border-gray-300'
+                }`}
+              >
+                <div className={`w-full h-8 rounded-md ${style.bg}`}></div>
+                <div className="text-xs mt-1 text-gray-600 capitalize">{key}</div>
+              </button>
+            ))}
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">找回密码</h1>
-          <p className="text-gray-600">通过手机号或用户名验证重置密码</p>
+        </div>
+      )}
+
+      <div className="w-full max-w-md relative z-10">
+        {/* 顶部区域 */}
+        <div className="text-center mb-8">
+          {/* Logo */}
+          <div className="relative inline-block mb-4">
+            <div className={`w-20 h-20 bg-gradient-to-br ${currentStyle.buttonBg} rounded-2xl flex items-center justify-center mx-auto transform rotate-3 hover:rotate-6 transition-transform duration-300 shadow-xl`}>
+              <Lock className="w-10 h-10 text-white" />
+            </div>
+            {/* 光晕效果 */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${currentStyle.buttonBg} rounded-2xl blur-xl opacity-50`}></div>
+          </div>
+
+          {/* 欢迎文案 */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-center space-x-2">
+              <Sparkles className="w-5 h-5 text-yellow-500 animate-pulse" />
+              <Heart className="w-5 h-5 text-red-400 animate-pulse delay-300" />
+              <Star className="w-5 h-5 text-purple-500 animate-pulse delay-700" />
+            </div>
+            <div className="text-2xl font-bold text-gray-800 leading-tight">
+              {success ? '邮件已发送' : '忘记密码？'}
+            </div>
+            <div className={`text-sm ${currentStyle.accent} font-medium`}>
+              {success
+                ? '请检查您的邮箱以重置密码'
+                : '输入您的邮箱地址，我们将发送重置链接'}
+            </div>
+          </div>
         </div>
 
-        {/* 步骤1: 选择找回方式并输入信息 */}
-        {step === 1 && (
-          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-            {/* 找回方式选择 */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">选择找回方式</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => setMethod('phone')}
-                  className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
-                    method === 'phone'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <Smartphone className={`w-6 h-6 mb-2 ${method === 'phone' ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span className={`text-sm ${method === 'phone' ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
-                    手机号找回
-                  </span>
-                </button>
-                <button
-                  onClick={() => setMethod('email')}
-                  className={`flex flex-col items-center p-4 rounded-lg border-2 transition-all ${
-                    method === 'email'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <Mail className={`w-6 h-6 mb-2 ${method === 'email' ? 'text-blue-600' : 'text-gray-400'}`} />
-                  <span className={`text-sm ${method === 'email' ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
-                    用户名+邮箱
-                  </span>
-                </button>
+        {/* 忘记密码表单 */}
+        <div className={`${currentStyle.cardBg} rounded-3xl shadow-2xl p-8 border border-white/50 backdrop-blur-xl`}>
+          {success ? (
+            /* 成功状态 */
+            <div className="text-center py-8">
+              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-10 h-10 text-green-500" />
               </div>
-              {method === 'email' && (
-                <p className="text-xs text-gray-500 mt-2">适用于老用户（未绑定手机号）</p>
-              )}
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">重置链接已发送</h3>
+              <p className="text-gray-600 mb-6">
+                我们已向 <strong>{email}</strong> 发送了密码重置链接
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                请检查您的邮箱，包括垃圾邮件文件夹
+              </p>
+              <Link
+                to="/login"
+                className={`inline-flex items-center space-x-2 ${currentStyle.accent} font-semibold hover:underline`}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>返回登录</span>
+              </Link>
             </div>
+          ) : (
+            /* 表单状态 */
+            <>
+              {error && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-start space-x-2">
+                  <span className="text-red-500">⚠️</span>
+                  <span>{error}</span>
+                </div>
+              )}
 
-            {/* 输入表单 */}
-            <div className="space-y-6">
-              {method === 'phone' ? (
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    手机号
+                    邮箱地址
                   </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="请输入手机号"
-                    maxLength={11}
-                  />
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      用户名
-                    </label>
-                    <input
-                      type="text"
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="请输入用户名"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      邮箱
-                    </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all hover:border-gray-300 bg-white/50 backdrop-blur"
                       placeholder="请输入注册邮箱"
+                      required
                     />
                   </div>
-                </>
-              )}
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">
-                  {error}
                 </div>
-              )}
 
-              {message && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-600 text-sm">
-                  {message}
-                </div>
-              )}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full bg-gradient-to-r ${currentStyle.buttonBg} text-white py-3 rounded-xl font-semibold hover:${currentStyle.buttonHover} transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 shadow-lg transform hover:scale-[1.02]`}
+                >
+                  {loading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <span>发送中...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>发送重置链接</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              </form>
 
-              <button
-                onClick={method === 'phone' ? sendCode : verifyUser}
-                disabled={loading}
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                {loading ? '验证中...' : (method === 'phone' ? '发送验证码' : '验证身份')}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 步骤2: 输入验证码（仅手机号方式） */}
-        {step === 2 && method === 'phone' && (
-          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  验证码
-                </label>
-                <input
-                  type="text"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-center text-2xl tracking-widest"
-                  placeholder="请输入6位验证码"
-                  maxLength={6}
-                />
+              <div className="mt-6 text-center">
+                <p className="text-sm text-gray-600">
+                  想起密码了？{' '}
+                  <Link to="/login" className={`font-semibold ${currentStyle.accent} hover:underline`}>
+                    立即登录
+                  </Link>
+                </p>
               </div>
-
-              <button
-                onClick={sendCode}
-                disabled={countdown > 0 || loading}
-                className="w-full py-3 px-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                {countdown > 0 ? `${countdown}秒后重新发送` : '重新发送验证码'}
-              </button>
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">
-                  {error}
-                </div>
-              )}
-
-              <button
-                onClick={verifyCode}
-                disabled={loading}
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                {loading ? '验证中...' : '下一步'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 步骤3: 重置密码 */}
-        {step === 3 && (
-          <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200">
-            {method === 'email' && userInfo && (
-              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center">
-                <CheckCircle2 className="w-5 h-5 text-green-600 mr-3" />
-                <div>
-                  <p className="text-green-800 font-medium">身份验证成功</p>
-                  <p className="text-green-700 text-sm">用户：{userInfo.username}</p>
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  新密码
-                </label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="请输入新密码（至少6位）"
-                  minLength={6}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  确认新密码
-                </label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="请再次输入新密码"
-                  minLength={6}
-                />
-              </div>
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-600 text-sm">
-                  {error}
-                </div>
-              )}
-
-              {message && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-600 text-sm">
-                  {message}
-                </div>
-              )}
-
-              <button
-                onClick={resetPassword}
-                disabled={loading}
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                {loading ? '重置中...' : '重置密码'}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 提示 */}
-        <p className="text-center text-gray-500 text-sm mt-6">
-          {method === 'phone' ? '验证码有效期为5分钟' : '验证通过后即可重置密码'}
-        </p>
+            </>
+          )}
+        </div>
       </div>
     </div>
   )
