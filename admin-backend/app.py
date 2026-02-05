@@ -695,7 +695,25 @@ def serve_static(filename):
 
 @app.route('/api/status')
 def index():
-    """健康检查"""
+    """健康检查 - 支持浏览器访问返回HTML页面"""
+    # 检查是否是浏览器请求
+    user_agent = request.headers.get('User-Agent', '')
+    accept = request.headers.get('Accept', '')
+    
+    # 如果User-Agent包含浏览器关键字，或者Accept包含text/html，返回HTML
+    browser_keywords = ['Mozilla', 'Chrome', 'Safari', 'Firefox', 'Edge', 'Opera']
+    is_browser = any(keyword in user_agent for keyword in browser_keywords)
+    wants_html = 'text/html' in accept
+    
+    if is_browser or wants_html:
+        # 返回HTML页面
+        public_dir = os.path.join(os.path.dirname(__file__), '../public')
+        index_file = os.path.join(public_dir, 'index.html')
+        if os.path.exists(index_file):
+            with open(index_file, 'r', encoding='utf-8') as f:
+                return f.read(), 200, {'Content-Type': 'text/html; charset=utf-8'}
+    
+    # 返回JSON
     return jsonify({
         'status': 'success',
         'message': '灵值生态园 API 服务正常运行',
