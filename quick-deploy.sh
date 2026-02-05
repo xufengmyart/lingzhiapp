@@ -1,104 +1,62 @@
 #!/bin/bash
-
-# 快速部署脚本 - 不备份，快速同步
-# 用途：开发过程中的快速预览
+# ==========================================
+# 梦幻版页面 - 快速部署脚本
+# 在服务器上执行此脚本
+# ==========================================
 
 set -e
 
-# 加载环境变量
-if [ -f ".env" ]; then
-    export $(cat .env | grep -v '^#' | xargs)
-else
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [ERROR] 未找到 .env 文件，请从 .env.example 复制并配置"
-    exit 1
+# 配置
+FRONTEND_DIR="/var/www/frontend"
+URL="https://coze-coding-project.tos.coze.site/coze_storage_7597771717536317475/dream-frontend-deploy.tar_7a6617f3.gz?sign=1770273524-245076a2ff-0-561bd59a69ac1a9cd6cb1c2c1cf230ab25b33fcaf79bf754a78d93f32f21de38"
+
+echo "🚀 开始部署梦幻版页面..."
+echo ""
+
+# 备份
+BACKUP_DIR="/var/www/frontend.backup.$(date +%Y%m%d_%H%M%S)"
+if [ -d "$FRONTEND_DIR" ] && [ "$(ls -A $FRONTEND_DIR 2>/dev/null)" ]; then
+    echo "💾 备份现有文件..."
+    cp -r "$FRONTEND_DIR" "$BACKUP_DIR" 2>/dev/null || true
 fi
 
-PROJECT_PATH="/workspace/projects"
-BUILD_DIR="$PROJECT_PATH/public"
-LOG_FILE="/app/work/logs/bypass/app.log"
-
-# 服务器配置
-SERVER_USER="${SERVER_USER:-root}"
-SERVER_HOST="${SERVER_HOST:-your-server-ip}"
-SERVER_PASSWORD="${SERVER_PASSWORD:-}"
-SERVER_PATH="${SERVER_PATH:-/var/www/html}"
-
-# GitHub 配置
-GITHUB_USERNAME="${GITHUB_USERNAME:-}"
-GITHUB_TOKEN="${GITHUB_TOKEN:-}"
-GITHUB_REPO="https://${GITHUB_USERNAME}:${GITHUB_TOKEN}@github.com/xufengmyart/lingzhiapp.git"
-
-# 日志函数
-log() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [INFO] $1" | tee -a "$LOG_FILE"
-}
-
-error() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [ERROR] $1" | tee -a "$LOG_FILE"
-}
-
-success() {
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] [SUCCESS] $1" | tee -a "$LOG_FILE"
-}
-
-log "开始快速部署..."
-
-# 进入项目目录
-cd "$PROJECT_PATH"
-
-# 检查是否有变更
-if [ -n "$(git status --porcelain)" ]; then
-    log "检测到代码变更"
-
-    # 提交变更
-    git add .
-    git commit -m "Quick deploy: $(date '+%Y-%m-%d %H:%M:%S')" || true
-
-    # 推送
-    if git push "$GITHUB_REPO" 2>&1; then
-        success "代码已推送到远程仓库"
-    else
-        error "推送失败"
-        exit 1
-    fi
+# 下载
+echo "📥 下载构建产物..."
+mkdir -p /root
+cd /root
+if command -v wget &> /dev/null; then
+    wget -O dream.tar.gz "$URL"
 else
-    log "没有代码变更，跳过提交"
+    curl -o dream.tar.gz "$URL"
 fi
 
-# 构建前端
-log "构建前端应用..."
-cd "$PROJECT_PATH/web-app"
+# 部署
+echo "📦 部署文件..."
+mkdir -p "$FRONTEND_DIR"
+rm -rf "$FRONTEND_DIR"/*
+mkdir -p /tmp/dream
+tar -xzf dream.tar.gz -C /tmp/dream
+cp -r /tmp/dream/* "$FRONTEND_DIR"/
+chown -R root:root "$FRONTEND_DIR"
+chmod -R 755 "$FRONTEND_DIR"
+rm -rf /tmp/dream
 
-if npm run build; then
-    success "前端构建成功"
-else
-    error "前端构建失败"
-    exit 1
-fi
+# 重启
+echo "🔄 重启Nginx..."
+systemctl restart nginx
 
-# 同步到服务器
-if [ -n "$SERVER_HOST" ] && [ "$SERVER_HOST" != "your-server-ip" ]; then
-    log "同步文件到服务器..."
-
-    # 设置 SSHPASS 环境变量
-    export SSHPASS="$SERVER_PASSWORD"
-
-    if rsync -avz --delete -e "sshpass -e ssh -o StrictHostKeyChecking=no" "$BUILD_DIR/" "$SERVER_USER@$SERVER_HOST:$SERVER_PATH/"; then
-        success "文件同步成功"
-
-        # 重启 Nginx
-        sshpass -e ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_HOST" "systemctl reload nginx"
-        success "Nginx 已重新加载"
-
-        # 清除环境变量
-        unset SSHPASS
-    else
-        error "文件同步失败"
-        unset SSHPASS
-        exit 1
-    fi
-else
-    log "未配置服务器，跳过同步"
-fi
-
-success "快速部署完成！"
+# 结果
+echo ""
+echo "=========================================="
+echo "  ✅ 部署完成！"
+echo "=========================================="
+echo ""
+echo "📍 访问地址："
+echo "   https://meiyueart.com/dream-selector"
+echo "   https://meiyueart.com/login-full"
+echo "   https://meiyueart.com/register-full"
+echo ""
+echo "📝 部署的文件："
+ls -lh "$FRONTEND_DIR/assets/" 2>/dev/null | grep -E '\.(js|css)$'
+echo ""
+echo "提示：清除浏览器缓存 (Ctrl+Shift+R)"

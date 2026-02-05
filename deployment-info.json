@@ -1,0 +1,34 @@
+{
+  "deployment": {
+    "status": "ready",
+    "timestamp": "2025-02-05T13:20:00Z",
+    "resources": {
+      "tarball": {
+        "key": "dream-frontend-deploy.tar_7a6617f3.gz",
+        "url": "https://coze-coding-project.tos.coze.site/coze_storage_7597771717536317475/dream-frontend-deploy.tar_7a6617f3.gz?sign=1770273524-245076a2ff-0-561bd59a69ac1a9cd6cb1c2c1cf230ab25b33fcaf79bf754a78d93f32f21de38",
+        "size": "192KB"
+      },
+      "deployScript": {
+        "key": "quick-deploy_ff392e4c.sh",
+        "url": "https://coze-coding-project.tos.coze.site/coze_storage_7597771717536317475/quick-deploy_ff392e4c.sh?sign=1770356381-9bd68d84c1-0-0faebe802da3a4846774e91460f53edc18d10274a85fbd8e40c1e84cd1f6e1ec",
+        "description": "自动下载并部署脚本"
+      },
+      "guide": {
+        "key": "deploy-guide_696d66b9.html",
+        "url": "https://coze-coding-project.tos.coze.site/coze_storage_7597771717536317475/deploy-guide_696d66b9.html?sign=1770356412-22e371b8d1-0-cde5ed9140df62fcc6cde6e53226807175302c0cead865906049250b454f76d9",
+        "description": "可视化部署指南"
+      }
+    },
+    "quickDeployCommand": "cd /root && wget https://coze-coding-project.tos.coze.site/coze_storage_7597771717536317475/quick-deploy_ff392e4c.sh?sign=1770356381-9bd68d84c1-0-0faebe802da3a4846774e91460f53edc18d10274a85fbd8e40c1e84cd1f6e1ec -O deploy.sh && bash deploy.sh",
+    "accessUrls": {
+      "dreamSelector": "https://meiyueart.com/dream-selector",
+      "loginFull": "https://meiyueart.com/login-full",
+      "registerFull": "https://meiyueart.com/register-full"
+    },
+    "expectedFiles": [
+      "/var/www/frontend/index.html",
+      "/var/www/frontend/assets/index-CkydMeua.js",
+      "/var/www/frontend/assets/index-CxUAxLXV.css"
+    ]
+  }
+}
