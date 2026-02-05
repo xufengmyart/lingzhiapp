@@ -4,39 +4,6 @@ import { Sparkles, Heart, Star, ArrowRight, User, Lock } from 'lucide-react'
 
 // 梦幻式设计风格配置
 const dreamStyles = {
-  dawn: {
-    bg: 'bg-gradient-to-br from-pink-100 via-purple-50 to-orange-50',
-    cardBg: 'bg-white/80 backdrop-blur-lg',
-    buttonBg: 'from-pink-500 to-orange-400',
-    buttonHover: 'from-pink-600 to-orange-500',
-    accent: 'text-pink-600',
-    decorColors: ['bg-pink-300', 'bg-purple-300', 'bg-orange-300'],
-    name: '晨曦之梦',
-    description: '温暖、活力、希望',
-    icon: '🌅',
-  },
-  galaxy: {
-    bg: 'bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900',
-    cardBg: 'bg-white/90 backdrop-blur-lg',
-    buttonBg: 'from-indigo-500 to-purple-500',
-    buttonHover: 'from-indigo-600 to-purple-600',
-    accent: 'text-indigo-600',
-    decorColors: ['bg-indigo-400', 'bg-purple-400', 'bg-blue-400'],
-    name: '星空梦境',
-    description: '深邃、神秘、宁静',
-    icon: '🌌',
-  },
-  forest: {
-    bg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50',
-    cardBg: 'bg-white/85 backdrop-blur-lg',
-    buttonBg: 'from-emerald-500 to-teal-500',
-    buttonHover: 'from-emerald-600 to-teal-600',
-    accent: 'text-emerald-600',
-    decorColors: ['bg-emerald-300', 'bg-teal-300', 'bg-cyan-300'],
-    name: '森林之梦',
-    description: '自然、清新、放松',
-    icon: '🌿',
-  },
   aurora: {
     bg: 'bg-gradient-to-br from-rose-100 via-purple-100 to-blue-100',
     cardBg: 'bg-white/85 backdrop-blur-lg',
@@ -48,11 +15,44 @@ const dreamStyles = {
     description: '绚丽、梦幻、多彩',
     icon: '🌈',
   },
+  sakura: {
+    bg: 'bg-gradient-to-br from-pink-50 via-rose-50 to-fuchsia-50',
+    cardBg: 'bg-white/85 backdrop-blur-lg',
+    buttonBg: 'from-pink-400 to-fuchsia-400',
+    buttonHover: 'from-pink-500 to-fuchsia-500',
+    accent: 'text-pink-500',
+    decorColors: ['bg-pink-200', 'bg-rose-200', 'bg-fuchsia-200'],
+    name: '樱花之梦',
+    description: '浪漫、柔美、优雅',
+    icon: '🌸',
+  },
+  ocean: {
+    bg: 'bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50',
+    cardBg: 'bg-white/85 backdrop-blur-lg',
+    buttonBg: 'from-cyan-500 to-blue-500',
+    buttonHover: 'from-cyan-600 to-blue-600',
+    accent: 'text-cyan-600',
+    decorColors: ['bg-cyan-300', 'bg-blue-300', 'bg-indigo-300'],
+    name: '海洋之梦',
+    description: '宁静、深邃、自由',
+    icon: '🌊',
+  },
+  cloud: {
+    bg: 'bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50',
+    cardBg: 'bg-white/90 backdrop-blur-lg',
+    buttonBg: 'from-slate-400 to-zinc-400',
+    buttonHover: 'from-slate-500 to-zinc-500',
+    accent: 'text-slate-600',
+    decorColors: ['bg-slate-200', 'bg-gray-200', 'bg-zinc-200'],
+    name: '云端之梦',
+    description: '轻盈、纯净、梦幻',
+    icon: '☁️',
+  },
 }
 
 const DreamPageSelector = () => {
   const navigate = useNavigate()
-  const [selectedStyle, setSelectedStyle] = useState<keyof typeof dreamStyles>('dawn')
+  const [selectedStyle, setSelectedStyle] = useState<keyof typeof dreamStyles>('aurora')
   const currentStyle = dreamStyles[selectedStyle]
 
   const handleGoToPage = (page: 'login' | 'register') => {
@@ -61,21 +61,21 @@ const DreamPageSelector = () => {
 
   return (
     <div className={`min-h-screen relative overflow-hidden ${currentStyle.bg}`}>
-      
+
       {/* 装饰性背景元素 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* 顶部装饰 */}
         <div className={`absolute top-20 left-20 w-32 h-32 ${currentStyle.decorColors[0]} rounded-full blur-3xl opacity-30 animate-pulse`}></div>
         <div className={`absolute top-40 right-32 w-24 h-24 ${currentStyle.decorColors[1]} rounded-full blur-3xl opacity-30 animate-pulse delay-1000`}></div>
-        
+
         {/* 中部装饰 */}
         <div className={`absolute top-1/2 left-10 w-40 h-40 ${currentStyle.decorColors[2]} rounded-full blur-3xl opacity-20 animate-pulse delay-500`}></div>
-        
+
         {/* 底部装饰 */}
         <div className="absolute bottom-20 left-1/4 w-16 h-16 bg-white/30 backdrop-blur rounded-2xl rotate-12 transform hover:scale-110 transition-transform duration-500"></div>
         <div className="absolute bottom-32 right-1/4 w-20 h-20 bg-white/40 backdrop-blur rounded-3xl -rotate-6 transform hover:scale-110 transition-transform duration-700"></div>
         <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-12 h-24 bg-white/20 backdrop-blur rounded-full transform hover:scale-110 transition-transform duration-600"></div>
-        
+
         {/* 飘动的星星 */}
         {[...Array(6)].map((_, i) => (
           <Star
