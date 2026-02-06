@@ -10,6 +10,18 @@ import random
 import string
 import json
 
+# 加载环境变量配置文件
+try:
+    from dotenv import load_dotenv
+    env_path = os.path.join(os.path.dirname(__file__), '.env')
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
+        print(f"✅ 环境变量已加载: {env_path}")
+    else:
+        print(f"⚠️  .env文件不存在: {env_path}")
+except ImportError:
+    print("⚠️  python-dotenv未安装，使用默认环境变量")
+
 # 设置 Coze 环境变量（如果未设置）
 os.environ.setdefault('COZE_WORKLOAD_IDENTITY_API_KEY', 'WU9RNGFQTmZTc3VnbnRCMmsyWUtDcDZHOWJMa0g5ZVk6NVN5cHNRbkNidjFzWHNEVnJ4UTZKQlN1SUxYMlU3ZEtidVRXbDYwWDFyZW9sdmhQbTU1QVdQaVJHcVo4b1BoWA==')
 os.environ.setdefault('COZE_INTEGRATION_MODEL_BASE_URL', 'https://integration.coze.cn/api/v3')
