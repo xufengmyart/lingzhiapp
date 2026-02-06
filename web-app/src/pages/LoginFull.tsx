@@ -22,12 +22,19 @@ const ecosystemFeatures = [
 
 const LoginFull = () => {
   const navigate = useNavigate()
-  const { login } = useAuth()
+  const { login, user } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+
+  // 如果用户已登录，直接跳转到dashboard
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [user, navigate])
 
   // 光扫动画轮播
   const [featureIndex, setFeatureIndex] = useState(0)
