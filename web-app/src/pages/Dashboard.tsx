@@ -141,24 +141,18 @@ const Dashboard = () => {
 
   return (
     <div className={`min-h-screen ${vrTheme.bgGradient} pb-8`}>
-      {/* 科幻主题背景装饰 - 移除fixed定位，使用absolute避免覆盖 */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#3e8bb6]/20 rounded-full blur-[128px]"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#b5cbdb]/20 rounded-full blur-[128px]"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#3e8bb6]/10 rounded-full blur-[200px]"></div>
-      </div>
 
       <div className="container mx-auto px-4 relative z-10 pt-20">
         {/* 系统通知 */}
         <div className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.shadow} ${vrTheme.glass.border} rounded-2xl p-4 mb-6`}>
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-[#3e8bb6] rounded-lg flex items-center justify-center">
               <Star className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">
               <h3 className="text-white font-semibold">系统通知</h3>
               <p className="text-sm text-gray-300">
-                🎉 VR 2.0 全新升级！沉浸式体验即将开启
+                🎉 欢迎使用灵值生态园！
               </p>
             </div>
             <button className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors">
@@ -167,8 +161,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* 欢迎消息 - VR风格 */}
-        <div className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.shadow} ${vrTheme.glass.border} rounded-3xl p-8 mb-6 animate-float`}>
+        {/* 欢迎消息 */}
+        <div className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.shadow} ${vrTheme.glass.border} rounded-3xl p-8 mb-6`}>
           <div className="flex items-center space-x-3 mb-3">
             <div className="relative">
               <div className="absolute inset-0 bg-cyan-500 blur-xl animate-pulse"></div>
@@ -179,25 +173,14 @@ const Dashboard = () => {
             <Shield className="w-6 h-6 text-cyan-400" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2 break-words whitespace-normal drop-shadow-lg">
-            欢迎来到灵值元宇宙
+            欢迎来到灵值生态园
           </h1>
           <p className="text-cyan-300 opacity-90 break-words whitespace-normal">
             创造者 {user?.username}，您的 {user?.totalLingzhi} 灵值正在创造无限可能
           </p>
         </div>
 
-        {/* VR特色展示 */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          {vrFeatures.map((feature, idx) => (
-            <div key={idx} className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.border} rounded-2xl p-4 text-center transition-all hover:scale-105`}>
-              <div className="text-3xl mb-2">{feature.icon}</div>
-              <div className="text-white font-semibold">{feature.title}</div>
-              <div className="text-sm text-cyan-300">{feature.subtitle}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* 核心数据卡片 - VR风格 */}
+        {/* 核心数据卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
           {/* 总灵值 */}
           <div className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 transition-all group`}>
@@ -300,11 +283,11 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* 项目入口 - VR风格 */}
+        {/* 项目入口 */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
             <Sparkles className="w-6 h-6 mr-2 text-cyan-400" />
-            元宇宙项目入口
+            项目入口
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div
@@ -343,7 +326,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 快速入口 - VR风格 */}
+      {/* 快速入口 */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
           <Zap className="w-6 h-6 mr-2 text-pink-400" />
@@ -396,7 +379,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* 用户动态 - VR风格 */}
+      {/* 用户动态 */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
           <Globe className="w-6 h-6 mr-2 text-cyan-400" />
