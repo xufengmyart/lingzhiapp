@@ -77,19 +77,23 @@ const Dashboard = () => {
         if (result.success) {
           // 更新用户信息（总灵值）
           const userInfo = await userApi.getUserInfo()
-          // 更新 AuthContext 中的用户信息
           if (userInfo.success && userInfo.data) {
             updateUser(userInfo.data)
-            // 更新统计数据
-            setStats(prev => ({
-              ...prev,
-              todayLingzhi: result.data.lingzhi,
-              checkedIn: true
-            }))
           }
+          
+          // 重新获取今日签到状态
+          const checkInStatus = await checkInApi.getTodayStatus()
+          
+          // 更新统计数据
+          setStats(prev => ({
+            ...prev,
+            todayLingzhi: checkInStatus.data.lingzhi || (prev.todayLingzhi + (result.data.lingzhi || 0)),
+            checkedIn: true
+          }))
         }
       } catch (error) {
         console.error('签到失败:', error)
+        alert('签到失败，请稍后重试')
       } finally {
         setCheckInLoading(false)
       }

@@ -46,94 +46,220 @@ body {
   min-height: 100vh;
 }
 
-/* VR背景动画效果 */
+/* VR背景动画效果 - 增强 */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-15px);
   }
 }
 
 @keyframes twinkle {
   0%, 100% {
     opacity: 0;
-    transform: scale(0.5);
+    transform: scale(0.3);
   }
   50% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale(1.2);
   }
 }
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.4), 0 0 60px rgba(34, 211, 238, 0.2);
   }
   50% {
-    box-shadow: 0 0 40px rgba(168, 85, 247, 0.6);
+    box-shadow: 0 0 50px rgba(168, 85, 247, 0.8), 0 0 100px rgba(34, 211, 238, 0.4);
+  }
+}
+
+@keyframes rainbow-glow {
+  0% {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(168, 85, 247, 0.3);
+  }
+  33% {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.5), 0 0 40px rgba(244, 114, 182, 0.3);
+  }
+  66% {
+    box-shadow: 0 0 20px rgba(244, 114, 182, 0.5), 0 0 40px rgba(34, 211, 238, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.5), 0 0 40px rgba(168, 85, 247, 0.3);
+  }
+}
+
+@keyframes border-flow {
+  0% {
+    border-color: rgba(34, 211, 238, 0.5);
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+  }
+  33% {
+    border-color: rgba(168, 85, 247, 0.5);
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+  }
+  66% {
+    border-color: rgba(244, 114, 182, 0.5);
+    box-shadow: 0 0 10px rgba(244, 114, 182, 0.3);
+  }
+  100% {
+    border-color: rgba(34, 211, 238, 0.5);
+    box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+  }
+}
+
+@keyframes text-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
   }
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 4s ease-in-out infinite;
 }
 
 .animate-twinkle {
-  animation: twinkle 2s ease-in-out infinite;
+  animation: twinkle 3s ease-in-out infinite;
 }
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* 玻璃拟态效果 */
-.glass-effect {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+.animate-rainbow-glow {
+  animation: rainbow-glow 4s linear infinite;
 }
 
-/* 发光按钮 */
+.animate-border-flow {
+  animation: border-flow 3s linear infinite;
+}
+
+/* 玻璃拟态效果 - 增强 */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 40px rgba(168, 85, 247, 0.4), inset 0 0 30px rgba(255, 255, 255, 0.05);
+}
+
+/* 发光按钮 - 增强 */
 .glow-button {
   background: linear-gradient(135deg, #22d3ee, #a855f7, #f472b6);
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(34, 211, 238, 0.3);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s ease;
+}
+
+.glow-button:hover::before {
+  left: 100%;
 }
 
 .glow-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 30px rgba(168, 85, 247, 0.7);
+  transform: scale(1.08);
+  box-shadow: 0 0 50px rgba(168, 85, 247, 0.8), 0 0 100px rgba(34, 211, 238, 0.4);
 }
 
-/* VR卡片样式 */
+/* VR卡片样式 - 增强 */
 .vr-card {
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.vr-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #22d3ee, #a855f7, #f472b6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .vr-card:hover {
   background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
+  transform: translateY(-5px) scale(1.02);
 }
 
-/* 文本发光效果 */
+.vr-card:hover::before {
+  opacity: 1;
+}
+
+/* 文本发光效果 - 增强 */
 .text-glow-cyan {
-  text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.8), 0 0 20px rgba(34, 211, 238, 0.4), 0 0 30px rgba(34, 211, 238, 0.2);
 }
 
 .text-glow-purple {
-  text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.8), 0 0 20px rgba(168, 85, 247, 0.4), 0 0 30px rgba(168, 85, 247, 0.2);
 }
 
 .text-glow-pink {
-  text-shadow: 0 0 10px rgba(244, 114, 182, 0.5);
+  text-shadow: 0 0 10px rgba(244, 114, 182, 0.8), 0 0 20px rgba(244, 114, 182, 0.4), 0 0 30px rgba(244, 114, 182, 0.2);
+}
+
+/* 新增：霓虹边框效果 */
+.neon-border {
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+}
+
+.neon-border::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  margin: -2px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #22d3ee, #a855f7, #f472b6);
+}
+
+/* 新增：3D卡片效果 */
+.vr-card-3d {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    0 1px 8px rgba(0, 0, 0, 0.2),
+    inset 0 0 20px rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transform-style: preserve-3d;
+}
+
+.vr-card-3d:hover {
+  transform: translateY(-10px) rotateX(5deg);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 10px 20px rgba(168, 85, 247, 0.3),
+    inset 0 0 30px rgba(255, 255, 255, 0.1);
 }
 
 /* 修复输入框文字颜色 - VR风格 */

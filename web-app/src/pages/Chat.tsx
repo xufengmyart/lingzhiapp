@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { ChatProvider, useChat } from '../contexts/ChatContext'
 import { Send, Sparkles, User, Bot, ThumbsUp, ThumbsDown, MessageSquarePlus, X, ChevronDown } from 'lucide-react'
 import axios from 'axios'
+import { vrTheme } from '../utils/vr-theme'
 
 interface Agent {
   id: number
@@ -92,33 +93,34 @@ const ChatContent = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] bg-white rounded-2xl shadow-xl overflow-hidden">
-      {/* 聊天头部 */}
-      <div className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white p-4 flex items-center justify-between">
+    <div className={`flex flex-col ${vrTheme.bgGradient} rounded-3xl shadow-2xl overflow-hidden border border-white/20`}>
+      {/* 聊天头部 - VR风格 */}
+      <div className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.border} p-4 flex items-center justify-between`}>
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-            <Sparkles className="w-5 h-5" />
+          <div className={`relative w-10 h-10 ${vrTheme.button.gradient} rounded-full flex items-center justify-center ${vrTheme.button.glow}`}>
+            <Sparkles className="w-5 h-5 text-white" />
+            <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
           </div>
           <div>
-            <h2 className="font-semibold">灵值生态园智能体</h2>
-            <p className="text-xs opacity-80">您的专属生态向导</p>
+            <h2 className="font-semibold text-white">灵值元宇宙智能体</h2>
+            <p className="text-xs text-cyan-400 opacity-80">您的专属元宇宙向导</p>
           </div>
         </div>
         <button
           onClick={clearChat}
-          className="px-4 py-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors text-sm"
+          className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-all text-sm text-white"
         >
           新对话
         </button>
       </div>
 
-      {/* 消息列表 */}
+      {/* 消息列表 - VR风格 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4" id="messages-container">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <Sparkles className="w-16 h-16 mb-4 text-primary-300" />
-            <p className="text-lg font-medium">开始您的对话</p>
-            <p className="text-sm">与智能体交流，探索灵值生态的价值</p>
+          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+            <Sparkles className="w-16 h-16 mb-4 text-cyan-400 animate-pulse" />
+            <p className="text-lg font-medium text-white">开始您的对话</p>
+            <p className="text-sm">与智能体交流，探索灵值元宇宙的价值</p>
           </div>
         ) : (
           messages.map((message) => (
@@ -131,8 +133,8 @@ const ChatContent = () => {
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                   message.role === 'user'
-                    ? 'bg-primary-500'
-                    : 'bg-secondary-500'
+                    ? 'bg-gradient-to-br from-cyan-400 to-cyan-500'
+                    : 'bg-gradient-to-br from-purple-400 to-purple-500'
                 }`}
               >
                 {message.role === 'user' ? (
@@ -143,14 +145,12 @@ const ChatContent = () => {
               </div>
               <div className="flex-1 max-w-[70%]">
                 <div
-                  className={`p-4 rounded-2xl ${
+                  className={`p-4 rounded-2xl backdrop-blur-sm ${
                     message.role === 'user'
-                      ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
+                      ? 'bg-gradient-to-r from-cyan-500/80 to-cyan-600/80 text-white border border-cyan-400/30'
+                      : 'bg-white/10 text-white border border-white/20'
                   }`}
                 >
-                  {/* 文字加大两号 - 从 text-sm 改为 text-base */}
-                  {/* 添加 break-all 和 break-words 确保长字符串自动换行 */}
                   <p className="text-base whitespace-pre-wrap leading-relaxed break-all break-words">{message.content}</p>
                   <span className="text-xs opacity-60 mt-2 block">
                     {new Date(message.timestamp).toLocaleTimeString()}
@@ -162,7 +162,7 @@ const ChatContent = () => {
                   <div className="flex items-center space-x-2 mt-2 ml-2">
                     <button
                       onClick={() => setFeedbackModal({ open: true, messageId: message.id, messageContent: message.content })}
-                      className="text-xs text-gray-500 hover:text-primary-600 flex items-center space-x-1 transition-colors"
+                      className="text-xs text-gray-400 hover:text-cyan-400 flex items-center space-x-1 transition-colors"
                     >
                       <MessageSquarePlus className="w-3 h-3" />
                       <span>反馈</span>
@@ -175,14 +175,14 @@ const ChatContent = () => {
         )}
         {loading && (
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-secondary-500 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-500 flex items-center justify-center">
               <Bot className="w-5 h-5 text-white" />
             </div>
-            <div className="bg-gray-100 p-4 rounded-2xl">
+            <div className="bg-white/10 p-4 rounded-2xl border border-white/20 backdrop-blur-sm">
               <div className="flex space-x-2">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
             </div>
           </div>
@@ -191,8 +191,8 @@ const ChatContent = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 输入框 */}
-      <div className="p-4 border-t bg-gray-50">
+      {/* 输入框 - VR风格 */}
+      <div className="p-4 border-t border-white/10 bg-white/5 backdrop-blur-sm">
         <form onSubmit={handleSubmit} className="flex space-x-3">
           <input
             type="text"
