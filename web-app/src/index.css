@@ -12,7 +12,7 @@
 
   color-scheme: dark;
   color: #ffffff;
-  background-color: #0f172a;
+  background-color: #091422;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -22,19 +22,26 @@
   /* 响应式字体大小基础 */
   --font-size-base: 16px;
 
-  /* VR主题色 */
-  --vr-cyan: #22d3ee;
-  --vr-purple: #a855f7;
-  --vr-pink: #f472b6;
-  --vr-dark-bg: #0f172a;
-  --vr-purple-bg: #1e1b4b;
+  /* 科幻主题色 */
+  --sci-fi-primary: #3e8bb6;   /* RGB(62, 139, 182) - 主底色 */
+  --sci-fi-dark: #091422;      /* RGB(9, 20, 34) - 深色背景 */
+  --sci-fi-light: #b5cbdb;     /* RGB(181, 203, 219) - 浅色高亮 */
+  --sci-fi-accent: #22d3ee;    /* 青色点缀 */
+  --sci-fi-glow: rgba(62, 139, 182, 0.6);  /* 主色光晕 */
+  
+  /* 兼容旧变量名 */
+  --vr-cyan: var(--sci-fi-primary);
+  --vr-purple: var(--sci-fi-light);
+  --vr-pink: var(--sci-fi-accent);
+  --vr-dark-bg: var(--sci-fi-dark);
+  --vr-purple-bg: #0d1a29;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  /* VR风格深色渐变背景 */
-  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  /* 科幻主题渐变背景 */
+  background: linear-gradient(135deg, #091422 0%, #3e8bb6 50%, #091422 100%);
   color: #ffffff;
 
   /* 响应式字体大小 */
@@ -193,15 +200,15 @@ body {
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, #22d3ee, #a855f7, #f472b6);
+  background: linear-gradient(90deg, #3e8bb6, #b5cbdb, #22d3ee);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .vr-card:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 30px rgba(168, 85, 247, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
+  background: rgba(62, 139, 182, 0.15);
+  border-color: rgba(181, 203, 219, 0.4);
+  box-shadow: 0 0 30px rgba(62, 139, 182, 0.5), inset 0 0 20px rgba(181, 203, 219, 0.05);
   transform: translateY(-5px) scale(1.02);
 }
 
@@ -209,20 +216,20 @@ body {
   opacity: 1;
 }
 
-/* 文本发光效果 - 增强 */
+/* 科幻主题发光效果 */
 .text-glow-cyan {
-  text-shadow: 0 0 10px rgba(34, 211, 238, 0.8), 0 0 20px rgba(34, 211, 238, 0.4), 0 0 30px rgba(34, 211, 238, 0.2);
+  text-shadow: 0 0 10px rgba(62, 139, 182, 0.8), 0 0 20px rgba(62, 139, 182, 0.4), 0 0 30px rgba(62, 139, 182, 0.2);
 }
 
 .text-glow-purple {
-  text-shadow: 0 0 10px rgba(168, 85, 247, 0.8), 0 0 20px rgba(168, 85, 247, 0.4), 0 0 30px rgba(168, 85, 247, 0.2);
+  text-shadow: 0 0 10px rgba(181, 203, 219, 0.8), 0 0 20px rgba(181, 203, 219, 0.4), 0 0 30px rgba(181, 203, 219, 0.2);
 }
 
 .text-glow-pink {
-  text-shadow: 0 0 10px rgba(244, 114, 182, 0.8), 0 0 20px rgba(244, 114, 182, 0.4), 0 0 30px rgba(244, 114, 182, 0.2);
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.8), 0 0 20px rgba(34, 211, 238, 0.4), 0 0 30px rgba(34, 211, 238, 0.2);
 }
 
-/* 新增：霓虹边框效果 */
+/* 科幻主题霓虹边框效果 */
 .neon-border {
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -239,17 +246,17 @@ body {
   z-index: -1;
   margin: -2px;
   border-radius: inherit;
-  background: linear-gradient(90deg, #22d3ee, #a855f7, #f472b6);
+  background: linear-gradient(90deg, #3e8bb6, #b5cbdb, #22d3ee);
 }
 
-/* 新增：3D卡片效果 */
+/* 科幻主题3D卡片效果 */
 .vr-card-3d {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(62, 139, 182, 0.08);
+  border: 1px solid rgba(181, 203, 219, 0.2);
   box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.3),
-    0 1px 8px rgba(0, 0, 0, 0.2),
-    inset 0 0 20px rgba(255, 255, 255, 0.05);
+    0 10px 30px rgba(9, 20, 34, 0.5),
+    0 1px 8px rgba(9, 20, 34, 0.3),
+    inset 0 0 20px rgba(62, 139, 182, 0.05);
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform-style: preserve-3d;
 }
@@ -257,26 +264,26 @@ body {
 .vr-card-3d:hover {
   transform: translateY(-10px) rotateX(5deg);
   box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.4),
-    0 10px 20px rgba(168, 85, 247, 0.3),
-    inset 0 0 30px rgba(255, 255, 255, 0.1);
+    0 20px 60px rgba(9, 20, 34, 0.6),
+    0 10px 20px rgba(62, 139, 182, 0.4),
+    inset 0 0 30px rgba(181, 203, 219, 0.1);
 }
 
-/* 修复输入框文字颜色 - VR风格 */
+/* 修复输入框文字颜色 - 科幻风格 */
 input, textarea {
   color: #ffffff !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(9, 20, 34, 0.6) !important;
+  border-color: rgba(62, 139, 182, 0.3) !important;
 }
 
 input::placeholder, textarea::placeholder {
-  color: #9ca3af !important;
+  color: rgba(181, 203, 219, 0.6) !important;
 }
 
 input:focus, textarea:focus {
   outline: none !important;
-  border-color: rgba(34, 211, 238, 0.5) !important;
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.2) !important;
+  border-color: rgba(62, 139, 182, 0.8) !important;
+  box-shadow: 0 0 10px rgba(62, 139, 182, 0.3) !important;
 }
 
 /* 滚动条样式 - VR风格 */

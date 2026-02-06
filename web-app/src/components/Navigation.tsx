@@ -23,17 +23,17 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 backdrop-blur-lg border-b border-purple-500/30 shadow-2xl z-50">
+    <nav className="fixed top-0 left-0 right-0 bg-gradient-to-r from-[#091422] via-[#3e8bb6] to-[#091422] backdrop-blur-lg border-b border-[#b5cbdb]/30 shadow-2xl z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/dashboard" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-lg flex items-center justify-center shadow-lg">
+            <div className="w-10 h-10 bg-gradient-to-r from-[#3e8bb6] to-[#b5cbdb] rounded-lg flex items-center justify-center shadow-lg">
               <Wallet className="w-5 h-5 text-white" />
             </div>
             <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-cyan-400" />
-              <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+              <Sparkles className="w-4 h-4 text-[#b5cbdb]" />
+              <span className="text-xl font-bold bg-gradient-to-r from-[#3e8bb6] via-[#b5cbdb] to-[#3e8bb6] bg-clip-text text-transparent">
                 灵值元宇宙
               </span>
             </div>
@@ -47,8 +47,8 @@ const Navigation = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all hover:bg-white/10 ${
-                    isActive(item.path) ? 'bg-white/20 text-white' : 'text-gray-300 hover:text-white'
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all hover:bg-[#3e8bb6]/20 ${
+                    isActive(item.path) ? 'bg-[#3e8bb6]/30 text-white' : 'text-[#b5cbdb] hover:text-white'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -59,15 +59,15 @@ const Navigation = () => {
           </div>
 
           {/* 帮助和反馈 */}
-          <div className="hidden md:flex items-center space-x-1 border-l border-white/10 pl-4">
+          <div className="hidden md:flex items-center space-x-1 border-l border-[#b5cbdb]/10 pl-4">
             {navItemsRight.map((item) => {
               const Icon = item.icon
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all hover:bg-white/10 ${
-                    isActive(item.path) ? 'bg-white/20 text-white' : 'text-gray-300 hover:text-white'
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all hover:bg-[#3e8bb6]/20 ${
+                    isActive(item.path) ? 'bg-[#3e8bb6]/30 text-white' : 'text-[#b5cbdb] hover:text-white'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -80,7 +80,7 @@ const Navigation = () => {
           {/* 用户信息和登出 */}
           <div className="flex items-center space-x-4">
             {user && (
-              <div className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 text-white px-4 py-2 rounded-full shadow-lg">
+              <div className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-[#3e8bb6] to-[#b5cbdb] text-white px-4 py-2 rounded-full shadow-lg">
                 <Wallet className="w-4 h-4" />
                 <span className="font-semibold whitespace-nowrap">{user.totalLingzhi} 灵值</span>
                 <span className="text-xs opacity-80 whitespace-nowrap">({(user.totalLingzhi * 0.1).toFixed(1)}元)</span>
@@ -88,7 +88,7 @@ const Navigation = () => {
             )}
             <button
               onClick={logout}
-              className="flex items-center space-x-2 px-4 py-2 text-pink-400 hover:bg-white/10 rounded-lg transition-all hover:text-pink-300"
+              className="flex items-center space-x-2 px-4 py-2 text-[#b5cbdb] hover:bg-[#3e8bb6]/20 rounded-lg transition-all hover:text-white"
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline whitespace-nowrap">退出</span>
@@ -97,7 +97,7 @@ const Navigation = () => {
         </div>
 
         {/* 移动端导航 */}
-        <div className="md:hidden flex justify-around py-3 border-t border-white/10">
+        <div className="md:hidden flex justify-around py-3 border-t border-[#b5cbdb]/10">
           {navItems.map((item) => {
             const Icon = item.icon
             return (
@@ -105,7 +105,7 @@ const Navigation = () => {
                 key={item.path}
                 to={item.path}
                 className={`flex flex-col items-center space-y-1 px-4 py-1 rounded-lg transition-all ${
-                  isActive(item.path) ? 'text-cyan-400' : 'text-gray-400'
+                  isActive(item.path) ? 'text-[#3e8bb6]' : 'text-[#b5cbdb]/60'
                 }`}
               >
                 <Icon className="w-5 h-5" />
