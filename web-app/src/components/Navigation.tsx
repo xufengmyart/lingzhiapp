@@ -23,12 +23,24 @@ const Navigation = () => {
 
   const isActive = (path: string) => location.pathname === path
 
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault()
+    logout()
+  }
+
   return (
-    <nav className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.shadow} ${vrTheme.glass.border} sticky top-0 z-50`}>
+    <nav 
+      className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.shadow} ${vrTheme.glass.border} sticky top-0 z-[9999] pointer-events-auto`}
+      style={{ pointerEvents: 'auto' }}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/dashboard" className="flex items-center space-x-3 group">
+          <Link 
+            to="/dashboard" 
+            className="flex items-center space-x-3 group cursor-pointer"
+            style={{ pointerEvents: 'auto' }}
+          >
             <div className={`relative w-10 h-10 ${vrTheme.button.gradient} rounded-lg flex items-center justify-center ${vrTheme.button.glow} transition-all group-hover:scale-110`}>
               <Wallet className="w-5 h-5 text-white" />
               <div className="absolute inset-0 bg-white/20 rounded-lg animate-pulse"></div>
@@ -47,11 +59,12 @@ const Navigation = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all cursor-pointer ${
                   isActive(item.path)
                     ? `bg-white/20 text-white ${item.glow}`
                     : 'text-gray-300 hover:bg-white/10 hover:text-white'
                 }`}
+                style={{ pointerEvents: 'auto' }}
               >
                 <item.icon className="w-4 h-4" />
                 <span className="no-wrap">{item.label}</span>
@@ -65,11 +78,12 @@ const Navigation = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all ${
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all cursor-pointer ${
                   isActive(item.path)
                     ? `bg-white/20 text-white ${item.glow}`
                     : 'text-gray-300 hover:bg-white/10 hover:text-white'
                 }`}
+                style={{ pointerEvents: 'auto' }}
               >
                 <item.icon className="w-4 h-4" />
                 <span className="text-sm no-wrap">{item.label}</span>
@@ -80,15 +94,16 @@ const Navigation = () => {
           {/* 用户信息和登出 */}
           <div className="flex items-center space-x-4">
             {user && (
-              <div className={`relative hidden sm:flex items-center space-x-2 ${vrTheme.button.gradient} ${vrTheme.button.glow} text-white px-4 py-2 rounded-full`}>
+              <div className={`relative hidden sm:flex items-center space-x-2 ${vrTheme.button.gradient} ${vrTheme.button.glow} text-white px-4 py-2 rounded-full pointer-events-none`}>
                 <Wallet className="w-4 h-4" />
                 <span className="font-semibold no-wrap">{user.totalLingzhi} 灵值</span>
                 <span className="text-xs opacity-80 no-wrap">({(user.totalLingzhi * 0.1).toFixed(1)}元)</span>
               </div>
             )}
             <button
-              onClick={logout}
-              className="flex items-center space-x-2 px-4 py-2 text-pink-400 hover:bg-white/10 rounded-lg transition-all hover:text-pink-300"
+              onClick={handleLogout}
+              className="flex items-center space-x-2 px-4 py-2 text-pink-400 hover:bg-white/10 rounded-lg transition-all hover:text-pink-300 cursor-pointer"
+              style={{ pointerEvents: 'auto' }}
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline no-wrap">退出</span>
@@ -102,9 +117,10 @@ const Navigation = () => {
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center space-y-1 px-4 py-1 rounded-lg transition-all ${
+              className={`flex flex-col items-center space-y-1 px-4 py-1 rounded-lg transition-all cursor-pointer ${
                 isActive(item.path) ? 'text-cyan-400' : 'text-gray-400'
               }`}
+              style={{ pointerEvents: 'auto' }}
             >
               <item.icon className="w-5 h-5" />
               <span className="text-xs">{item.label}</span>
