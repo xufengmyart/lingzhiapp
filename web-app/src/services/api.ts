@@ -77,7 +77,7 @@ api.interceptors.response.use(
 export const userApi = {
   login: async (username: string, password: string) => {
     if (USE_MOCK_API) return mockApi.login(username, password)
-    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/api/login', {
+    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/login', {
       username,
       password,
     })
@@ -86,12 +86,12 @@ export const userApi = {
 
   register: async (username: string, email: string, password: string, referrer?: string) => {
     if (USE_MOCK_API) return mockApi.register({ username, email, phone: '', password, referrer })
-    
+
     // 如果有推荐人用户名，先查找推荐人ID
     let referrerId: number | undefined = undefined
     if (referrer) {
       try {
-        const searchResponse = await api.get<{ data: any[] }>(`/api/admin/users?search=${encodeURIComponent(referrer)}`)
+        const searchResponse = await api.get<{ data: any[] }>(`/admin/users?search=${encodeURIComponent(referrer)}`)
         if (searchResponse.data.data && searchResponse.data.data.length > 0) {
           referrerId = searchResponse.data.data[0].id
         } else {
@@ -102,7 +102,7 @@ export const userApi = {
       }
     }
 
-    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/api/register', {
+    const response = await api.post<ApiResponse<{ token: string; user: User }>>('/register', {
       username,
       email,
       phone: '',
@@ -114,30 +114,30 @@ export const userApi = {
 
   getUserInfo: async (useCache: boolean = true) => {
     if (USE_MOCK_API) return mockApi.getUserInfo()
-    
-    const cacheKey = generateCacheKey('GET', '/api/user/info')
-    
+
+    const cacheKey = generateCacheKey('GET', '/user/info')
+
     // 尝试从缓存获取
     if (useCache) {
       const cached = requestCache.get(cacheKey)
       if (cached) return cached
     }
-    
-    const response = await api.get<ApiResponse<User>>('/api/user/info')
-    
+
+    const response = await api.get<ApiResponse<User>>('/user/info')
+
     // 缓存结果
     requestCache.set(cacheKey, response.data)
-    
+
     return response.data
   },
 
   updateProfile: async (data: Partial<User>) => {
     if (USE_MOCK_API) return mockApi.updateProfile(data)
-    const response = await api.put<ApiResponse<User>>('/api/user/profile', data)
-    
+    const response = await api.put<ApiResponse<User>>('/user/profile', data)
+
     // 清除用户信息缓存
-    requestCache.delete(generateCacheKey('GET', '/api/user/info'))
-    
+    requestCache.delete(generateCacheKey('GET', '/user/info'))
+
     return response.data
   }
 }
@@ -147,7 +147,7 @@ export const agentApi = {
   sendMessage: async (message: string, conversationId?: string, agentId?: number) => {
     if (USE_MOCK_API) return mockApi.sendMessage(message, conversationId)
     const response = await api.post<ApiResponse<{ reply: string; conversationId: string; agentId: number }>>(
-      '/api/agent/chat',
+      '/agent/chat',
       { message, conversationId, agentId: agentId || 1 }
     )
     return response.data
@@ -156,13 +156,13 @@ export const agentApi = {
   getConversationHistory: async (conversationId: string) => {
     if (USE_MOCK_API) return mockApi.getConversationHistory(conversationId)
     const response = await api.get<ApiResponse<{ messages: any[] }>>(
-      `/api/agent/conversations/${conversationId}`
+      `/agent/conversations/${conversationId}`
     )
     return response.data
   },
 
   getAgents: async () => {
-    const response = await api.get<ApiResponse<any[]>>('/api/admin/agents')
+    const response = await api.get<ApiResponse<any[]>>('/admin/agents')
     return response.data
   },
 }
@@ -172,7 +172,7 @@ export const economyApi = {
   getIncomeProjection: async (level: string) => {
     if (USE_MOCK_API) return mockApi.getIncomeProjection(level)
     const response = await api.get<ApiResponse<IncomeLevel>>(
-      `/api/economy/income-projection?level=${level}`
+      `/economy/income-projection?level=${level}`
     )
     return response.data
   },
@@ -183,13 +183,13 @@ export const economyApi = {
     if (lockPeriod) {
       params.append('lockPeriod', lockPeriod)
     }
-    const response = await api.get<ApiResponse<any>>(`/api/economy/value?${params}`)
+    const response = await api.get<ApiResponse<any>>(`/economy/value?${params}`)
     return response.data
   },
 
   getExchangeInfo: async () => {
     if (USE_MOCK_API) return mockApi.getExchangeInfo()
-    const response = await api.get<ApiResponse<any>>('/api/economy/exchange-info')
+    const response = await api.get<ApiResponse<any>>('/economy/exchange-info')
     return response.data
   },
 }
@@ -198,19 +198,19 @@ export const economyApi = {
 export const journeyApi = {
   getJourneyStage: async (userId: string) => {
     if (USE_MOCK_API) return mockApi.getJourneyStage(userId)
-    const response = await api.get<ApiResponse<JourneyStage>>(`/api/journey/stage/${userId}`)
+    const response = await api.get<ApiResponse<JourneyStage>>(`/journey/stage/${userId}`)
     return response.data
   },
 
   updateProgress: async (userId: string, data: any) => {
     if (USE_MOCK_API) return mockApi.updateProgress(userId, data)
-    const response = await api.put<ApiResponse<any>>(`/api/journey/progress/${userId}`, data)
+    const response = await api.put<ApiResponse<any>>(`/journey/progress/${userId}`, data)
     return response.data
   },
 
   getMilestones: async (userId: string) => {
     if (USE_MOCK_API) return mockApi.getMilestones(userId)
-    const response = await api.get<ApiResponse<any>>(`/api/journey/milestones/${userId}`)
+    const response = await api.get<ApiResponse<any>>(`/journey/milestones/${userId}`)
     return response.data
   },
 }
@@ -218,7 +218,7 @@ export const journeyApi = {
 // 合伙人API
 export const partnerApi = {
   checkQualification: async (userId: string, currentLingzhi: number) => {
-    const response = await api.post<ApiResponse<PartnerInfo>>('/api/partner/check-qualification', {
+    const response = await api.post<ApiResponse<PartnerInfo>>('/partner/check-qualification', {
       userId,
       currentLingzhi,
     })
@@ -232,18 +232,18 @@ export const partnerApi = {
     currentLingzhi: number
     reason: string
   }) => {
-    const response = await api.post<ApiResponse<any>>('/api/partner/apply', data)
+    const response = await api.post<ApiResponse<any>>('/partner/apply', data)
     return response.data
   },
 
   getApplicationStatus: async (userId: number | string) => {
-    const response = await api.get<ApiResponse<any>>(`/api/partner/status/${userId}`)
+    const response = await api.get<ApiResponse<any>>(`/partner/status/${userId}`)
     return response.data
   },
 
   getPrivileges: async (level: string) => {
     if (USE_MOCK_API) return mockApi.getPrivileges(level)
-    const response = await api.get<ApiResponse<any>>(`/api/partner/privileges?level=${level}`)
+    const response = await api.get<ApiResponse<any>>(`/partner/privileges?level=${level}`)
     return response.data
   },
 }
