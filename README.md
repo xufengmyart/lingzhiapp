@@ -6,6 +6,31 @@
 
 通过每日签到、智能对话、参与活动等方式积累"灵值"，这一数字资产可以直接兑换成现金收益。
 
+**最新版本**: v9.0 - 资源匹配与变现生态系统
+**部署状态**: ✅ 已部署到 https://meiyueart.com
+**最后更新**: 2025-02-06
+
+---
+
+## 📋 更新日志
+
+### v9.0 (2025-02-06)
+
+#### 重大修复
+- ✅ **导航栏修复**: 彻底重构导航栏组件，移除所有复杂的内联样式和事件阻止逻辑，确保导航链接可正常点击
+- ✅ **API路径修复**: 修复所有API调用中的路径重复问题（如`/api/api/checkin` → `/api/checkin`）
+- ✅ **自动部署**: 实现一键自动部署到远程服务器，包括构建、备份、上传和验证
+
+#### 技术优化
+- 简化HTML结构，使用标准React Router Link组件
+- 设置正确的z-index层级（z-[999999]）确保导航栏始终在最上层
+- 优化部署流程，支持自动备份和回滚
+
+#### 部署信息
+- **远程主机**: 123.56.142.143
+- **部署路径**: /var/www/html
+- **部署方式**: 自动化脚本（deploy-to-remote.sh）
+
 ---
 
 ## 💰 核心价值
@@ -224,7 +249,64 @@ MIT License
 ## 📞 联系我们
 
 - **官网**：http://123.56.142.143
+- **生产环境**：https://meiyueart.com
 - **GitHub**：https://github.com/xufengmyart/lingzhiapp
+
+---
+
+## 🚀 自动部署
+
+### 部署脚本
+
+项目提供了自动化部署脚本 `deploy-to-remote.sh`，可以一键构建并部署到远程服务器。
+
+### 环境配置
+
+确保 `.env` 文件包含以下配置：
+
+```bash
+# 服务器配置
+SERVER_USER=root
+SERVER_HOST=123.56.142.143
+SERVER_PASSWORD=your_password
+SERVER_PATH=/var/www/html
+```
+
+### 使用方法
+
+```bash
+# 进入项目目录
+cd /workspace/projects
+
+# 执行自动部署脚本
+./deploy-to-remote.sh
+```
+
+### 部署流程
+
+脚本会自动执行以下步骤：
+
+1. **构建前端**：编译TypeScript并使用Vite构建生产版本
+2. **备份现有文件**：在远程服务器上备份当前版本
+3. **上传构建产物**：将新版本上传到远程服务器
+4. **设置文件权限**：配置正确的文件权限
+5. **验证部署**：检查关键文件是否存在
+
+### 手动恢复备份
+
+如果部署后出现问题，可以手动恢复备份：
+
+```bash
+ssh root@123.56.142.143
+cp -r /var/www/html.backup.YYYYMMDD_HHMMSS/* /var/www/html/
+```
+
+### 访问地址
+
+- **主页**: https://meiyueart.com
+- **选择器**: https://meiyueart.com/dream-selector
+- **登录**: https://meiyueart.com/login-full
+- **注册**: https://meiyueart.com/register-full
 
 ---
 
@@ -234,6 +316,7 @@ MIT License
 
 ---
 
-**版本**：v7.3 | **更新日期**：2026年2月
+**版本**：v9.0 | **更新日期**：2025年2月6日
 
 *让您的日常行为产生真实价值* 🚀
+
