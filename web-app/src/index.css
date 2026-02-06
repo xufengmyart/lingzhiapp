@@ -22,7 +22,7 @@
   /* 响应式字体大小基础 */
   --font-size-base: 16px;
 
-  /* 主题色 */
+  /* 科幻主题色 */
   --sci-fi-primary: #3e8bb6;   /* RGB(62, 139, 182) - 主底色 */
   --sci-fi-dark: #2a4559;      /* RGB(42, 69, 89) - 深色背景 */
   --sci-fi-light: #b5cbdb;     /* RGB(181, 203, 219) - 浅色高亮 */
@@ -40,8 +40,8 @@
 body {
   margin: 0;
   min-height: 100vh;
-  /* 纯色背景 */
-  background: #2a4559;
+  /* 科幻主题渐变背景 */
+  background: linear-gradient(135deg, #2a4559 0%, #3e8bb6 50%, #2a4559 100%);
   color: #ffffff;
 
   /* 响应式字体大小 */
@@ -53,7 +53,7 @@ body {
   min-height: 100vh;
 }
 
-/* 背景动画效果 */
+/* VR背景动画效果 - 增强 */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);
@@ -184,7 +184,7 @@ body {
   box-shadow: 0 0 50px rgba(168, 85, 247, 0.8), 0 0 100px rgba(34, 211, 238, 0.4);
 }
 
-/* 卡片样式 */
+/* VR卡片样式 - 增强 */
 .vr-card {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.15);
@@ -216,7 +216,7 @@ body {
   opacity: 1;
 }
 
-/* 主题发光效果 */
+/* 科幻主题发光效果 */
 .text-glow-cyan {
   text-shadow: 0 0 10px rgba(62, 139, 182, 0.8), 0 0 20px rgba(62, 139, 182, 0.4), 0 0 30px rgba(62, 139, 182, 0.2);
 }
@@ -229,7 +229,7 @@ body {
   text-shadow: 0 0 10px rgba(34, 211, 238, 0.8), 0 0 20px rgba(34, 211, 238, 0.4), 0 0 30px rgba(34, 211, 238, 0.2);
 }
 
-/* 霓虹边框效果 */
+/* 科幻主题霓虹边框效果 */
 .neon-border {
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -249,7 +249,7 @@ body {
   background: linear-gradient(90deg, #3e8bb6, #b5cbdb, #22d3ee);
 }
 
-/* 3D卡片效果 */
+/* 科幻主题3D卡片效果 */
 .vr-card-3d {
   background: rgba(62, 139, 182, 0.08);
   border: 1px solid rgba(181, 203, 219, 0.2);
@@ -269,7 +269,7 @@ body {
     inset 0 0 30px rgba(181, 203, 219, 0.1);
 }
 
-/* 修复输入框文字颜色 */
+/* 修复输入框文字颜色 - 科幻风格 */
 input, textarea {
   color: #ffffff !important;
   background: rgba(9, 20, 34, 0.6) !important;
@@ -286,7 +286,7 @@ input:focus, textarea:focus {
   box-shadow: 0 0 10px rgba(62, 139, 182, 0.3) !important;
 }
 
-/* 滚动条样式 */
+/* 滚动条样式 - VR风格 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

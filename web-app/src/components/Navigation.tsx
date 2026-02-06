@@ -23,7 +23,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-[#2a4559] border-b border-[#b5cbdb]/30 shadow-2xl z-50">
+    <nav className="fixed top-0 left-0 right-0 bg-gradient-to-r from-[#091422] via-[#3e8bb6] to-[#091422] border-b border-[#b5cbdb]/30 shadow-2xl z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -34,7 +34,7 @@ const Navigation = () => {
             <div className="flex items-center space-x-2">
               <Sparkles className="w-4 h-4 text-[#b5cbdb]" />
               <span className="text-xl font-bold bg-gradient-to-r from-[#3e8bb6] via-[#b5cbdb] to-[#3e8bb6] bg-clip-text text-transparent">
-                灵值生态园
+                灵值元宇宙
               </span>
             </div>
           </Link>
