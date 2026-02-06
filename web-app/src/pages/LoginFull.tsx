@@ -5,8 +5,8 @@ import { Lock, ArrowRight, Sparkles, Heart, Star, RefreshCw, CheckCircle, User, 
 
 // 科幻太空风格配置
 const vrStyle = {
-  bg: 'bg-gradient-to-br from-[#091422] via-[#3e8bb6]/40 to-[#091422]',
-  cardBg: 'bg-[#091422]/60 backdrop-blur-xl',
+  bg: 'bg-gradient-to-br from-[#2a4559] via-[#3e8bb6]/40 to-[#2a4559]',
+  cardBg: 'bg-[#2a4559]/60 backdrop-blur-xl',
   buttonBg: 'from-[#3e8bb6] via-[#b5cbdb] to-[#22d3ee]',
   buttonHover: 'from-[#b5cbdb] via-[#22d3ee] to-[#3e8bb6]',
   accent: 'text-[#3e8bb6]',

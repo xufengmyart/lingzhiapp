@@ -24,7 +24,7 @@
 
   /* 科幻主题色 */
   --sci-fi-primary: #3e8bb6;   /* RGB(62, 139, 182) - 主底色 */
-  --sci-fi-dark: #091422;      /* RGB(9, 20, 34) - 深色背景 */
+  --sci-fi-dark: #2a4559;      /* RGB(42, 69, 89) - 深色背景 */
   --sci-fi-light: #b5cbdb;     /* RGB(181, 203, 219) - 浅色高亮 */
   --sci-fi-accent: #22d3ee;    /* 青色点缀 */
   --sci-fi-glow: rgba(62, 139, 182, 0.6);  /* 主色光晕 */
@@ -34,14 +34,14 @@
   --vr-purple: var(--sci-fi-light);
   --vr-pink: var(--sci-fi-accent);
   --vr-dark-bg: var(--sci-fi-dark);
-  --vr-purple-bg: #0d1a29;
+  --vr-purple-bg: #1e3543;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   /* 科幻主题渐变背景 */
-  background: linear-gradient(135deg, #091422 0%, #3e8bb6 50%, #091422 100%);
+  background: linear-gradient(135deg, #2a4559 0%, #3e8bb6 50%, #2a4559 100%);
   color: #ffffff;
 
   /* 响应式字体大小 */

@@ -5,11 +5,11 @@
 
 export const vrTheme = {
   // 背景渐变
-  bgGradient: 'bg-gradient-to-br from-[#091422] via-[#3e8bb6]/40 to-[#091422]',
+  bgGradient: 'bg-gradient-to-br from-[#2a4559] via-[#3e8bb6]/40 to-[#2a4559]',
 
   // 玻璃拟态
   glass: {
-    bg: 'bg-[#091422]/40',
+    bg: 'bg-[#2a4559]/40',
     blur: 'backdrop-blur-xl',
     border: 'border border-[#3e8bb6]/30',
     shadow: 'shadow-[0_0_30px_rgba(62,139,182,0.3)]',
@@ -43,7 +43,7 @@ export const vrTheme = {
 
   // 卡片样式
   card: {
-    bg: 'bg-[#091422]/60',
+    bg: 'bg-[#2a4559]/60',
     border: 'border border-[#3e8bb6]/20',
     hover: 'hover:bg-[#3e8bb6]/20 hover:border-[#b5cbdb]/30',
     glow: 'hover:shadow-[0_0_20px_rgba(62,139,182,0.3)]',
@@ -75,7 +75,7 @@ export const vrTheme = {
   // 进度条
   progress: {
     gradient: 'bg-gradient-to-r from-[#3e8bb6] via-[#b5cbdb] to-[#22d3ee]',
-    track: 'bg-[#091422]/40',
+    track: 'bg-[#2a4559]/40',
   },
 }
 

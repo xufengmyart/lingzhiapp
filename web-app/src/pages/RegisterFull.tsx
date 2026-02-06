@@ -6,24 +6,24 @@ import { Lock, Mail, ArrowRight, User, Sparkles, Heart, Star, RefreshCw, Message
 // 科幻太空主题配置
 const dreamStyles = {
   ecosystem: {
-    bg: 'bg-gradient-to-br from-[#091422] via-[#3e8bb6]/40 to-[#091422]',
-    cardBg: 'bg-[#091422]/60 backdrop-blur-lg',
+    bg: 'bg-gradient-to-br from-[#2a4559] via-[#3e8bb6]/40 to-[#2a4559]',
+    cardBg: 'bg-[#2a4559]/60 backdrop-blur-lg',
     buttonBg: 'from-[#3e8bb6] via-[#b5cbdb] to-[#22d3ee]',
     buttonHover: 'from-[#b5cbdb] via-[#22d3ee] to-[#3e8bb6]',
     accent: 'text-[#3e8bb6]',
     decorColors: ['bg-[#3e8bb6]', 'bg-[#b5cbdb]', 'bg-[#22d3ee]'],
   },
   aurora: {
-    bg: 'bg-gradient-to-br from-[#091422] via-[#3e8bb6]/40 to-[#091422]',
-    cardBg: 'bg-[#091422]/60 backdrop-blur-lg',
+    bg: 'bg-gradient-to-br from-[#2a4559] via-[#3e8bb6]/40 to-[#2a4559]',
+    cardBg: 'bg-[#2a4559]/60 backdrop-blur-lg',
     buttonBg: 'from-[#3e8bb6] via-[#b5cbdb] to-[#22d3ee]',
     buttonHover: 'from-[#b5cbdb] via-[#22d3ee] to-[#3e8bb6]',
     accent: 'text-[#3e8bb6]',
     decorColors: ['bg-[#3e8bb6]', 'bg-[#b5cbdb]', 'bg-[#22d3ee]'],
   },
   sakura: {
-    bg: 'bg-gradient-to-br from-[#091422] via-[#3e8bb6]/40 to-[#091422]',
-    cardBg: 'bg-[#091422]/60 backdrop-blur-lg',
+    bg: 'bg-gradient-to-br from-[#2a4559] via-[#3e8bb6]/40 to-[#2a4559]',
+    cardBg: 'bg-[#2a4559]/60 backdrop-blur-lg',
     buttonBg: 'from-[#3e8bb6] via-[#b5cbdb] to-[#22d3ee]',
     buttonHover: 'from-[#b5cbdb] via-[#22d3ee] to-[#3e8bb6]',
     accent: 'text-[#3e8bb6]',
