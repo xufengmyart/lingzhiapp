@@ -8,9 +8,14 @@ import {
   ArrowUpRight,
   CheckCircle2,
   Clock,
-  Star
+  Star,
+  Sparkles,
+  Globe,
+  Zap,
+  Shield
 } from 'lucide-react'
 import { checkInApi, userApi } from '../services/api'
+import { vrTheme, vrCardStyles, vrFeatures } from '../utils/vr-theme'
 
 interface DashboardStats {
   todayLingzhi: number
@@ -93,194 +98,251 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary-500"></div>
+      <div className={`min-h-screen ${vrTheme.bgGradient} flex items-center justify-center`}>
+        <div className="relative">
+          <div className="w-20 h-20 border-4 border-cyan-400/30 rounded-full"></div>
+          <div className="w-20 h-20 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin absolute top-0 left-0"></div>
+          <div className="w-20 h-20 border-4 border-transparent border-t-purple-400 rounded-full animate-spin absolute top-0 left-0" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* 欢迎消息 */}
-      <div className="bg-gradient-to-r from-primary-500 to-secondary-500 rounded-2xl p-8 text-white shadow-xl">
-        <h1 className="text-3xl font-bold mb-2 break-words whitespace-normal">
-          欢迎回来，{user?.username}！
-        </h1>
-        <p className="opacity-90 break-words whitespace-normal">
-          今天也是创造价值的一天，{user?.totalLingzhi} 灵值正在增长中
-        </p>
+    <div className={`min-h-screen ${vrTheme.bgGradient} pb-8`}>
+      {/* VR背景装饰 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[128px]"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-[128px]"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-500/10 rounded-full blur-[200px]"></div>
       </div>
 
-      {/* 核心数据卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* 总灵值 */}
-        <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-primary-600" />
+      <div className="container mx-auto px-4 relative z-10">
+        {/* 欢迎消息 - VR风格 */}
+        <div className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.shadow} ${vrTheme.glass.border} rounded-3xl p-8 mb-6 animate-float`}>
+          <div className="flex items-center space-x-3 mb-3">
+            <div className="relative">
+              <div className="absolute inset-0 bg-cyan-500 blur-xl animate-pulse"></div>
+              <Sparkles className="w-6 h-6 text-cyan-400 relative z-10" />
             </div>
-            <div className="flex items-center text-green-500 text-sm font-semibold">
-              <ArrowUpRight className="w-4 h-4 mr-1" />
-              <span>+{((user?.totalLingzhi || 0) * 0.012).toFixed(1)}%</span>
-            </div>
+            <Globe className="w-6 h-6 text-purple-400" />
+            <Zap className="w-6 h-6 text-pink-400" />
+            <Shield className="w-6 h-6 text-cyan-400" />
           </div>
-          <div className="text-3xl font-bold text-gray-900">{user?.totalLingzhi || 0}</div>
-          <div className="text-gray-500 text-sm mt-1">总灵值</div>
-          <div className="text-primary-600 font-semibold mt-2">
-            {((user?.totalLingzhi || 0) * 0.1).toFixed(1)} 元
-          </div>
+          <h1 className="text-3xl font-bold text-white mb-2 break-words whitespace-normal drop-shadow-lg">
+            欢迎来到灵值元宇宙
+          </h1>
+          <p className="text-cyan-300 opacity-90 break-words whitespace-normal">
+            创造者 {user?.username}，您的 {user?.totalLingzhi} 灵值正在创造无限可能
+          </p>
         </div>
 
-        {/* 今日签到 */}
-        <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-secondary-100 rounded-lg flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-secondary-600" />
+        {/* VR特色展示 */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {vrFeatures.map((feature, idx) => (
+            <div key={idx} className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.border} rounded-2xl p-4 text-center transition-all hover:scale-105`}>
+              <div className="text-3xl mb-2">{feature.icon}</div>
+              <div className="text-white font-semibold">{feature.title}</div>
+              <div className="text-sm text-cyan-300">{feature.subtitle}</div>
             </div>
-            <div className="flex items-center text-green-500 text-sm font-semibold">
-              <Clock className="w-4 h-4 mr-1" />
-              <span>连续 {stats.streak} 天</span>
+          ))}
+        </div>
+
+        {/* 核心数据卡片 - VR风格 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+          {/* 总灵值 */}
+          <div className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 transition-all group`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 ${vrCardStyles.totalLingzhi.color} rounded-xl flex items-center justify-center ${vrCardStyles.totalLingzhi.glow}`}>
+                <TrendingUp className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex items-center text-green-400 text-sm font-semibold">
+                <ArrowUpRight className="w-4 h-4 mr-1" />
+                <span>+{((user?.totalLingzhi || 0) * 0.012).toFixed(1)}%</span>
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">{user?.totalLingzhi || 0}</div>
+            <div className="text-gray-400 text-sm">总灵值</div>
+            <div className="text-cyan-400 font-semibold mt-2">
+              {((user?.totalLingzhi || 0) * 0.1).toFixed(1)} 元
             </div>
           </div>
-          <div className="text-3xl font-bold text-gray-900">{stats.todayLingzhi}</div>
-          <div className="text-gray-500 text-sm mt-1">今日灵值</div>
-          <button
-            onClick={handleCheckIn}
-            disabled={stats.checkedIn || checkInLoading}
-            className={`mt-4 w-full py-2 rounded-lg font-semibold transition-all ${
-              stats.checkedIn
-                ? 'bg-green-100 text-green-700 cursor-default'
-                : 'bg-gradient-to-r from-primary-500 to-secondary-500 text-white hover:from-primary-600 hover:to-secondary-600'
-            }`}
-          >
-            {stats.checkedIn ? (
-              <span className="flex items-center justify-center">
-                <CheckCircle2 className="w-4 h-4 mr-2" />
-                已签到
+
+          {/* 今日签到 */}
+          <div className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 transition-all group`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 ${vrCardStyles.todayCheckIn.color} rounded-xl flex items-center justify-center ${vrCardStyles.todayCheckIn.glow}`}>
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex items-center text-purple-400 text-sm font-semibold">
+                <Clock className="w-4 h-4 mr-1" />
+                <span>连续 {stats.streak} 天</span>
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">{stats.todayLingzhi}</div>
+            <div className="text-gray-400 text-sm">今日灵值</div>
+            <button
+              onClick={handleCheckIn}
+              disabled={stats.checkedIn || checkInLoading}
+              className={`mt-4 w-full py-2.5 rounded-xl font-semibold transition-all ${
+                stats.checkedIn
+                  ? 'bg-green-500/20 text-green-400 border border-green-500/50 cursor-default'
+                  : `${vrTheme.button.gradient} ${vrTheme.button.glow} text-white hover:scale-105`
+              }`}
+            >
+              {stats.checkedIn ? (
+                <span className="flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  已签到
+                </span>
+              ) : checkInLoading ? (
+                '签到中...'
+              ) : (
+                '立即签到 (+10灵值)'
+              )}
+            </button>
+          </div>
+
+          {/* 下一个里程碑 */}
+          <div className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 transition-all group`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 ${vrCardStyles.milestone.color} rounded-xl flex items-center justify-center ${vrCardStyles.milestone.glow}`}>
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <div className="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded-full font-semibold">
+                目标
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">{stats.nextMilestone}</div>
+            <div className="text-gray-400 text-sm">下一个里程碑</div>
+            <div className="mt-4">
+              <div className="flex justify-between text-sm text-gray-300 mb-2">
+                <span>进度</span>
+                <span>{stats.progress.toFixed(0)}%</span>
+              </div>
+              <div className={`w-full ${vrTheme.progress.track} rounded-full h-2 overflow-hidden`}>
+                <div 
+                  className={`${vrTheme.progress.gradient} h-2 rounded-full transition-all`}
+                  style={{ width: `${stats.progress}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          {/* 合伙人资格 */}
+          <div className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 transition-all group`}>
+            <div className="flex items-center justify-between mb-4">
+              <div className={`w-12 h-12 ${vrCardStyles.partner.color} rounded-xl flex items-center justify-center ${vrCardStyles.partner.glow}`}>
+                <Award className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex items-center text-amber-400 text-sm font-semibold">
+                <Star className="w-4 h-4 mr-1" />
+                <span>{user?.totalLingzhi! >= 10000 ? '已达成' : '进行中'}</span>
+              </div>
+            </div>
+            <div className="text-3xl font-bold text-white mb-1">{10000}</div>
+            <div className="text-gray-400 text-sm">合伙人资格要求</div>
+            <div className="mt-4 text-sm">
+              <span className="text-gray-300">距离资格还差：</span>
+              <span className="text-cyan-400 font-semibold">
+                {Math.max(0, 10000 - user!.totalLingzhi)} 灵值
               </span>
-            ) : checkInLoading ? (
-              '签到中...'
-            ) : (
-              '立即签到 (+10灵值)'
-            )}
-          </button>
-        </div>
-
-        {/* 下一个里程碑 */}
-        <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <Target className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div className="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full font-semibold">
-              目标
-            </div>
-          </div>
-          <div className="text-3xl font-bold text-gray-900">{stats.nextMilestone}</div>
-          <div className="text-gray-500 text-sm mt-1">下一个里程碑</div>
-          <div className="mt-4">
-            <div className="flex justify-between text-sm text-gray-600 mb-2">
-              <span>进度</span>
-              <span>{stats.progress.toFixed(0)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-gradient-to-r from-primary-500 to-secondary-500 h-2 rounded-full transition-all"
-                style={{ width: `${stats.progress}%` }}
-              ></div>
             </div>
           </div>
         </div>
 
-        {/* 合伙人资格 */}
-        <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Award className="w-6 h-6 text-purple-600" />
+        {/* 项目入口 - VR风格 */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+            <Sparkles className="w-6 h-6 mr-2 text-cyan-400" />
+            元宇宙项目入口
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div
+              onClick={() => window.location.href = '/medium-video'}
+              className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-red-500/10"></div>
+              <div className="text-4xl mb-3 relative z-10">🎬</div>
+              <h3 className="text-lg font-semibold text-orange-400 mb-2 relative z-10">中视频项目</h3>
+              <p className="text-gray-400 text-sm relative z-10">创作 1-30 分钟视频，获取播放收益</p>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/20 rounded-full blur-2xl"></div>
             </div>
-            <div className="flex items-center text-purple-500 text-sm font-semibold">
-              <Star className="w-4 h-4 mr-1" />
-              <span>{user?.totalLingzhi! >= 10000 ? '已达成' : '进行中'}</span>
+
+            <div
+              onClick={() => window.location.href = '/xian-aesthetics'}
+              className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+              <div className="text-4xl mb-3 relative z-10">🔍</div>
+              <h3 className="text-lg font-semibold text-purple-400 mb-2 relative z-10">西安美学侦探</h3>
+              <p className="text-gray-400 text-sm relative z-10">探索城市美学，发现西安之美</p>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl"></div>
             </div>
-          </div>
-          <div className="text-3xl font-bold text-gray-900">{10000}</div>
-          <div className="text-gray-500 text-sm mt-1">合伙人资格要求</div>
-          <div className="mt-4 text-sm">
-            <span className="text-gray-600">距离资格还差：</span>
-            <span className="text-primary-600 font-semibold">
-              {Math.max(0, 10000 - user!.totalLingzhi)} 灵值
-            </span>
+
+            <div
+              onClick={() => window.location.href = '/partner'}
+              className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-yellow-500/10"></div>
+              <div className="text-4xl mb-3 relative z-10">🏆</div>
+              <h3 className="text-lg font-semibold text-amber-400 mb-2 relative z-10">合伙人计划</h3>
+              <p className="text-gray-400 text-sm relative z-10">成为合伙人，享受更高收益</p>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl"></div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 项目入口 */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">🎯 项目入口</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div
-            onClick={() => window.location.href = '/medium-video'}
-            className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border border-orange-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
-          >
-            <div className="text-3xl mb-3">🎬</div>
-            <h3 className="text-lg font-semibold text-orange-800 mb-2">中视频项目</h3>
-            <p className="text-orange-600 text-sm">创作 1-30 分钟视频，获取播放收益</p>
-          </div>
-
-          <div
-            onClick={() => window.location.href = '/xian-aesthetics'}
-            className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border border-purple-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
-          >
-            <div className="text-3xl mb-3">🔍</div>
-            <h3 className="text-lg font-semibold text-purple-800 mb-2">西安美学侦探</h3>
-            <p className="text-purple-600 text-sm">探索城市美学，发现西安之美</p>
-          </div>
-
-          <div
-            onClick={() => window.location.href = '/partner'}
-            className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl p-6 border border-amber-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
-          >
-            <div className="text-3xl mb-3">🏆</div>
-            <h3 className="text-lg font-semibold text-amber-800 mb-2">合伙人计划</h3>
-            <p className="text-amber-600 text-sm">成为合伙人，享受更高收益</p>
-          </div>
-        </div>
-      </div>
-
-      {/* 快速入口 */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">⚡ 快速入口</h2>
+      {/* 快速入口 - VR风格 */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+          <Zap className="w-6 h-6 mr-2 text-pink-400" />
+          快速入口
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div
             onClick={() => window.location.href = '/guide'}
-            className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border border-blue-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+            className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
           >
-            <h3 className="text-lg font-semibold text-blue-800 mb-2">📖 用户指南</h3>
-            <p className="text-blue-600 text-sm">了解系统价值，快速开始赚钱</p>
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10"></div>
+            <div className="text-4xl mb-3 relative z-10">📖</div>
+            <h3 className="text-lg font-semibold text-cyan-400 mb-2 relative z-10">用户指南</h3>
+            <p className="text-gray-400 text-sm relative z-10">了解系统价值，快速开始赚钱</p>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl"></div>
           </div>
 
           <div
             onClick={() => window.location.href = '/chat'}
-            className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-xl p-6 border border-pink-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+            className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
           >
-            <h3 className="text-lg font-semibold text-pink-800 mb-2">💬 智能对话</h3>
-            <p className="text-pink-600 text-sm">与智能体对话，探索文化价值</p>
+            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-purple-500/10"></div>
+            <div className="text-4xl mb-3 relative z-10">💬</div>
+            <h3 className="text-lg font-semibold text-pink-400 mb-2 relative z-10">智能对话</h3>
+            <p className="text-gray-400 text-sm relative z-10">与智能体对话，探索文化价值</p>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-pink-500/20 rounded-full blur-2xl"></div>
           </div>
 
           <div
             onClick={() => window.location.href = '/economy'}
-            className="bg-gradient-to-br from-teal-50 to-teal-100 rounded-xl p-6 border border-teal-200 hover:shadow-lg transition-shadow cursor-pointer hover:scale-105 active:scale-95"
+            className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
           >
-            <h3 className="text-lg font-semibold text-teal-800 mb-2">💰 经济模型</h3>
-            <p className="text-teal-600 text-sm">查看收入预测，规划财富增长</p>
+            <div className="absolute inset-0 bg-gradient-to-br from-teal-500/10 to-green-500/10"></div>
+            <div className="text-4xl mb-3 relative z-10">💰</div>
+            <h3 className="text-lg font-semibold text-teal-400 mb-2 relative z-10">经济模型</h3>
+            <p className="text-gray-400 text-sm relative z-10">查看收入预测，规划财富增长</p>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl"></div>
           </div>
         </div>
       </div>
 
-      {/* 用户动态 */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900 mb-4">👥 用户动态</h2>
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
+      {/* 用户动态 - VR风格 */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+          <Globe className="w-6 h-6 mr-2 text-cyan-400" />
+          用户动态
+        </h2>
+        <div className={`${vrTheme.card.bg} ${vrTheme.card.border} rounded-2xl p-6`}>
           <UserActivityFeed />
         </div>
       </div>
@@ -299,7 +361,7 @@ const UserActivityFeed = () => {
 
   const loadRecentUsers = async () => {
     try {
-      const response = await fetch('http://localhost:8001/api/public/users/recent?limit=20')
+      const response = await fetch('/api/public/users/recent?limit=20')
       const data = await response.json()
       if (data.success) {
         setRecentUsers(data.data)
@@ -314,7 +376,10 @@ const UserActivityFeed = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
+        <div className="relative">
+          <div className="w-12 h-12 border-4 border-cyan-400/30 rounded-full"></div>
+          <div className="w-12 h-12 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin absolute top-0 left-0"></div>
+        </div>
       </div>
     )
   }
@@ -324,16 +389,16 @@ const UserActivityFeed = () => {
       {recentUsers.map((user) => (
         <div
           key={user.id}
-          className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+          className={`flex items-center space-x-4 p-4 ${vrTheme.card.bg} rounded-xl hover:bg-white/10 transition-colors`}
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-secondary-500 rounded-full flex items-center justify-center text-white font-bold">
+          <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold">
             {user.username.charAt(0)}
           </div>
           <div className="flex-1">
-            <div className="text-sm font-semibold text-gray-900">
-              {user.username} 加入了灵值生态
+            <div className="text-sm font-semibold text-white">
+              {user.username} 加入了灵值元宇宙
             </div>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-gray-400">
               {new Date(user.created_at).toLocaleString('zh-CN', {
                 month: 'short',
                 day: 'numeric',
@@ -342,13 +407,13 @@ const UserActivityFeed = () => {
               })}
             </div>
           </div>
-          <div className="text-xs text-primary-600 font-medium">
+          <div className={`px-3 py-1 text-xs ${vrTheme.button.gradient} rounded-full text-white`}>
             新用户
           </div>
         </div>
       ))}
       {recentUsers.length === 0 && (
-        <div className="text-center text-gray-500 py-8">
+        <div className="text-center text-gray-400 py-8">
           暂无用户动态
         </div>
       )}

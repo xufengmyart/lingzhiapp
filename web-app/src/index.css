@@ -10,9 +10,9 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light;
-  color: #1f2937;
-  background-color: #ffffff;
+  color-scheme: dark;
+  color: #ffffff;
+  background-color: #0f172a;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,13 +21,21 @@
 
   /* 响应式字体大小基础 */
   --font-size-base: 16px;
+
+  /* VR主题色 */
+  --vr-cyan: #22d3ee;
+  --vr-purple: #a855f7;
+  --vr-pink: #f472b6;
+  --vr-dark-bg: #0f172a;
+  --vr-purple-bg: #1e1b4b;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: linear-gradient(135deg, #fef3f2 0%, #f0fdfa 100%);
-  color: #1f2937;
+  /* VR风格深色渐变背景 */
+  background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  color: #ffffff;
 
   /* 响应式字体大小 */
   font-size: var(--font-size-base);
@@ -38,13 +46,131 @@ body {
   min-height: 100vh;
 }
 
-/* 修复输入框文字颜色 */
+/* VR背景动画效果 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.6);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-twinkle {
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* 玻璃拟态效果 */
+.glass-effect {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.3);
+}
+
+/* 发光按钮 */
+.glow-button {
+  background: linear-gradient(135deg, #22d3ee, #a855f7, #f472b6);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+  transition: all 0.3s ease;
+}
+
+.glow-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 30px rgba(168, 85, 247, 0.7);
+}
+
+/* VR卡片样式 */
+.vr-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.vr-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+  transform: translateY(-2px);
+}
+
+/* 文本发光效果 */
+.text-glow-cyan {
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+}
+
+.text-glow-purple {
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+}
+
+.text-glow-pink {
+  text-shadow: 0 0 10px rgba(244, 114, 182, 0.5);
+}
+
+/* 修复输入框文字颜色 - VR风格 */
 input, textarea {
-  color: #1f2937 !important;
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 input::placeholder, textarea::placeholder {
   color: #9ca3af !important;
+}
+
+input:focus, textarea:focus {
+  outline: none !important;
+  border-color: rgba(34, 211, 238, 0.5) !important;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.2) !important;
+}
+
+/* 滚动条样式 - VR风格 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #22d3ee, #a855f7);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #a855f7, #f472b6);
 }
 
 /* 响应式字体大小 */
