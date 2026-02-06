@@ -297,7 +297,7 @@ export const partnerApi = {
 // 中视频项目API
 export const videoApi = {
   getProjects: async () => {
-    const response = await api.get<ApiResponse<any[]>>('/api/video/projects')
+    const response = await api.get<ApiResponse<any[]>>('/video/projects')
     return response.data
   },
 
@@ -308,7 +308,7 @@ export const videoApi = {
     cover_image?: string
     lingzhi_cost?: number
   }) => {
-    const response = await api.post<ApiResponse<{ id: number }>>('/api/video/projects', data)
+    const response = await api.post<ApiResponse<{ id: number }>>('/video/projects', data)
     return response.data
   },
 
@@ -328,7 +328,7 @@ export const videoApi = {
 // 西安美学侦探API
 export const aestheticApi = {
   getProjects: async () => {
-    const response = await api.get<ApiResponse<any[]>>('/api/aesthetic/projects')
+    const response = await api.get<ApiResponse<any[]>>('/aesthetic/projects')
     return response.data
   },
 
@@ -340,7 +340,7 @@ export const aestheticApi = {
     images?: string
     lingzhi_cost?: number
   }) => {
-    const response = await api.post<ApiResponse<{ id: number }>>('/api/aesthetic/projects', data)
+    const response = await api.post<ApiResponse<{ id: number }>>('/aesthetic/projects', data)
     return response.data
   },
 }
@@ -348,7 +348,7 @@ export const aestheticApi = {
 // 合伙人项目API
 export const partnerProjectApi = {
   getProjects: async () => {
-    const response = await api.get<ApiResponse<any[]>>('/api/partner/projects')
+    const response = await api.get<ApiResponse<any[]>>('/partner/projects')
     return response.data
   },
 
@@ -359,12 +359,12 @@ export const partnerProjectApi = {
     expected_return?: number
     description?: string
   }) => {
-    const response = await api.post<ApiResponse<{ id: number }>>('/api/partner/projects', data)
+    const response = await api.post<ApiResponse<{ id: number }>>('/partner/projects', data)
     return response.data
   },
 
   getEarnings: async () => {
-    const response = await api.get<ApiResponse<any[]>>('/api/partner/earnings')
+    const response = await api.get<ApiResponse<any[]>>('/partner/earnings')
     return response.data
   },
 }
@@ -373,20 +373,20 @@ export const partnerProjectApi = {
 export const checkInApi = {
   checkIn: async () => {
     if (USE_MOCK_API) return mockApi.checkIn()
-    const response = await api.post<ApiResponse<{ lingzhi: number }>>('/api/checkin')
+    const response = await api.post<ApiResponse<{ lingzhi: number }>>('/checkin')
     return response.data
   },
 
   getTodayStatus: async () => {
     if (USE_MOCK_API) return mockApi.getTodayStatus()
     
-    const cacheKey = generateCacheKey('GET', '/api/checkin/status')
+    const cacheKey = generateCacheKey('GET', '/checkin/status')
     
     // 尝试从缓存获取
     const cached = requestCache.get(cacheKey)
     if (cached) return cached
     
-    const response = await api.get<ApiResponse<{ checkedIn: boolean; lingzhi: number }>>('/api/checkin/status')
+    const response = await api.get<ApiResponse<{ checkedIn: boolean; lingzhi: number }>>('/checkin/status')
     
     // 缓存结果（1分钟）
     requestCache.set(cacheKey, response.data, 60 * 1000)
@@ -396,7 +396,7 @@ export const checkInApi = {
 
   getHistory: async (days: number = 7) => {
     if (USE_MOCK_API) return mockApi.getHistory(days)
-    const response = await api.get<ApiResponse<any[]>>(`/api/checkin/history?days=${days}`)
+    const response = await api.get<ApiResponse<any[]>>(`/checkin/history?days=${days}`)
     return response.data
   },
 }
