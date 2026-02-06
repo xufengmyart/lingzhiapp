@@ -304,7 +304,6 @@ cp -r /var/www/html.backup.YYYYMMDD_HHMMSS/* /var/www/html/
 ### 访问地址
 
 - **主页**: https://meiyueart.com
-- **选择器**: https://meiyueart.com/dream-selector
 - **登录**: https://meiyueart.com/login-full
 - **注册**: https://meiyueart.com/register-full
 

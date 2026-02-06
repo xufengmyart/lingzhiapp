@@ -3,7 +3,6 @@ import Login from './pages/Login'
 import LoginFull from './pages/LoginFull'
 import Register from './pages/Register'
 import RegisterFull from './pages/RegisterFull'
-import DreamPageSelector from './pages/DreamPageSelector'
 import AdminLogin from './pages/AdminLogin'
 import ForgotPassword from './pages/ForgotPassword'
 import DesignShowcase from './pages/DesignShowcase'
@@ -38,7 +37,6 @@ function App() {
       <Route path="/login-full" element={<LoginFull />} />
       <Route path="/register" element={<Register />} />
       <Route path="/register-full" element={<RegisterFull />} />
-      <Route path="/dream-selector" element={<DreamPageSelector />} />
       <Route path="/api-config" element={<ApiConfig />} />
       <Route path="/design-showcase" element={<DesignShowcase />} />
       <Route path="/wechat/callback" element={<WeChatCallback />} />
