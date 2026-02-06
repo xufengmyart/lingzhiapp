@@ -16,6 +16,8 @@ import Partner from './pages/Partner'
 import Profile from './pages/Profile'
 import SecuritySettings from './pages/SecuritySettings'
 import UserGuide from './pages/UserGuide'
+import ValueGuide from './pages/ValueGuide'
+import Feedback from './pages/Feedback'
 import MediumVideoProject from './pages/MediumVideoProject'
 import XianAesthetics from './pages/XianAesthetics'
 import CompleteProfile from './pages/CompleteProfile'
@@ -52,12 +54,14 @@ function App() {
           <Route path="/economy" element={<Economy />} />
           <Route path="/partner" element={<Partner />} />
           <Route path="/guide" element={<UserGuide />} />
+          <Route path="/value-guide" element={<ValueGuide />} />
           <Route path="/medium-video" element={<MediumVideoProject />} />
           <Route path="/xian-aesthetics" element={<XianAesthetics />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/security" element={<SecuritySettings />} />
           <Route path="/recharge" element={<Recharge />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
+          <Route path="/feedback" element={<Feedback />} />
         </Route>
       </Route>
 

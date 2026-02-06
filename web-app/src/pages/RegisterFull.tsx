@@ -71,6 +71,13 @@ const RegisterFull = () => {
     setError('')
     setLoading(true)
 
+    // 验证输入
+    if (!formData.username.trim() || !formData.email.trim() || !formData.password.trim()) {
+      setError('请填写所有必填项')
+      setLoading(false)
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError('两次输入的密码不一致')
       setLoading(false)
@@ -91,7 +98,20 @@ const RegisterFull = () => {
       await register(formData.username, formData.email, formData.password, formData.referrer)
       navigate('/')
     } catch (err: any) {
-      setError(err.response?.data?.message || '注册失败，请稍后重试')
+      console.error('注册错误:', err)
+      
+      // 根据错误类型显示不同的提示
+      if (err.response?.status === 400) {
+        setError(err.response?.data?.message || '注册信息有误，请检查后重试')
+      } else if (err.response?.status === 409) {
+        setError('用户名或邮箱已存在，请直接登录')
+      } else if (err.response?.status === 429) {
+        setError('注册过于频繁，请稍后再试')
+      } else if (err.code === 'NETWORK_ERROR' || !err.response) {
+        setError('网络连接失败，请检查网络后重试')
+      } else {
+        setError(err.response?.data?.message || '注册失败，请稍后重试')
+      }
     } finally {
       setLoading(false)
     }

@@ -5,8 +5,8 @@ import { userApi } from '../services/api'
 interface AuthContextType {
   user: User | null
   loading: boolean
-  login: (username: string, password: string) => Promise<void>
-  register: (username: string, email: string, password: string, referrer?: string) => Promise<void>
+  login: (username: string, password: string) => Promise<boolean>
+  register: (username: string, email: string, password: string, referrer?: string) => Promise<boolean>
   loginWithToken: (token: string, userData: any) => void
   logout: () => void
   updateUser: (user: User) => void
@@ -44,18 +44,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [])
 
-  const login = async (username: string, password: string) => {
+  const login = async (username: string, password: string): Promise<boolean> => {
     const res = await userApi.login(username, password)
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('user', JSON.stringify(res.data.user))
     setUser(res.data.user)
+    return true
   }
 
-  const register = async (username: string, email: string, password: string, referrer?: string) => {
+  const register = async (username: string, email: string, password: string, referrer?: string): Promise<boolean> => {
     const res = await userApi.register(username, email, password, referrer)
     localStorage.setItem('token', res.data.token)
     localStorage.setItem('user', JSON.stringify(res.data.user))
     setUser(res.data.user)
+    return true
   }
 
   const loginWithToken = (token: string, userData: any) => {

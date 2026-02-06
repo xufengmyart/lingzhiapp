@@ -122,6 +122,24 @@ const Dashboard = () => {
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
+        {/* 系统通知 */}
+        <div className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.shadow} ${vrTheme.glass.border} rounded-2xl p-4 mb-6`}>
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-lg flex items-center justify-center">
+              <Star className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-white font-semibold">系统通知</h3>
+              <p className="text-sm text-gray-300">
+                🎉 VR 2.0 全新升级！沉浸式体验即将开启
+              </p>
+            </div>
+            <button className="text-cyan-400 text-sm hover:text-cyan-300 transition-colors">
+              查看更多
+            </button>
+          </div>
+        </div>
+
         {/* 欢迎消息 - VR风格 */}
         <div className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.shadow} ${vrTheme.glass.border} rounded-3xl p-8 mb-6 animate-float`}>
           <div className="flex items-center space-x-3 mb-3">
@@ -304,16 +322,16 @@ const Dashboard = () => {
           <Zap className="w-6 h-6 mr-2 text-pink-400" />
           快速入口
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div
-            onClick={() => window.location.href = '/guide'}
+            onClick={() => window.location.href = '/value-guide'}
             className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-cyan-500/10"></div>
-            <div className="text-4xl mb-3 relative z-10">📖</div>
-            <h3 className="text-lg font-semibold text-cyan-400 mb-2 relative z-10">用户指南</h3>
-            <p className="text-gray-400 text-sm relative z-10">了解系统价值，快速开始赚钱</p>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-orange-500/10"></div>
+            <div className="text-4xl mb-3 relative z-10">💎</div>
+            <h3 className="text-lg font-semibold text-amber-400 mb-2 relative z-10">价值指南</h3>
+            <p className="text-gray-400 text-sm relative z-10">了解设计初衷，发现您的价值</p>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/20 rounded-full blur-2xl"></div>
           </div>
 
           <div
@@ -336,6 +354,17 @@ const Dashboard = () => {
             <h3 className="text-lg font-semibold text-teal-400 mb-2 relative z-10">经济模型</h3>
             <p className="text-gray-400 text-sm relative z-10">查看收入预测，规划财富增长</p>
             <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/20 rounded-full blur-2xl"></div>
+          </div>
+
+          <div
+            onClick={() => window.location.href = '/partner'}
+            className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/10"></div>
+            <div className="text-4xl mb-3 relative z-10">🤝</div>
+            <h3 className="text-lg font-semibold text-purple-400 mb-2 relative z-10">合伙人计划</h3>
+            <p className="text-gray-400 text-sm relative z-10">推荐好友，享受分润收益</p>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl"></div>
           </div>
         </div>
       </div>

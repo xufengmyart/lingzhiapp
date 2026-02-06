@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { Home, MessageSquare, TrendingUp, Award, User, LogOut, Wallet, Sparkles, Globe, Zap, Shield } from 'lucide-react'
+import { Home, MessageSquare, TrendingUp, Award, User, LogOut, Wallet, Sparkles, Globe, Zap, Shield, HelpCircle, MessageCircle } from 'lucide-react'
 import { vrTheme } from '../utils/vr-theme'
 
 const Navigation = () => {
@@ -14,6 +14,11 @@ const Navigation = () => {
     { path: '/partner', icon: Award, label: '合伙人', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.3)]' },
     { path: '/recharge', icon: Wallet, label: '购买灵值', glow: 'shadow-[0_0_15px_rgba(52,211,153,0.3)]' },
     { path: '/profile', icon: User, label: '个人中心', glow: 'shadow-[0_0_15px_rgba(239,68,68,0.3)]' },
+  ]
+
+  const navItemsRight = [
+    { path: '/value-guide', icon: HelpCircle, label: '价值指南', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.3)]' },
+    { path: '/feedback', icon: MessageCircle, label: '反馈', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.3)]' },
   ]
 
   const isActive = (path: string) => location.pathname === path
@@ -50,6 +55,24 @@ const Navigation = () => {
               >
                 <item.icon className="w-4 h-4" />
                 <span className="no-wrap">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+
+          {/* 帮助和反馈 */}
+          <div className="hidden md:flex items-center space-x-1 border-l border-white/10 pl-4">
+            {navItemsRight.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all ${
+                  isActive(item.path)
+                    ? `bg-white/20 text-white ${item.glow}`
+                    : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <item.icon className="w-4 h-4" />
+                <span className="text-sm no-wrap">{item.label}</span>
               </Link>
             ))}
           </div>

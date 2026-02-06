@@ -39,33 +39,67 @@ api.interceptors.request.use(
   }
 )
 
-// 响应拦截器 - 添加重试机制
+// 响应拦截器 - 增强认证错误处理
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const config = error.config as InternalAxiosRequestConfig & { __retryCount?: number }
+    const config = error.config as InternalAxiosRequestConfig & { __retryCount?: number; __isRetry?: boolean }
 
-    // 不重试的情况
-    if (!config || !error.response) return Promise.reject(error)
-    if (error.response.status === 401) {
-      // 清除缓存并跳转登录
+    // 401认证错误处理
+    if (error.response?.status === 401) {
+      // 如果已经是重试请求，不再重试
+      if (config.__isRetry) {
+        clearAuthCache()
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        // 只在非登录页面时跳转
+        if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+          window.location.href = '/login'
+        }
+        return Promise.reject(error)
+      }
+
+      // 标记为重试请求
+      config.__isRetry = true
+      config.__retryCount = (config.__retryCount || 0) + 1
+
+      // 最多重试2次
+      if (config.__retryCount <= 2) {
+        console.log('认证失败，正在重试...', config.__retryCount)
+        await sleep(RETRY_DELAY)
+        return api.request(config)
+      }
+
+      // 重试失败，清除认证信息
       clearAuthCache()
       localStorage.removeItem('token')
       localStorage.removeItem('user')
-      window.location.href = '/login'
+      
+      if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+        window.location.href = '/login'
+      }
       return Promise.reject(error)
     }
-    if (error.response.status === 404) return Promise.reject(error)
-    if (config.method !== 'get') return Promise.reject(error) // 只重试GET请求
 
-    config.__retryCount = config.__retryCount || 0
+    // 其他错误处理
+    if (!config || !error.response) {
+      console.error('网络错误:', error.message)
+      return Promise.reject(error)
+    }
+
+    if (error.response.status === 404) return Promise.reject(error)
+
+    // 只对GET请求进行重试（避免重复提交POST/PUT/DELETE）
+    if (config.method !== 'get') return Promise.reject(error)
+
+    config.__retryCount = (config.__retryCount || 0) + 1
 
     if (config.__retryCount >= MAX_RETRY) {
+      console.error('请求失败，已达到最大重试次数')
       return Promise.reject(error)
     }
 
-    config.__retryCount += 1
-
+    console.log('请求失败，正在重试...', config.__retryCount)
     // 指数退避
     await sleep(RETRY_DELAY * Math.pow(2, config.__retryCount - 1))
 

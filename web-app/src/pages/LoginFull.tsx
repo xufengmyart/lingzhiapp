@@ -167,12 +167,35 @@ const LoginFull = () => {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    // 验证输入
+    if (!username.trim() || !password.trim()) {
+      setError('请输入用户名和密码')
+      setLoading(false)
+      return
+    }
+
     try {
-      await login(username, password)
-      navigate('/dashboard')
+      const success = await login(username, password)
+      if (success) {
+        navigate('/dashboard')
+      } else {
+        setError('登录失败，请检查用户名和密码')
+        setLoading(false)
+      }
     } catch (err: any) {
-      setError(err.response?.data?.message || '登录失败，请检查用户名和密码')
-    } finally {
+      console.error('登录错误:', err)
+      
+      // 根据错误类型显示不同的提示
+      if (err.response?.status === 401) {
+        setError('用户名或密码错误，请重试')
+      } else if (err.response?.status === 429) {
+        setError('登录过于频繁，请稍后再试')
+      } else if (err.code === 'NETWORK_ERROR' || !err.response) {
+        setError('网络连接失败，请检查网络后重试')
+      } else {
+        setError(err.response?.data?.message || '登录失败，请稍后重试')
+      }
       setLoading(false)
     }
   }
