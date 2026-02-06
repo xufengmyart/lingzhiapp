@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Lock, ArrowRight, Sparkles, Heart, Star, RefreshCw, CheckCircle, User, MessageCircle, Eye, EyeOff, Globe, Zap, Shield } from 'lucide-react'
 
-// VR情景式风格配置
+// 科幻太空风格配置
 const vrStyle = {
-  bg: 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900',
-  cardBg: 'bg-white/10 backdrop-blur-xl',
-  buttonBg: 'from-cyan-500 via-purple-500 to-pink-500',
-  buttonHover: 'from-cyan-400 via-purple-400 to-pink-400',
-  accent: 'text-cyan-400',
-  glow: 'shadow-[0_0_30px_rgba(168,85,247,0.3)]',
+  bg: 'bg-gradient-to-br from-[#091422] via-[#3e8bb6]/40 to-[#091422]',
+  cardBg: 'bg-[#091422]/60 backdrop-blur-xl',
+  buttonBg: 'from-[#3e8bb6] via-[#b5cbdb] to-[#22d3ee]',
+  buttonHover: 'from-[#b5cbdb] via-[#22d3ee] to-[#3e8bb6]',
+  accent: 'text-[#3e8bb6]',
+  glow: 'shadow-[0_0_30px_rgba(62,139,182,0.3)]',
 }
 
 // VR特点配置（底部）
@@ -219,11 +219,11 @@ const LoginFull = () => {
       <ParticleSystem />
       <Stars />
 
-      {/* VR光晕装饰 */}
+      {/* 科幻主题光晕装饰 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[128px]"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-[128px]"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-500/10 rounded-full blur-[200px]"></div>
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#3e8bb6]/20 rounded-full blur-[128px]"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#b5cbdb]/20 rounded-full blur-[128px]"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#3e8bb6]/10 rounded-full blur-[200px]"></div>
       </div>
 
       {/* 登录卡片 */}
@@ -232,22 +232,22 @@ const LoginFull = () => {
         <div className="text-center mb-8 animate-float">
           <div className="inline-flex items-center space-x-3 mb-4">
             <div className="relative">
-              <div className="absolute inset-0 bg-cyan-500 blur-xl animate-pulse"></div>
-              <Sparkles className="w-6 h-6 text-cyan-400 relative z-10" />
+              <div className="absolute inset-0 bg-[#3e8bb6] blur-xl animate-pulse"></div>
+              <Sparkles className="w-6 h-6 text-[#b5cbdb] relative z-10" />
             </div>
             <div className="relative">
-              <div className="absolute inset-0 bg-purple-500 blur-xl animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-              <Heart className="w-6 h-6 text-purple-400 relative z-10" />
+              <div className="absolute inset-0 bg-[#b5cbdb] blur-xl animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              <Heart className="w-6 h-6 text-[#22d3ee] relative z-10" />
             </div>
             <div className="relative">
-              <div className="absolute inset-0 bg-pink-500 blur-xl animate-pulse" style={{ animationDelay: '0.4s' }}></div>
-              <Star className="w-6 h-6 text-pink-400 relative z-10" />
+              <div className="absolute inset-0 bg-[#22d3ee] blur-xl animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+              <Star className="w-6 h-6 text-[#3e8bb6] relative z-10" />
             </div>
           </div>
           <h1 className="text-2xl font-bold text-white whitespace-nowrap drop-shadow-lg">
             进入灵值元宇宙
           </h1>
-          <p className="text-sm text-cyan-300 mt-2 drop-shadow-md">
+          <p className="text-sm text-[#b5cbdb] mt-2 drop-shadow-md">
             沉浸体验·全息交互·无限可能
           </p>
         </div>
@@ -256,10 +256,10 @@ const LoginFull = () => {
         <div className={`${vrStyle.cardBg} rounded-3xl shadow-2xl p-8 border border-white/20 backdrop-blur-xl ${vrStyle.glow}`}>
           <form onSubmit={handleLoginSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-cyan-300 mb-2">用户名</label>
+              <label className="block text-sm font-medium text-[#3e8bb6] mb-2">用户名</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="w-5 h-5 text-cyan-400" />
+                  <User className="w-5 h-5 text-[#b5cbdb]" />
                 </div>
                 <input
                   type="text"
@@ -274,10 +274,10 @@ const LoginFull = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-cyan-300 mb-2">密码</label>
+              <label className="block text-sm font-medium text-[#3e8bb6] mb-2">密码</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="w-5 h-5 text-cyan-400" />
+                  <Lock className="w-5 h-5 text-[#b5cbdb]" />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -290,7 +290,7 @@ const LoginFull = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-cyan-400 hover:text-cyan-300 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#b5cbdb] hover:text-[#3e8bb6] transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -332,7 +332,7 @@ const LoginFull = () => {
             <div className="flex justify-center space-x-6 text-sm">
               <button
                 onClick={() => navigate('/register-full')}
-                className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
+                className="text-[#b5cbdb] hover:text-[#3e8bb6] font-medium transition-colors"
               >
                 注册账号
               </button>
@@ -360,7 +360,7 @@ const LoginFull = () => {
                     </div>
                   </div>
                   <div className={`text-xl font-bold text-white drop-shadow-lg`}>{feature.title}</div>
-                  <div className="text-xs text-cyan-300">{feature.subtitle}</div>
+                  <div className="text-xs text-[#3e8bb6]">{feature.subtitle}</div>
                 </div>
               ))}
             </div>

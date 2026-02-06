@@ -3,39 +3,39 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Lock, Mail, ArrowRight, User, Sparkles, Heart, Star, RefreshCw, MessageCircle, CheckCircle, AlertCircle, Shield, Link as LinkIcon } from 'lucide-react'
 
-// 梦幻式设计风格配置
+// 科幻太空主题配置
 const dreamStyles = {
   ecosystem: {
-    bg: 'bg-gradient-to-br from-emerald-50 via-teal-50 to-amber-50',
-    cardBg: 'bg-white/85 backdrop-blur-lg',
-    buttonBg: 'from-emerald-500 to-amber-500',
-    buttonHover: 'from-emerald-600 to-amber-600',
-    accent: 'text-emerald-600',
-    decorColors: ['bg-emerald-300', 'bg-teal-300', 'bg-amber-300'],
+    bg: 'bg-gradient-to-br from-[#091422] via-[#3e8bb6]/40 to-[#091422]',
+    cardBg: 'bg-[#091422]/60 backdrop-blur-lg',
+    buttonBg: 'from-[#3e8bb6] via-[#b5cbdb] to-[#22d3ee]',
+    buttonHover: 'from-[#b5cbdb] via-[#22d3ee] to-[#3e8bb6]',
+    accent: 'text-[#3e8bb6]',
+    decorColors: ['bg-[#3e8bb6]', 'bg-[#b5cbdb]', 'bg-[#22d3ee]'],
   },
   aurora: {
-    bg: 'bg-gradient-to-br from-rose-100 via-purple-100 to-blue-100',
-    cardBg: 'bg-white/85 backdrop-blur-lg',
-    buttonBg: 'from-rose-500 to-purple-500',
-    buttonHover: 'from-rose-600 to-purple-600',
-    accent: 'text-rose-600',
-    decorColors: ['bg-rose-300', 'bg-purple-300', 'bg-blue-300'],
+    bg: 'bg-gradient-to-br from-[#091422] via-[#3e8bb6]/40 to-[#091422]',
+    cardBg: 'bg-[#091422]/60 backdrop-blur-lg',
+    buttonBg: 'from-[#3e8bb6] via-[#b5cbdb] to-[#22d3ee]',
+    buttonHover: 'from-[#b5cbdb] via-[#22d3ee] to-[#3e8bb6]',
+    accent: 'text-[#3e8bb6]',
+    decorColors: ['bg-[#3e8bb6]', 'bg-[#b5cbdb]', 'bg-[#22d3ee]'],
   },
   sakura: {
-    bg: 'bg-gradient-to-br from-pink-50 via-rose-50 to-fuchsia-50',
-    cardBg: 'bg-white/85 backdrop-blur-lg',
-    buttonBg: 'from-pink-400 to-fuchsia-400',
-    buttonHover: 'from-pink-500 to-fuchsia-500',
-    accent: 'text-pink-500',
-    decorColors: ['bg-pink-200', 'bg-rose-200', 'bg-fuchsia-200'],
+    bg: 'bg-gradient-to-br from-[#091422] via-[#3e8bb6]/40 to-[#091422]',
+    cardBg: 'bg-[#091422]/60 backdrop-blur-lg',
+    buttonBg: 'from-[#3e8bb6] via-[#b5cbdb] to-[#22d3ee]',
+    buttonHover: 'from-[#b5cbdb] via-[#22d3ee] to-[#3e8bb6]',
+    accent: 'text-[#3e8bb6]',
+    decorColors: ['bg-[#3e8bb6]', 'bg-[#b5cbdb]', 'bg-[#22d3ee]'],
   },
   ocean: {
-    bg: 'bg-gradient-to-br from-cyan-50 via-blue-50 to-indigo-50',
-    cardBg: 'bg-white/85 backdrop-blur-lg',
-    buttonBg: 'from-cyan-500 to-blue-500',
-    buttonHover: 'from-cyan-600 to-blue-600',
-    accent: 'text-cyan-600',
-    decorColors: ['bg-cyan-300', 'bg-blue-300', 'bg-indigo-300'],
+    bg: 'bg-gradient-to-br from-[#091422] via-[#3e8bb6]/40 to-[#091422]',
+    cardBg: 'bg-[#091422]/60 backdrop-blur-lg',
+    buttonBg: 'from-[#3e8bb6] via-[#b5cbdb] to-[#22d3ee]',
+    buttonHover: 'from-[#b5cbdb] via-[#22d3ee] to-[#3e8bb6]',
+    accent: 'text-[#3e8bb6]',
+    decorColors: ['bg-[#3e8bb6]', 'bg-[#b5cbdb]', 'bg-[#22d3ee]'],
   },
 }
 
