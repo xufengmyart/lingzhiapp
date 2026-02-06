@@ -26,7 +26,7 @@ const Navigation = () => {
             <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center">
               <Wallet className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent no-wrap">
               灵值生态园
             </span>
           </Link>
@@ -44,7 +44,7 @@ const Navigation = () => {
                 }`}
               >
                 <item.icon className="w-4 h-4" />
-                <span>{item.label}</span>
+                <span className="no-wrap">{item.label}</span>
               </Link>
             ))}
           </div>
@@ -54,8 +54,8 @@ const Navigation = () => {
             {user && (
               <div className="hidden sm:flex items-center space-x-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white px-4 py-2 rounded-full">
                 <Wallet className="w-4 h-4" />
-                <span className="font-semibold">{user.totalLingzhi} 灵值</span>
-                <span className="text-xs opacity-80">({(user.totalLingzhi * 0.1).toFixed(1)}元)</span>
+                <span className="font-semibold no-wrap">{user.totalLingzhi} 灵值</span>
+                <span className="text-xs opacity-80 no-wrap">({(user.totalLingzhi * 0.1).toFixed(1)}元)</span>
               </div>
             )}
             <button
@@ -63,7 +63,7 @@ const Navigation = () => {
               className="flex items-center space-x-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
             >
               <LogOut className="w-4 h-4" />
-              <span className="hidden sm:inline">退出</span>
+              <span className="hidden sm:inline no-wrap">退出</span>
             </button>
           </div>
         </div>

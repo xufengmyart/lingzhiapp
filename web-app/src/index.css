@@ -191,6 +191,17 @@ input::placeholder, textarea::placeholder {
   .text-balance {
     text-wrap: balance;
   }
+
+  /* 强制不换行 - 用于所有标题和重要文本 */
+  .no-wrap {
+    white-space: nowrap;
+  }
+
+  /* 可选换行 - 用于长文本内容 */
+  .wrap-normal {
+    white-space: normal;
+    word-break: break-word;
+  }
 }
 
 /* 自定义滚动条 */
