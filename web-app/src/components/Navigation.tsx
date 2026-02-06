@@ -23,10 +23,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <nav 
-      className="sticky top-0 bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg z-[999999]"
-      style={{ position: 'sticky', top: 0, zIndex: 999999 }}
-    >
+    <nav className="fixed top-0 left-0 right-0 bg-gradient-to-r from-slate-900 via-purple-900 to-slate-900 backdrop-blur-lg border-b border-purple-500/30 shadow-2xl z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -53,7 +50,6 @@ const Navigation = () => {
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all hover:bg-white/10 ${
                     isActive(item.path) ? 'bg-white/20 text-white' : 'text-gray-300 hover:text-white'
                   }`}
-                  style={{ textDecoration: 'none' }}
                 >
                   <Icon className="w-4 h-4" />
                   <span className="whitespace-nowrap">{item.label}</span>
@@ -73,7 +69,6 @@ const Navigation = () => {
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-all hover:bg-white/10 ${
                     isActive(item.path) ? 'bg-white/20 text-white' : 'text-gray-300 hover:text-white'
                   }`}
-                  style={{ textDecoration: 'none' }}
                 >
                   <Icon className="w-4 h-4" />
                   <span className="text-sm whitespace-nowrap">{item.label}</span>
@@ -112,7 +107,6 @@ const Navigation = () => {
                 className={`flex flex-col items-center space-y-1 px-4 py-1 rounded-lg transition-all ${
                   isActive(item.path) ? 'text-cyan-400' : 'text-gray-400'
                 }`}
-                style={{ textDecoration: 'none' }}
               >
                 <Icon className="w-5 h-5" />
                 <span className="text-xs">{item.label}</span>

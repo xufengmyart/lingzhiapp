@@ -136,14 +136,14 @@ const Dashboard = () => {
 
   return (
     <div className={`min-h-screen ${vrTheme.bgGradient} pb-8`}>
-      {/* VR背景装饰 */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      {/* VR背景装饰 - 移除fixed定位，使用absolute避免覆盖 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-[128px]"></div>
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-[128px]"></div>
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-500/10 rounded-full blur-[200px]"></div>
       </div>
 
-      <div className="container mx-auto px-4 relative z-10">
+      <div className="container mx-auto px-4 relative z-10 pt-20">
         {/* 系统通知 */}
         <div className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.shadow} ${vrTheme.glass.border} rounded-2xl p-4 mb-6`}>
           <div className="flex items-center space-x-3">
