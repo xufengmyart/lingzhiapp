@@ -39,7 +39,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadDashboardData()
-  }, [user])
+  }, []) // 只在组件挂载时加载一次
 
   const loadDashboardData = async () => {
     if (!user) return
@@ -48,12 +48,20 @@ const Dashboard = () => {
       setLoading(true)
       // 获取签到状态
       const checkInRes = await checkInApi.getTodayStatus()
+      console.log('签到状态响应:', checkInRes)
 
       // 计算下一个里程碑
       const milestones = [10, 100, 500, 1000, 5000, 10000]
       const nextMilestone = milestones.find(m => m > user.totalLingzhi) || milestones[milestones.length - 1]
       const prevMilestone = milestones.filter(m => m < user.totalLingzhi).pop() || 0
       const progress = ((user.totalLingzhi - prevMilestone) / (nextMilestone - prevMilestone)) * 100
+
+      console.log('统计数据:', {
+        todayLingzhi: checkInRes.data.lingzhi,
+        checkedIn: checkInRes.data.checkedIn,
+        nextMilestone,
+        progress
+      })
 
       setStats({
         todayLingzhi: checkInRes.data.lingzhi || 0,
@@ -81,7 +89,10 @@ const Dashboard = () => {
       console.log('签到结果:', result)
 
       if (result.success) {
-        // 更新用户信息（总灵值）
+        // 显示成功提示
+        alert(`签到成功！获得 ${result.data.lingzhi || 10} 灵值`)
+
+        // 重新加载所有数据（包括用户信息和签到状态）
         const userInfo = await userApi.getUserInfo()
         console.log('用户信息:', userInfo)
         
@@ -89,19 +100,8 @@ const Dashboard = () => {
           updateUser(userInfo.data)
         }
         
-        // 重新获取今日签到状态
-        const checkInStatus = await checkInApi.getTodayStatus()
-        console.log('签到状态:', checkInStatus)
-        
-        // 更新统计数据
-        setStats(prev => ({
-          ...prev,
-          todayLingzhi: checkInStatus.data.lingzhi || result.data.lingzhi || 0,
-          checkedIn: checkInStatus.data.checkedIn || true
-        }))
-
-        // 显示成功提示
-        alert(`签到成功！获得 ${result.data.lingzhi || 10} 灵值`)
+        // 重新加载仪表盘数据
+        await loadDashboardData()
       } else {
         alert(result.message || '签到失败，请稍后重试')
       }

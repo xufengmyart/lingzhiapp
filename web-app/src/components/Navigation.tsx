@@ -8,7 +8,7 @@ const Navigation = () => {
   const location = useLocation()
 
   const navItems = [
-    { path: '/', icon: Home, label: '首页', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.3)]' },
+    { path: '/dashboard', icon: Home, label: '首页', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.3)]' },
     { path: '/chat', icon: MessageSquare, label: '智能对话', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.3)]' },
     { path: '/economy', icon: TrendingUp, label: '经济模型', glow: 'shadow-[0_0_15px_rgba(244,114,182,0.3)]' },
     { path: '/partner', icon: Award, label: '合伙人', glow: 'shadow-[0_0_15px_rgba(251,191,36,0.3)]' },
@@ -28,7 +28,7 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
+          <Link to="/dashboard" className="flex items-center space-x-3 group">
             <div className={`relative w-10 h-10 ${vrTheme.button.gradient} rounded-lg flex items-center justify-center ${vrTheme.button.glow} transition-all group-hover:scale-110`}>
               <Wallet className="w-5 h-5 text-white" />
               <div className="absolute inset-0 bg-white/20 rounded-lg animate-pulse"></div>
@@ -80,11 +80,10 @@ const Navigation = () => {
           {/* 用户信息和登出 */}
           <div className="flex items-center space-x-4">
             {user && (
-              <div className={`hidden sm:flex items-center space-x-2 ${vrTheme.button.gradient} ${vrTheme.button.glow} text-white px-4 py-2 rounded-full`}>
+              <div className={`relative hidden sm:flex items-center space-x-2 ${vrTheme.button.gradient} ${vrTheme.button.glow} text-white px-4 py-2 rounded-full`}>
                 <Wallet className="w-4 h-4" />
                 <span className="font-semibold no-wrap">{user.totalLingzhi} 灵值</span>
                 <span className="text-xs opacity-80 no-wrap">({(user.totalLingzhi * 0.1).toFixed(1)}元)</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-full opacity-50"></div>
               </div>
             )}
             <button
