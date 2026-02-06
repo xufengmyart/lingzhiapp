@@ -22,7 +22,7 @@ const Feedback = () => {
   const feedbackTypes = [
     { value: 'bug', label: 'Bug反馈', icon: AlertCircle, color: 'text-pink-400', bg: 'bg-pink-500/20' },
     { value: 'feature', label: '功能建议', icon: Lightbulb, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
-    { value: 'suggestion', label: '意见建议', icon: MessageCircle, color: 'text-purple-400', bg: 'bg-purple-500/20' },
+    { value: 'suggestion', label: '意见建议', icon: MessageCircle, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
     { value: 'other', label: '其他', icon: Smile, color: 'text-green-400', bg: 'bg-green-500/20' },
   ]
 
@@ -43,7 +43,7 @@ const Feedback = () => {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#2a4559] via-[#3e8bb6]/40 to-[#2a4559] flex items-center justify-center px-4">
         <div className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.border} rounded-2xl p-8 max-w-md w-full text-center`}>
           <div className="w-20 h-20 mx-auto mb-6 bg-green-500/20 rounded-full flex items-center justify-center">
             <CheckCircle className="w-10 h-10 text-green-400" />
@@ -75,7 +75,7 @@ const Feedback = () => {
       <div className="container mx-auto max-w-3xl relative z-10">
         {/* 标题区域 */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 mb-6 bg-gradient-to-br from-cyan-500 to-purple-500 rounded-2xl shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 mb-6 bg-gradient-to-br from-cyan-500 to-[#3e8bb6] rounded-2xl shadow-lg">
             <MessageCircle className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-4">

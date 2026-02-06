@@ -269,7 +269,7 @@ const LoginFull = () => {
                   placeholder="请输入用户名"
                   required
                 />
-                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-cyan-500/20 to-[#3e8bb6]/20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
               </div>
             </div>
 

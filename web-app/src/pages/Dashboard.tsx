@@ -133,7 +133,7 @@ const Dashboard = () => {
         <div className="relative">
           <div className="w-20 h-20 border-4 border-cyan-400/30 rounded-full"></div>
           <div className="w-20 h-20 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin absolute top-0 left-0"></div>
-          <div className="w-20 h-20 border-4 border-transparent border-t-purple-400 rounded-full animate-spin absolute top-0 left-0" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          <div className="w-20 h-20 border-4 border-transparent border-t-cyan-400 rounded-full animate-spin absolute top-0 left-0" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
         </div>
       </div>
     )
@@ -174,8 +174,8 @@ const Dashboard = () => {
               <div className="absolute inset-0 bg-cyan-500 blur-xl animate-pulse"></div>
               <Sparkles className="w-6 h-6 text-cyan-400 relative z-10" />
             </div>
-            <Globe className="w-6 h-6 text-purple-400" />
-            <Zap className="w-6 h-6 text-pink-400" />
+            <Globe className="w-6 h-6 text-cyan-400" />
+            <Zap className="w-6 h-6 text-cyan-300" />
             <Shield className="w-6 h-6 text-cyan-400" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2 break-words whitespace-normal drop-shadow-lg">
@@ -223,7 +223,7 @@ const Dashboard = () => {
               <div className={`w-12 h-12 ${vrCardStyles.todayCheckIn.color} rounded-xl flex items-center justify-center ${vrCardStyles.todayCheckIn.glow}`}>
                 <Calendar className="w-6 h-6 text-white" />
               </div>
-              <div className="flex items-center text-purple-400 text-sm font-semibold">
+              <div className="flex items-center text-cyan-400 text-sm font-semibold">
                 <Clock className="w-4 h-4 mr-1" />
                 <span>连续 {stats.streak} 天</span>
               </div>
@@ -322,11 +322,11 @@ const Dashboard = () => {
               onClick={() => window.location.href = '/xian-aesthetics'}
               className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
             >
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-[#3e8bb6]/10"></div>
               <div className="text-4xl mb-3 relative z-10">🔍</div>
-              <h3 className="text-lg font-semibold text-purple-400 mb-2 relative z-10">西安美学侦探</h3>
+              <h3 className="text-lg font-semibold text-cyan-400 mb-2 relative z-10">西安美学侦探</h3>
               <p className="text-gray-400 text-sm relative z-10">探索城市美学，发现西安之美</p>
-              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl"></div>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl"></div>
             </div>
 
             <div
@@ -365,11 +365,11 @@ const Dashboard = () => {
             onClick={() => window.location.href = '/chat'}
             className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 to-purple-500/10"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-[#3e8bb6]/10"></div>
             <div className="text-4xl mb-3 relative z-10">💬</div>
-            <h3 className="text-lg font-semibold text-pink-400 mb-2 relative z-10">智能对话</h3>
+            <h3 className="text-lg font-semibold text-cyan-400 mb-2 relative z-10">智能对话</h3>
             <p className="text-gray-400 text-sm relative z-10">与智能体对话，探索文化价值</p>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-pink-500/20 rounded-full blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl"></div>
           </div>
 
           <div
@@ -387,11 +387,11 @@ const Dashboard = () => {
             onClick={() => window.location.href = '/partner'}
             className={`${vrTheme.card.bg} ${vrTheme.card.border} ${vrTheme.card.hover} rounded-2xl p-6 cursor-pointer transition-all hover:scale-105 group relative overflow-hidden`}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-indigo-500/10"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-[#3e8bb6]/10"></div>
             <div className="text-4xl mb-3 relative z-10">🤝</div>
-            <h3 className="text-lg font-semibold text-purple-400 mb-2 relative z-10">合伙人计划</h3>
+            <h3 className="text-lg font-semibold text-cyan-400 mb-2 relative z-10">合伙人计划</h3>
             <p className="text-gray-400 text-sm relative z-10">推荐好友，享受分润收益</p>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/20 rounded-full blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/20 rounded-full blur-2xl"></div>
           </div>
         </div>
       </div>
@@ -451,7 +451,7 @@ const UserActivityFeed = () => {
           key={user.id}
           className={`flex items-center space-x-4 p-4 ${vrTheme.card.bg} rounded-xl hover:bg-white/10 transition-colors`}
         >
-          <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-purple-400 rounded-full flex items-center justify-center text-white font-bold">
+          <div className="w-10 h-10 bg-gradient-to-br from-cyan-400 to-[#3e8bb6] rounded-full flex items-center justify-center text-white font-bold">
             {user.username.charAt(0)}
           </div>
           <div className="flex-1">
