@@ -59,5 +59,10 @@ export function generateCacheKey(method: string, url: string, params?: any): str
 // 清除特定类型的缓存
 export function clearAuthCache(): void {
   requestCache.clearPattern('^GET:/api/user')
-  requestCache.clearPattern('^GET:/api/checkin')
+  requestCache.clearPattern('^GET:/checkin')
+}
+
+// 清除签到相关缓存
+export function clearCheckInCache(): void {
+  requestCache.clearPattern('/checkin')
 }

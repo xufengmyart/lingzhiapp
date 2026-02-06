@@ -23,7 +23,7 @@ const Navigation = () => {
   const isActive = (path: string) => location.pathname === path
 
   return (
-    <nav className="fixed top-0 left-0 right-0 bg-gradient-to-r from-[#091422] via-[#3e8bb6] to-[#091422] backdrop-blur-lg border-b border-[#b5cbdb]/30 shadow-2xl z-50">
+    <nav className="fixed top-0 left-0 right-0 bg-gradient-to-r from-[#091422] via-[#3e8bb6] to-[#091422] border-b border-[#b5cbdb]/30 shadow-2xl z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}

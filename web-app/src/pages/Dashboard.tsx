@@ -15,6 +15,7 @@ import {
   Shield
 } from 'lucide-react'
 import { checkInApi, userApi } from '../services/api'
+import { clearCheckInCache } from '../services/cache'
 import { vrTheme, vrCardStyles, vrFeatures } from '../utils/vr-theme'
 
 interface DashboardStats {
@@ -89,8 +90,12 @@ const Dashboard = () => {
       console.log('签到结果:', result)
 
       if (result.success) {
+        // 清除签到缓存，确保获取最新数据
+        clearCheckInCache()
+        
         // 显示成功提示
-        alert(`签到成功！获得 ${result.data.lingzhi || 10} 灵值`)
+        const lingzhiGained = result.data.lingzhi || 10
+        alert(`🎉 签到成功！获得 ${lingzhiGained} 灵值`)
 
         // 重新加载所有数据（包括用户信息和签到状态）
         const userInfo = await userApi.getUserInfo()
