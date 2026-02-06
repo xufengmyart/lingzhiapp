@@ -89,6 +89,18 @@ api.interceptors.response.use(
 
     if (error.response.status === 404) return Promise.reject(error)
 
+    // 403禁止访问错误
+    if (error.response.status === 403) {
+      console.error('无权限访问，请联系管理员')
+      return Promise.reject(error)
+    }
+
+    // 500服务器错误
+    if (error.response.status === 500) {
+      console.error('服务器错误:', error.message)
+      return Promise.reject(error)
+    }
+
     // 只对GET请求进行重试（避免重复提交POST/PUT/DELETE）
     if (config.method !== 'get') return Promise.reject(error)
 

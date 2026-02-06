@@ -189,12 +189,18 @@ const LoginFull = () => {
       // 根据错误类型显示不同的提示
       if (err.response?.status === 401) {
         setError('用户名或密码错误，请重试')
+      } else if (err.response?.status === 403) {
+        setError('账号已被禁用，请联系管理员')
       } else if (err.response?.status === 429) {
         setError('登录过于频繁，请稍后再试')
+      } else if (err.response?.status === 500) {
+        setError('服务器错误，请稍后重试或联系客服')
       } else if (err.code === 'NETWORK_ERROR' || !err.response) {
         setError('网络连接失败，请检查网络后重试')
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message)
       } else {
-        setError(err.response?.data?.message || '登录失败，请稍后重试')
+        setError('登录失败，请稍后重试')
       }
       setLoading(false)
     }
