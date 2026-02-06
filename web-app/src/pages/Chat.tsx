@@ -146,7 +146,9 @@ const ChatContent = () => {
               <div className="flex-1 max-w-[70%]">
                 <div
                   className={`p-4 rounded-2xl backdrop-blur-sm ${
-                    message.role === 'user'
+                    message.isError
+                      ? 'bg-red-500/20 text-red-200 border border-red-400/30'
+                      : message.role === 'user'
                       ? 'bg-gradient-to-r from-cyan-500/80 to-cyan-600/80 text-white border border-cyan-400/30'
                       : 'bg-white/10 text-white border border-white/20'
                   }`}
@@ -157,8 +159,8 @@ const ChatContent = () => {
                   </span>
                 </div>
 
-                {/* 智能体回复添加反馈按钮 */}
-                {message.role === 'assistant' && (
+                {/* 智能体回复添加反馈按钮（非错误消息） */}
+                {message.role === 'assistant' && !message.isError && (
                   <div className="flex items-center space-x-2 mt-2 ml-2">
                     <button
                       onClick={() => setFeedbackModal({ open: true, messageId: message.id, messageContent: message.content })}

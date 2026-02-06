@@ -22,6 +22,7 @@ export interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  isError?: boolean  // 标记是否为错误消息
 }
 
 export interface IncomeLevel {

@@ -70,33 +70,55 @@ const Dashboard = () => {
   }
 
   const handleCheckIn = async () => {
-    if (!stats.checkedIn) {
-      setCheckInLoading(true)
-      try {
-        const result = await checkInApi.checkIn()
-        if (result.success) {
-          // 更新用户信息（总灵值）
-          const userInfo = await userApi.getUserInfo()
-          if (userInfo.success && userInfo.data) {
-            updateUser(userInfo.data)
-          }
-          
-          // 重新获取今日签到状态
-          const checkInStatus = await checkInApi.getTodayStatus()
-          
-          // 更新统计数据
-          setStats(prev => ({
-            ...prev,
-            todayLingzhi: checkInStatus.data.lingzhi || (prev.todayLingzhi + (result.data.lingzhi || 0)),
-            checkedIn: true
-          }))
+    if (stats.checkedIn || checkInLoading) {
+      return
+    }
+
+    setCheckInLoading(true)
+    try {
+      console.log('开始签到...')
+      const result = await checkInApi.checkIn()
+      console.log('签到结果:', result)
+
+      if (result.success) {
+        // 更新用户信息（总灵值）
+        const userInfo = await userApi.getUserInfo()
+        console.log('用户信息:', userInfo)
+        
+        if (userInfo.success && userInfo.data) {
+          updateUser(userInfo.data)
         }
-      } catch (error) {
-        console.error('签到失败:', error)
-        alert('签到失败，请稍后重试')
-      } finally {
-        setCheckInLoading(false)
+        
+        // 重新获取今日签到状态
+        const checkInStatus = await checkInApi.getTodayStatus()
+        console.log('签到状态:', checkInStatus)
+        
+        // 更新统计数据
+        setStats(prev => ({
+          ...prev,
+          todayLingzhi: checkInStatus.data.lingzhi || result.data.lingzhi || 0,
+          checkedIn: checkInStatus.data.checkedIn || true
+        }))
+
+        // 显示成功提示
+        alert(`签到成功！获得 ${result.data.lingzhi || 10} 灵值`)
+      } else {
+        alert(result.message || '签到失败，请稍后重试')
       }
+    } catch (error: any) {
+      console.error('签到失败:', error)
+      // 根据错误类型显示不同的提示
+      if (error.response?.status === 401) {
+        alert('请先登录后再进行签到')
+      } else if (error.response?.status === 429) {
+        alert('操作过于频繁，请稍后再试')
+      } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+        alert('网络连接失败，请检查网络后重试')
+      } else {
+        alert(error.response?.data?.message || '签到失败，请稍后重试')
+      }
+    } finally {
+      setCheckInLoading(false)
     }
   }
 

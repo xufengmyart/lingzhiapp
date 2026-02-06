@@ -57,6 +57,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         errorContent = '请先登录后再使用对话功能。'
       } else if (error.response?.status === 429) {
         errorContent = '请求过于频繁，请稍后再试。'
+      } else if (error.response?.status === 500) {
+        errorContent = '服务器错误，我们正在努力修复，请稍后再试。'
+      } else if (error.response?.status === 503) {
+        errorContent = '服务暂时不可用，请稍后再试。'
       } else if (error.message) {
         errorContent = `发生错误: ${error.message}`
       }
@@ -66,6 +70,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role: 'assistant',
         content: errorContent,
         timestamp: new Date(),
+        isError: true,
       }
       setMessages((prev) => [...prev, errorMessage])
     } finally {
