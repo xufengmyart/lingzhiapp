@@ -1,0 +1,23 @@
+[Unit]
+Description=Gunicorn daemon for Lingzhi Ecosystem
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/root/workspace/admin-backend
+Environment="PATH=/root/workspace/admin-backend/venv/bin"
+ExecStart=/root/workspace/admin-backend/venv/bin/gunicorn \
+    --config gunicorn_config.py \
+    app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/gunicorn/app.log
+StandardError=append:/var/log/gunicorn/error.log
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

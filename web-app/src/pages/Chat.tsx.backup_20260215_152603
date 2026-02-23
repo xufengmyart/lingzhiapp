@@ -1,0 +1,484 @@
+import { useState, useRef, useEffect } from 'react'
+import { ChatProvider, useChat } from '../contexts/ChatContext'
+import { Send, Sparkles, User, Bot, ThumbsUp, ThumbsDown, MessageSquarePlus, X, ChevronDown, Menu, X as CloseIcon } from 'lucide-react'
+import api from '../services/api'
+import { vrTheme } from '../utils/vr-theme'
+import KnowledgeSidebar from '../components/KnowledgeSidebar'
+import { useChatBilling } from '../hooks/useChatBilling'
+import ChatEndDialog from '../components/ChatEndDialog'
+
+interface Agent {
+  id: number
+  name: string
+  description: string
+  avatar_url: string
+}
+
+interface KnowledgeItem {
+  id: string
+  title: string
+  content: string
+  category: string
+  tags: string[]
+}
+
+const ChatContent = () => {
+  const { messages, loading, sendMessage, clearChat } = useChat()
+  const [input, setInput] = useState('')
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null)
+  const [agents, setAgents] = useState<Agent[]>([])
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [feedbackModal, setFeedbackModal] = useState<{ open: boolean; messageId: string; messageContent: string }>({
+    open: false,
+    messageId: '',
+    messageContent: ''
+  })
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
+  const [showKnowledgeSidebar, setShowKnowledgeSidebar] = useState(false) // 默认隐藏侧栏
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false) // 移动端侧栏打开状态
+  const [isMobile, setIsMobile] = useState(false) // 是否为移动端
+  const [enableThinking, setEnableThinking] = useState(false) // 深度思考模式开关
+  const [chatEndDialogOpen, setChatEndDialogOpen] = useState(false) // 对话结束对话框
+
+  // 检测移动端
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // 对话计费Hook
+  const {
+    billingInfo,
+    startBilling,
+    stopBilling,
+    resetBilling,
+    addFeedbackReward,
+    formatDuration,
+    isBilling
+  } = useChatBilling()
+
+  // 加载智能体列表
+  useEffect(() => {
+    loadAgents()
+  }, [])
+
+  const loadAgents = async () => {
+    try {
+      const response = await agentApi.getAgents()
+      if (response.success) {
+        const activeAgents = response.data.filter((a: any) => a.status === 'active')
+        setAgents(activeAgents)
+        if (activeAgents.length > 0 && !selectedAgent) {
+          setSelectedAgent(activeAgents[0])
+        }
+      }
+    } catch (error) {
+      console.error('加载智能体列表失败:', error)
+    }
+  }
+
+  // 自动滚动到底部
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages, loading])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!input.trim() || loading) return
+
+    // 如果是第一条消息，开始计费
+    if (!isBilling) {
+      startBilling()
+    }
+
+    const agentIdToSend = selectedAgent?.id || (agents.length > 0 ? agents[0].id : 2)
+    console.log('[Chat] 发送消息，智能体ID:', agentIdToSend, '选中智能体:', selectedAgent, '深度思考:', enableThinking)
+
+    await sendMessage(input, agentIdToSend, enableThinking)
+    setInput('')
+  }
+
+  const handleKnowledgeSelect = (item: KnowledgeItem) => {
+    // 将知识库内容作为问题发送给智能体
+    const question = `我想了解：${item.title}`
+    setInput(question)
+    // 自动提交
+    setTimeout(() => {
+      handleSubmit(new Event('submit') as any)
+    }, 100)
+  }
+
+  const handleFeedback = async (type: 'helpful' | 'not_helpful' | 'suggestion', question?: string) => {
+    setFeedbackSubmitting(true)
+    try {
+      const response = await api.post('/feedback', {
+        type,
+        question: feedbackModal.messageContent,
+        comment: question || '',
+        agent_id: 1
+      })
+
+      if (response.data.success) {
+        const reward = response.data.data.contribution_value
+        alert(`反馈提交成功！获得 ${reward} 灵值`)
+        
+        // 添加反馈奖励
+        addFeedbackReward(reward)
+        
+        setFeedbackModal({ open: false, messageId: '', messageContent: '' })
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error('提交反馈失败:', error)
+      alert('提交反馈失败，请稍后重试')
+    } finally {
+      setFeedbackSubmitting(false)
+    }
+  }
+
+  // 处理"新对话"按钮点击
+  const handleNewChat = () => {
+    if (isBilling) {
+      // 如果正在计费，停止计费并显示对话框
+      stopBilling()
+      setChatEndDialogOpen(true)
+    } else {
+      // 如果没有计费，直接清空聊天
+      clearChat()
+    }
+  }
+
+  // 关闭对话框并清空聊天
+  const handleChatEndDialogClose = () => {
+    setChatEndDialogOpen(false)
+    clearChat()
+    resetBilling()
+  }
+
+  // 处理侧栏切换
+  const toggleSidebar = () => {
+    if (isMobile) {
+      setIsMobileSidebarOpen(!isMobileSidebarOpen)
+    } else {
+      setShowKnowledgeSidebar(!showKnowledgeSidebar)
+    }
+  }
+
+  // 关闭移动端侧栏
+  const closeMobileSidebar = () => {
+    setIsMobileSidebarOpen(false)
+  }
+
+  return (
+    <div className="flex h-[calc(100vh-80px)] gap-0 relative">
+      {/* 移动端遮罩层 */}
+      {isMobile && isMobileSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={closeMobileSidebar}
+        />
+      )}
+
+      {/* 知识库侧边栏 */}
+      {(showKnowledgeSidebar || isMobileSidebarOpen) && (
+        <div
+          className={`
+            ${isMobile
+              ? 'fixed inset-0 z-50 md:hidden'
+              : 'relative'
+            }
+            transition-all duration-300 ease-in-out
+          `}
+        >
+          <KnowledgeSidebar
+            onKnowledgeSelect={(item) => {
+              handleKnowledgeSelect(item)
+              closeMobileSidebar()
+            }}
+          />
+          {/* 移动端关闭按钮 */}
+          {isMobile && (
+            <button
+              onClick={closeMobileSidebar}
+              className="absolute top-4 right-4 z-10 p-2 bg-white/10 backdrop-blur-sm rounded-lg hover:bg-white/20 transition-all"
+            >
+              <CloseIcon className="w-5 h-5 text-white" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* 主聊天区域 */}
+      <div className={`flex-1 flex flex-col ${vrTheme.bgGradient} border border-white/20 ${showKnowledgeSidebar ? 'rounded-l-none' : 'rounded-3xl'}`}>
+        {/* 聊天头部 */}
+        <div className={`${vrTheme.glass.bg} ${vrTheme.glass.blur} ${vrTheme.glass.border} p-3 sm:p-4 flex items-center justify-between gap-2 sm:gap-3`}>
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <button
+              onClick={toggleSidebar}
+              className="p-2 hover:bg-white/10 rounded-lg transition-all flex-shrink-0"
+              title={isMobile ? '打开知识库' : (showKnowledgeSidebar ? '隐藏知识库' : '显示知识库')}
+            >
+              {(isMobile && !isMobileSidebarOpen) || (!isMobile && !showKnowledgeSidebar) ? (
+                <Menu className="w-4 h-4 text-white" />
+              ) : (
+                <CloseIcon className="w-4 h-4 text-white" />
+              )}
+            </button>
+            <div className={`relative w-9 h-9 sm:w-10 sm:h-10 ${vrTheme.button.gradient} rounded-full flex items-center justify-center ${vrTheme.button.glow} flex-shrink-0`}>
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
+            </div>
+            <div className="flex-1 min-w-[120px] overflow-hidden pr-2">
+              <h2 className="font-semibold text-white text-xs sm:text-sm whitespace-normal break-words leading-tight mb-0.5 drop-shadow-md">灵值元宇宙智能体</h2>
+              <p className="text-[10px] sm:text-xs text-cyan-400 opacity-90 whitespace-normal break-words leading-tight drop-shadow-sm">您的专属元宇宙向导</p>
+            </div>
+          </div>
+          <button
+            onClick={handleNewChat}
+            className="px-3 py-1.5 sm:px-4 sm:py-2 bg-white/10 border border-white/20 rounded-lg hover:bg-white/20 transition-all text-xs sm:text-sm text-white flex-shrink-0"
+          >
+            新对话
+          </button>
+        </div>
+
+        {/* 消息列表 */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4" id="messages-container">
+          {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
+              <Sparkles className="w-16 h-16 mb-4 text-cyan-400 animate-pulse" />
+              <p className="text-lg font-medium text-white">开始您的对话</p>
+              <p className="text-sm">与智能体交流，探索灵值元宇宙的价值</p>
+              {(!showKnowledgeSidebar && !isMobileSidebarOpen) && (
+                <button
+                  onClick={toggleSidebar}
+                  className="mt-4 px-4 py-2 bg-[#00C3FF]/20 border border-[#00C3FF]/50 rounded-lg text-white hover:bg-[#00C3FF]/30 transition-all"
+                >
+                  打开知识库
+                </button>
+              )}
+            </div>
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex items-start space-x-3 ${
+                  message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                }`}
+              >
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    message.role === 'user'
+                      ? 'bg-gradient-to-br from-cyan-400 to-cyan-500'
+                      : 'bg-gradient-to-br from-purple-400 to-purple-500'
+                  }`}
+                >
+                  {message.role === 'user' ? (
+                    <User className="w-5 h-5 text-white" />
+                  ) : (
+                    <Bot className="w-5 h-5 text-white" />
+                  )}
+                </div>
+                <div className="flex-1 max-w-[70%]">
+                  {/* 显示思考过程 */}
+                  {message.role === 'assistant' && message.thinking && (
+                    <div className="mb-2 bg-purple-500/10 border border-purple-400/30 rounded-xl p-3">
+                      <div className="flex items-center gap-2 mb-2 text-purple-300 text-sm">
+                        <Sparkles className="w-4 h-4 animate-pulse" />
+                        <span className="font-semibold">深度思考过程</span>
+                      </div>
+                      <p className="text-sm text-purple-200 whitespace-pre-wrap leading-relaxed break-all break-words">
+                        {message.thinking}
+                      </p>
+                    </div>
+                  )}
+                  <div
+                    className={`p-4 rounded-2xl backdrop-blur-sm ${
+                      message.isError
+                        ? 'bg-red-500/20 text-red-200 border border-red-400/30'
+                        : message.role === 'user'
+                        ? 'bg-gradient-to-r from-cyan-500/80 to-cyan-600/80 text-white border border-cyan-400/30'
+                        : 'bg-white/10 text-white border border-white/20'
+                    }`}
+                  >
+                    <p className="text-base whitespace-pre-wrap leading-relaxed break-all break-words">{message.content}</p>
+                    <span className="text-xs opacity-60 mt-2 block">
+                      {new Date(message.timestamp).toLocaleTimeString()}
+                    </span>
+                  </div>
+
+                  {message.role === 'assistant' && !message.isError && (
+                    <div className="flex items-center space-x-2 mt-2 ml-2">
+                      <button
+                        onClick={() => setFeedbackModal({ open: true, messageId: message.id, messageContent: message.content })}
+                        className="text-xs text-gray-400 hover:text-cyan-400 flex items-center space-x-1 transition-colors"
+                      >
+                        <MessageSquarePlus className="w-3 h-3" />
+                        <span>反馈</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+          {loading && (
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-purple-500 flex items-center justify-center">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <div className="bg-white/10 p-4 rounded-2xl border border-white/20 backdrop-blur-sm">
+                <div className="flex space-x-2">
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                  <div className="w-2 h-2 bg-pink-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* 输入框 */}
+        <div className="p-3 sm:p-4 border-t border-white/10 bg-white/5 backdrop-blur-sm">
+          {/* 深度思考模式开关 */}
+          <div className="flex items-center justify-between mb-3 px-1">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <div className={`relative w-12 h-6 transition-all ${enableThinking ? 'bg-cyan-500' : 'bg-gray-600'} rounded-full`}>
+                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-all ${enableThinking ? 'translate-x-6' : ''}`}></div>
+              </div>
+              <input
+                type="checkbox"
+                checked={enableThinking}
+                onChange={(e) => setEnableThinking(e.target.checked)}
+                className="sr-only"
+              />
+              <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+                🧠 深度思考模式
+              </span>
+            </label>
+            <span className="text-xs text-gray-500">
+              {enableThinking ? '已启用 - AI会展示思考过程' : '已禁用 - 快速响应模式'}
+            </span>
+          </div>
+          <form onSubmit={handleSubmit} className="flex gap-2 sm:gap-3">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="输入您的问题..."
+              className="flex-1 px-3 py-2 sm:px-4 sm:py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm sm:text-base min-w-0"
+              disabled={loading}
+            />
+            <button
+              type="submit"
+              disabled={!input.trim() || loading}
+              className="px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg hover:from-primary-600 hover:to-secondary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+            >
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* 反馈模态框 */}
+      {feedbackModal.open && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4">
+            <div className="p-6 border-b flex items-center justify-between">
+              <h3 className="text-lg font-semibold">您的反馈对我们很重要</h3>
+              <button
+                onClick={() => setFeedbackModal({ open: false, messageId: '', messageContent: '' })}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-sm text-gray-600 mb-4">智能体回复：</p>
+              <div className="bg-gray-50 rounded-lg p-4 mb-6 text-sm text-gray-700">
+                {feedbackModal.messageContent}
+              </div>
+
+              <p className="text-sm font-medium text-gray-900 mb-3">这条回复对您有帮助吗？</p>
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <button
+                  onClick={() => handleFeedback('helpful')}
+                  disabled={feedbackSubmitting}
+                  className="flex items-center justify-center space-x-2 p-4 border-2 border-green-200 rounded-lg hover:bg-green-50 hover:border-green-400 transition-all disabled:opacity-50"
+                >
+                  <ThumbsUp className="w-5 h-5 text-green-600" />
+                  <span className="font-medium text-gray-700">有帮助 (+3灵值)</span>
+                </button>
+                <button
+                  onClick={() => handleFeedback('not_helpful')}
+                  disabled={feedbackSubmitting}
+                  className="flex items-center justify-center space-x-2 p-4 border-2 border-orange-200 rounded-lg hover:bg-orange-50 hover:border-orange-400 transition-all disabled:opacity-50"
+                >
+                  <ThumbsDown className="w-5 h-5 text-orange-600" />
+                  <span className="font-medium text-gray-700">无帮助 (+5灵值)</span>
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  您的问题或建议 <span className="text-xs text-gray-500">(选填，+10灵值)</span>
+                </label>
+                <textarea
+                  id="feedback-question"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
+                  rows={3}
+                  placeholder="请描述您遇到的问题或改进建议..."
+                />
+              </div>
+
+              <button
+                onClick={() => {
+                  const questionInput = document.getElementById('feedback-question') as HTMLTextAreaElement
+                  handleFeedback('suggestion', questionInput?.value)
+                }}
+                disabled={feedbackSubmitting}
+                className="w-full py-3 bg-gradient-to-r from-primary-500 to-secondary-500 text-white rounded-lg font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all disabled:opacity-50"
+              >
+                {feedbackSubmitting ? '提交中...' : '提交反馈'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 对话结束对话框 */}
+      <ChatEndDialog
+        open={chatEndDialogOpen}
+        onClose={handleChatEndDialogClose}
+        duration={billingInfo.duration}
+        consumedLingzhi={billingInfo.consumedLingzhi}
+        earnedLingzhi={billingInfo.earnedLingzhi}
+        hasSubmittedFeedback={billingInfo.hasSubmittedFeedback}
+      />
+    </div>
+  )
+}
+
+const Chat = () => {
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">智能对话</h1>
+        <p className="text-gray-600 mt-2">与灵值生态园智能体交流，探索文化价值</p>
+      </div>
+      <ChatProvider>
+        <ChatContent />
+      </ChatProvider>
+    </div>
+  )
+}
+
+export default Chat

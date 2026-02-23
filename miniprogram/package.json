@@ -1,0 +1,22 @@
+{
+  "name": "lingzhi-ecosystem-miniprogram",
+  "version": "1.0.0",
+  "description": "灵值生态园智能体系统 - 微信小程序",
+  "main": "index.js",
+  "scripts": {
+    "upload": "node ci/upload.js",
+    "preview": "node ci/preview.js",
+    "build": "echo '小程序在微信开发者工具中构建'"
+  },
+  "keywords": [
+    "miniprogram",
+    "wechat",
+    "lingzhi"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {
+    "miniprogram-ci": "^1.6.10"
+  }
+}

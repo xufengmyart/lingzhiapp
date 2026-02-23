@@ -1,0 +1,70 @@
+✅ 环境变量已加载: /workspace/projects/admin-backend/.env
+[DEBUG] conversation_memory loaded: BASE_DIR=/workspace/projects/admin-backend, DB_PATH=/workspace/projects/admin-backend/lingzhi_ecosystem.db, exists=True
+✅ 对话记忆系统已加载
+✅ 记忆系统表初始化完成
+✅ 用户旅程系统已加载
+✅ 用户旅程表初始化完成
+✅ 环境变量已加载: /workspace/projects/admin-backend/.env
+✅ 统一认证系统已加载
+✅ 对话记忆 API 已注册
+✅ 用户旅程 API 已注册
+✅ 统一认证 API 已注册
+静态文件目录: /workspace/projects/admin-backend/../public
+旧数据库不存在，跳过迁移
+扩展功能表创建成功
+扩展功能初始化完成
+✅ 扩展功能初始化成功
+==================================================
+灵值生态园 API 服务启动中...
+==================================================
+服务地址: http://0.0.0.0:8080
+默认管理员账号: admin / admin123
+==================================================
+正在备份数据库...
+数据库备份成功: /workspace/projects/admin-backend/backups/lingzhi_ecosystem_backup_20260209_103726.db
+✅ 分红池 API 路由已注册
+✅ 安全推荐码 API 路由已注册
+ * Serving Flask app 'app'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://169.254.99.36:8080
+[33mPress CTRL+C to quit[0m
+ * Restarting with watchdog (inotify)
+✅ 环境变量已加载: /workspace/projects/admin-backend/.env
+[DEBUG] conversation_memory loaded: BASE_DIR=/workspace/projects/admin-backend, DB_PATH=/workspace/projects/admin-backend/lingzhi_ecosystem.db, exists=True
+✅ 对话记忆系统已加载
+✅ 记忆系统表初始化完成
+✅ 用户旅程系统已加载
+✅ 用户旅程表初始化完成
+✅ 环境变量已加载: /workspace/projects/admin-backend/.env
+✅ 统一认证系统已加载
+✅ 对话记忆 API 已注册
+✅ 用户旅程 API 已注册
+✅ 统一认证 API 已注册
+静态文件目录: /workspace/projects/admin-backend/../public
+旧数据库不存在，跳过迁移
+扩展功能表创建成功
+扩展功能初始化完成
+✅ 扩展功能初始化成功
+==================================================
+灵值生态园 API 服务启动中...
+==================================================
+服务地址: http://0.0.0.0:8080
+默认管理员账号: admin / admin123
+==================================================
+正在备份数据库...
+数据库备份成功: /workspace/projects/admin-backend/backups/lingzhi_ecosystem_backup_20260209_103729.db
+✅ 分红池 API 路由已注册
+✅ 安全推荐码 API 路由已注册
+ * Debugger is active!
+ * Debugger PIN: 250-067-736
+/workspace/projects/admin-backend/app.py:855: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'exp': datetime.utcnow().timestamp() + JWT_EXPIRATION
+127.0.0.1 - - [09/Feb/2026 10:40:24] "POST /api/register HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 10:40:27] "[31m[1mPOST /api/login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [09/Feb/2026 10:40:32] "[31m[1mPOST /api/login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [09/Feb/2026 10:40:39] "POST /api/register HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 10:40:42] "[31m[1mPOST /api/login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [09/Feb/2026 10:40:54] "GET /api/user/profile HTTP/1.1" 200 -

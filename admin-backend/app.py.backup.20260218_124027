@@ -1,0 +1,649 @@
+"""
+灵值生态园智能体系统 - 主应用入口
+简化版本，所有业务逻辑已迁移到 routes/ 模块
+"""
+
+from flask import Flask, jsonify
+from flask_cors import CORS
+import os
+import sqlite3
+
+# 导入配置管理模块
+from config import config
+
+# 加载环境变量配置文件
+try:
+    from dotenv import load_dotenv
+    env_path = os.path.join(os.path.dirname(__file__), '.env')
+    if os.path.exists(env_path):
+        load_dotenv(env_path)
+        print(f"✅ 环境变量已加载: {env_path}")
+    else:
+        print(f"⚠️  .env文件不存在: {env_path}")
+except ImportError:
+    print("⚠️  python-dotenv未安装，使用默认环境变量")
+
+# 使用配置管理模块获取所有配置
+SECRET_KEY = config.JWT_SECRET_KEY
+# 如果是测试环境，使用测试数据库
+DATABASE = os.getenv('TEST_DATABASE_PATH', config.DATABASE_PATH)
+OLD_DATABASE = config.OLD_DATABASE
+JWT_SECRET = config.JWT_SECRET_KEY
+JWT_EXPIRATION = config.JWT_EXPIRATION
+
+print(f"[配置] 数据库路径: {DATABASE}")
+print(f"[配置] JWT过期时间: {JWT_EXPIRATION}秒")
+
+# 导入日志模块
+from logger import setup_logger
+logger = setup_logger('app', log_dir='logs')
+
+# 设置 Coze 环境变量（如果未设置）
+os.environ.setdefault('COZE_WORKLOAD_IDENTITY_API_KEY', 'WU9RNGFQTmZTc3VnbnRCMmsyWUtDcDZHOWJMa0g5ZVk6NVN5cHNRbkNidjFzWHNEVnJ4UTZKQlN1SUxYMlU3ZEtidVRXbDYwWDFyZW9sdmhQbTU1QVdQaVJHcVo4b1BoWA==')
+os.environ.setdefault('COZE_INTEGRATION_MODEL_BASE_URL', 'https://integration.coze.cn/api/v3')
+os.environ.setdefault('COZE_INTEGRATION_BASE_URL', 'https://integration.coze.cn')
+os.environ.setdefault('COZE_PROJECT_ID', '7597768668038643746')
+
+# 创建 Flask 应用
+app = Flask(__name__)
+
+# ============ 注册中间件 ============
+
+print("\n🔧 初始化中间件...")
+
+# 1. 初始化 JWT 认证
+try:
+    from middleware.jwt_auth import init_jwt_auth
+    init_jwt_auth(JWT_SECRET, JWT_EXPIRATION)
+    print("✅ JWT 认证中间件已初始化")
+except ImportError as e:
+    print(f"⚠️  JWT 认证中间件初始化失败: {e}")
+
+# 2. 注册错误处理器
+try:
+    from middleware.error_handler import register_error_handlers
+    register_error_handlers(app)
+    print("✅ 错误处理器已注册")
+except ImportError as e:
+    print(f"⚠️  错误处理器注册失败: {e}")
+
+# 3. 注册请求日志
+try:
+    from middleware.request_logger import setup_request_logging
+    setup_request_logging(app)
+    print("✅ 请求日志中间件已注册")
+except ImportError as e:
+    print(f"⚠️  请求日志中间件注册失败: {e}")
+
+# 配置 CORS 允许跨域请求
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["https://meiyueart.com", "http://meiyueart.com", "*"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
+    },
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
+    }
+})
+
+# 配置静态文件路径
+ENV = os.getenv('ENV', 'development')
+if ENV == 'production':
+    public_dir = os.getenv('STATIC_DIR', '/var/www/meiyueart.com')
+else:
+    public_dir = os.path.join(os.path.dirname(__file__), '../public')
+
+if os.path.exists(public_dir):
+    app.static_folder = public_dir
+    app.static_url_path = '/'
+    print(f"静态文件目录: {public_dir}")
+
+# ============ 注册蓝图（按功能模块） ============
+
+print("\n📦 开始注册路由模块...")
+
+# 1. 认证系统
+try:
+    from routes.auth import auth_bp
+    app.register_blueprint(auth_bp)
+    print("✅ 认证系统 API 已注册")
+except ImportError as e:
+    print(f"⚠️  认证系统模块加载失败: {e}")
+
+# 2. 管理员功能
+try:
+    from routes.admin import admin_bp
+    app.register_blueprint(admin_bp)
+    print("✅ 管理员功能 API 已注册")
+except ImportError as e:
+    print(f"⚠️  管理员功能模块加载失败: {e}")
+
+# 3. 推荐系统
+try:
+    from routes.referral import referral_bp
+    app.register_blueprint(referral_bp)
+    print("✅ 推荐系统 API 已注册")
+except ImportError as e:
+    print(f"⚠️  推荐系统模块加载失败: {e}")
+
+# 4. 签到系统
+try:
+    from routes.checkin import checkin_bp
+    app.register_blueprint(checkin_bp)
+    print("✅ 签到系统 API 已注册")
+except ImportError as e:
+    print(f"⚠️  签到系统模块加载失败: {e}")
+
+# 5. 充值系统
+try:
+    from routes.recharge import recharge_bp
+    app.register_blueprint(recharge_bp)
+    print("✅ 充值系统 API 已注册")
+except ImportError as e:
+    print(f"⚠️  充值系统模块加载失败: {e}")
+
+# 6. 对话记忆系统
+try:
+    from conversation_memory import memory_bp, ensure_memory_tables
+    app.register_blueprint(memory_bp, url_prefix='/api/memory')
+    ensure_memory_tables()
+    print("✅ 对话记忆系统 API 已注册")
+except ImportError as e:
+    print(f"⚠️  对话记忆系统模块加载失败: {e}")
+
+# 7. 用户旅程系统
+try:
+    from user_journey import journey_bp, init_journey_tables
+    app.register_blueprint(journey_bp)
+    init_journey_tables()
+    print("✅ 用户旅程系统 API 已注册")
+except ImportError as e:
+    print(f"⚠️  用户旅程系统模块加载失败: {e}")
+
+# 8. 统一认证系统
+try:
+    from unified_auth import auth_bp as unified_auth_bp
+    app.register_blueprint(unified_auth_bp)
+    print("✅ 统一认证系统 API 已注册")
+except ImportError as e:
+    print(f"⚠️  统一认证系统模块加载失败: {e}")
+
+# 9. 商家服务系统
+try:
+    from merchant_service import (
+        init_merchant_tables,
+        seed_merchant_data
+    )
+    init_merchant_tables()
+    seed_merchant_data()
+    print("✅ 商家服务系统 API 已注册")
+except ImportError as e:
+    print(f"⚠️  商家服务系统模块加载失败: {e}")
+
+# 10. 用户资料编辑
+try:
+    from routes.user_profile import user_profile_bp
+    app.register_blueprint(user_profile_bp)
+    print("✅ 用户资料编辑 API 已注册")
+except ImportError as e:
+    print(f"⚠️  用户资料编辑模块加载失败: {e}")
+
+# 11. 贡献值系统
+try:
+    from routes.contribution import contribution_bp
+    app.register_blueprint(contribution_bp)
+    print("✅ 贡献值系统 API 已注册")
+except ImportError as e:
+    print(f"⚠️  贡献值系统模块加载失败: {e}")
+
+# 12. 商家功能
+try:
+    from routes.merchant import merchant_bp
+    app.register_blueprint(merchant_bp)
+    print("✅ 商家功能 API 已注册")
+except ImportError as e:
+    print(f"⚠️  商家功能模块加载失败: {e}")
+
+# 13. 专家功能
+try:
+    from routes.expert import expert_bp
+    app.register_blueprint(expert_bp)
+    print("✅ 专家功能 API 已注册")
+except ImportError as e:
+    print(f"⚠️  专家功能模块加载失败: {e}")
+
+# 14. 文化圣地
+try:
+    from routes.sacred_sites import sacred_bp
+    app.register_blueprint(sacred_bp)
+    print("✅ 文化圣地 API 已注册")
+except Exception as e:
+    print(f"⚠️  文化圣地模块加载失败: {e}")
+
+# 15. 美学侦探任务
+try:
+    from routes.aesthetic_tasks import aesthetic_bp
+    app.register_blueprint(aesthetic_bp)
+    print("✅ 美学侦探任务 API 已注册")
+except Exception as e:
+    print(f"⚠️  美学侦探任务模块加载失败: {e}")
+
+# 16. 数字资产
+try:
+    from routes.digital_assets import assets_bp
+    app.register_blueprint(assets_bp)
+    print("✅ 数字资产 API 已注册")
+except Exception as e:
+    print(f"⚠️  数字资产模块加载失败: {e}")
+
+# 17. 用户反馈
+try:
+    from routes.feedback import feedback_bp
+    app.register_blueprint(feedback_bp, url_prefix='/api')
+    print("✅ 用户反馈 API 已注册")
+except ImportError as e:
+    print(f"⚠️  用户反馈模块加载失败: {e}")
+
+# 18. 数据分析
+try:
+    from routes.analytics import analytics_bp
+    app.register_blueprint(analytics_bp, url_prefix='/api')
+    print("✅ 数据分析 API 已注册")
+except ImportError as e:
+    print(f"⚠️  数据分析模块加载失败: {e}")
+
+# 19. 导航配置
+try:
+    from routes.navigation_config import navigation_config_bp
+    app.register_blueprint(navigation_config_bp, url_prefix='/api')
+    print("✅ 导航配置 API 已注册")
+except ImportError as e:
+    print(f"⚠️  导航配置模块加载失败: {e}")
+
+# 20. 用户引导文档
+try:
+    from routes.user_guide import user_guide_bp
+    app.register_blueprint(user_guide_bp, url_prefix='/api')
+    print("✅ 用户引导文档 API 已注册")
+except ImportError as e:
+    print(f"⚠️  用户引导文档模块加载失败: {e}")
+
+# 21. 智能体聊天
+try:
+    from routes.agent import agent_bp
+    app.register_blueprint(agent_bp)
+    print("✅ 智能体聊天 API 已注册")
+except ImportError as e:
+    print(f"⚠️  智能体聊天模块加载失败: {e}")
+
+# 22. 知识库
+try:
+    from routes.knowledge import knowledge_bp
+    app.register_blueprint(knowledge_bp)
+    print("✅ 知识库 API 已注册")
+except ImportError as e:
+    print(f"⚠️  知识库模块加载失败: {e}")
+
+# 23. 用户系统
+try:
+    from routes.user_system import user_bp
+    app.register_blueprint(user_bp)
+    print("✅ 用户系统 API 已注册")
+except ImportError as e:
+    print(f"⚠️  用户系统模块加载失败: {e}")
+
+# 24. 综合功能
+try:
+    from routes.complete_apis import complete_bp
+    app.register_blueprint(complete_bp)
+    print("✅ 综合功能 API 已注册")
+except ImportError as e:
+    print(f"⚠️  综合功能模块加载失败: {e}")
+
+# 25. 微信小程序登录
+try:
+    from routes.wechat_login import wechat_bp
+    app.register_blueprint(wechat_bp)
+    print("✅ 微信小程序登录 API 已注册")
+except Exception as e:
+    print(f"⚠️  微信小程序登录模块加载失败: {e}")
+
+# 26. 对话计费
+try:
+    from routes.conversation_billing import conversation_billing_bp
+    app.register_blueprint(conversation_billing_bp)
+    print("✅ 对话计费 API 已注册")
+except Exception as e:
+    print(f"⚠️  对话计费模块加载失败: {e}")
+
+# 27. 动态资讯
+try:
+    from news_articles import news_bp
+    app.register_blueprint(news_bp)
+    print("✅ 动态资讯 API 已注册")
+except Exception as e:
+    print(f"⚠️  动态资讯模块加载失败: {e}")
+
+# 28. 中视频项目
+try:
+    from medium_video_api import medium_video_bp
+    app.register_blueprint(medium_video_bp)
+    print("✅ 中视频项目 API 已注册")
+except Exception as e:
+    print(f"⚠️  中视频项目模块加载失败: {e}")
+
+# 29. 推荐关系网络
+try:
+    from referral_network_api import referral_network_bp
+    app.register_blueprint(referral_network_bp)
+    print("✅ 推荐关系网络 API 已注册")
+except Exception as e:
+    print(f"⚠️  推荐关系网络模块加载失败: {e}")
+
+# 30. 合伙人招募
+try:
+    from partner_api import partner_bp
+    app.register_blueprint(partner_bp)
+    print("✅ 合伙人招募 API 已注册")
+except Exception as e:
+    print(f"⚠️  合伙人招募模块加载失败: {e}")
+
+print("\n✅ 所有路由模块注册完成！\n")
+
+# ============ 核心路由（留在 app.py 中） ============
+
+@app.route('/')
+def index():
+    """首页"""
+    return jsonify({
+        'success': True,
+        'message': '灵值生态园智能体系统',
+        'version': '9.24.0',
+        'status': 'running'
+    })
+
+@app.route('/api/status')
+def status():
+    """系统状态"""
+    return jsonify({
+        'success': True,
+        'message': '系统正常运行',
+        'version': '9.24.0',
+        'modules': '已重构为模块化架构'
+    })
+
+@app.route('/api/health')
+def health():
+    """健康检查"""
+    try:
+        conn = sqlite3.connect(DATABASE)
+        conn.execute("SELECT 1")
+        conn.close()
+        return jsonify({
+            'success': True,
+            'status': 'healthy',
+            'database': 'connected'
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'status': 'unhealthy',
+            'database': 'disconnected',
+            'error': str(e)
+        }), 500
+
+# ============ 数据库初始化 ============
+
+def init_db():
+    """初始化数据库表结构"""
+    print("📦 开始初始化数据库...")
+
+    try:
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+
+        # 用户表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT,
+            phone TEXT,
+            password_hash TEXT NOT NULL,
+            total_lingzhi INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'active',
+            last_login_at TIMESTAMP,
+            avatar_url TEXT,
+            real_name TEXT,
+            is_verified BOOLEAN DEFAULT 0,
+            login_type TEXT DEFAULT 'phone',
+            wechat_openid TEXT,
+            wechat_unionid TEXT,
+            wechat_nickname TEXT,
+            wechat_avatar TEXT,
+            referrer_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+
+        # 添加字段（如果表已存在）
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN status TEXT DEFAULT 'active'")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN real_name TEXT")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT 0")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN login_type TEXT DEFAULT 'phone'")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN wechat_openid TEXT UNIQUE")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN wechat_unionid TEXT")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN wechat_nickname TEXT")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN wechat_avatar TEXT")
+        except:
+            pass
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN referrer_id INTEGER")
+        except:
+            pass
+
+        # 管理员表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS admins (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            password_hash TEXT NOT NULL,
+            role TEXT DEFAULT 'admin',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+
+        # 签到记录表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS checkin_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            checkin_date DATE NOT NULL,
+            lingzhi_earned INTEGER DEFAULT 10,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            UNIQUE(user_id, checkin_date)
+        )
+        ''')
+
+        # 推荐关系表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS referral_relationships (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            referrer_id INTEGER NOT NULL,
+            referred_user_id INTEGER NOT NULL,
+            level INTEGER DEFAULT 1,
+            lingzhi_reward INTEGER DEFAULT 0,
+            reward_status TEXT DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (referrer_id) REFERENCES users(id),
+            FOREIGN KEY (referred_user_id) REFERENCES users(id),
+            UNIQUE(referrer_id, referred_user_id)
+        )
+        ''')
+
+        # 推荐码表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS referral_codes (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            referrer_id INTEGER NOT NULL,
+            code TEXT UNIQUE NOT NULL,
+            status TEXT DEFAULT 'active',
+            expires_at TIMESTAMP,
+            used_count INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (referrer_id) REFERENCES users(id)
+        )
+        ''')
+
+        # 充值档位表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS recharge_tiers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            description TEXT,
+            price DECIMAL(10,2) NOT NULL,
+            base_lingzhi INTEGER NOT NULL,
+            bonus_lingzhi INTEGER NOT NULL,
+            bonus_percentage INTEGER NOT NULL,
+            partner_level INTEGER DEFAULT 0,
+            benefits TEXT,
+            status TEXT DEFAULT 'active',
+            sort_order INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+
+        # 充值记录表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS recharge_records (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            tier_id INTEGER NOT NULL,
+            order_no TEXT UNIQUE NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            base_lingzhi INTEGER NOT NULL,
+            bonus_lingzhi INTEGER NOT NULL,
+            total_lingzhi INTEGER NOT NULL,
+            payment_method VARCHAR(20) DEFAULT 'online',
+            payment_status VARCHAR(20) DEFAULT 'pending',
+            payment_time TIMESTAMP,
+            transaction_id TEXT,
+            voucher_id INTEGER,
+            audit_status VARCHAR(20),
+            bank_info TEXT,
+            status TEXT DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (tier_id) REFERENCES recharge_tiers(id)
+        )
+        ''')
+
+        # 公司收款账户表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS company_accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            account_name VARCHAR(200) NOT NULL,
+            account_number VARCHAR(50) NOT NULL,
+            bank_name VARCHAR(200) NOT NULL,
+            bank_branch VARCHAR(200),
+            company_name VARCHAR(200) NOT NULL,
+            company_credit_code VARCHAR(50),
+            account_type VARCHAR(20) NOT NULL DEFAULT 'primary',
+            is_active BOOLEAN DEFAULT 1,
+            sort_order INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+
+        # 转账凭证表
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS transfer_vouchers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recharge_record_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            image_url VARCHAR(500) NOT NULL,
+            transfer_amount DECIMAL(10, 2) NOT NULL,
+            transfer_time TIMESTAMP,
+            transfer_account VARCHAR(200),
+            remark TEXT,
+            audit_status VARCHAR(20) DEFAULT 'pending',
+            audit_user_id INTEGER,
+            audit_time TIMESTAMP,
+            audit_remark TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (recharge_record_id) REFERENCES recharge_records(id),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            FOREIGN KEY (audit_user_id) REFERENCES admins(id)
+        )
+        ''')
+
+        conn.commit()
+        conn.close()
+
+        print("✅ 数据库初始化完成！")
+        return True
+
+    except Exception as e:
+        print(f"❌ 数据库初始化失败: {e}")
+        return False
+
+# ============ 应用启动 ============
+
+if __name__ == '__main__':
+    print("\n" + "="*60)
+    print("🚀 灵值生态园智能体系统 - V9.24.0")
+    print("="*60 + "\n")
+
+    # 初始化数据库
+    init_db()
+
+    # 启动应用
+    host = os.getenv('FLASK_HOST', '0.0.0.0')
+    port = int(os.getenv('FLASK_PORT', 5000))
+    debug = os.getenv('FLASK_DEBUG', 'False') == 'True'
+
+    print(f"\n🌐 服务器启动: http://{host}:{port}")
+    print(f"📝 调试模式: {debug}")
+    print(f"🔧 工作目录: {os.getcwd()}\n")
+
+    app.run(host=host, port=port, debug=debug)

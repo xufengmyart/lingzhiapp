@@ -1,0 +1,59 @@
+<!--pages/auth/login/login.wxml-->
+<view class="container">
+  <view class="login-box">
+    <view class="logo">
+      <image class="logo-image" src="/images/logo.png"></image>
+      <text class="logo-text">灵值生态园</text>
+    </view>
+
+    <view class="form">
+      <view class="form-item">
+        <view class="form-label">用户名</view>
+        <input
+          class="form-input"
+          type="text"
+          placeholder="请输入用户名"
+          value="{{formData.username}}"
+          bindinput="onUsernameInput"
+        />
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">密码</view>
+        <input
+          class="form-input"
+          type="{{showPassword ? 'text' : 'password'}}"
+          placeholder="请输入密码"
+          value="{{formData.password}}"
+          bindinput="onPasswordInput"
+        />
+        <view class="password-toggle" bindtap="togglePassword">
+          <text class="toggle-text">{{showPassword ? '隐藏' : '显示'}}</text>
+        </view>
+      </view>
+
+      <view class="form-actions">
+        <button
+          class="btn btn-primary btn-block"
+          type="primary"
+          bindtap="handleLogin"
+          disabled="{{loading}}"
+        >
+          {{loading ? '登录中...' : '登录'}}
+        </button>
+      </view>
+
+      <view class="form-links">
+        <text class="link" bindtap="navigateToRegister">注册账号</text>
+        <text class="divider">|</text>
+        <text class="link" bindtap="navigateToForgot">忘记密码</text>
+      </view>
+    </view>
+
+    <view class="demo-tips">
+      <text class="tips-title">测试账号：</text>
+      <text class="tips-item">管理员: admin / 123</text>
+      <text class="tips-item">用户: 马伟娟 / 123</text>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>强制刷新页面</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0A0D18 0%, #121A2F 50%, #0A0D18 100%);
+      color: #fff;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: rgba(18, 26, 47, 0.9);
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 195, 255, 0.15);
+      padding: 2rem;
+      text-align: center;
+      border: 1px solid rgba(0, 195, 255, 0.2);
+    }
+    h1 {
+      margin: 0 0 1.5rem;
+      font-size: 2rem;
+      background: linear-gradient(90deg, #00C3FF, #47D1FF, #00E0FF);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .status-box {
+      margin: 1.5rem 0;
+      padding: 1.5rem;
+      background: rgba(0, 195, 255, 0.08);
+      border-radius: 12px;
+      border-left: 4px solid #00C3FF;
+      text-align: left;
+    }
+    .status-box.success {
+      background: rgba(0, 255, 136, 0.08);
+      border-left-color: #00ff88;
+    }
+    .status-box.error {
+      background: rgba(255, 68, 68, 0.08);
+      border-left-color: #ff4444;
+    }
+    .status-box.warning {
+      background: rgba(255, 193, 7, 0.08);
+      border-left-color: #ffc107;
+    }
+    .status-title {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #fff;
+    }
+    .status-content {
+      font-size: 0.9rem;
+      color: #B4C7E7;
+      line-height: 1.6;
+    }
+    button {
+      margin-top: 1.5rem;
+      padding: 1rem 2rem;
+      background: linear-gradient(90deg, #00C3FF, #00E0FF);
+      color: #000;
+      border: none;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 16px rgba(0, 195, 255, 0.3);
+    }
+    button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0, 195, 255, 0.4);
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .progress {
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      text-align: left;
+    }
+    .step {
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      background: rgba(18, 26, 47, 0.8);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .step-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .step.pending .step-icon {
+      background: rgba(255, 255, 255, 0.1);
+      color: #B4C7E7;
+    }
+    .step.loading .step-icon {
+      background: rgba(0, 195, 255, 0.2);
+      color: #00C3FF;
+    }
+    .step.success .step-icon {
+      background: rgba(0, 255, 136, 0.2);
+      color: #00ff88;
+    }
+    .step.error .step-icon {
+      background: rgba(255, 68, 68, 0.2);
+      color: #ff4444;
+    }
+    .step-text {
+      font-size: 0.9rem;
+      color: #B4C7E7;
+    }
+    .manual-section {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: rgba(71, 209, 255, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(71, 209, 255, 0.1);
+    }
+    .manual-section h3 {
+      margin-bottom: 1rem;
+      color: #47D1FF;
+      font-size: 1.1rem;
+    }
+    .manual-section ul {
+      list-style: none;
+      padding: 0;
+    }
+    .manual-section li {
+      margin: 0.75rem 0;
+      padding: 0.75rem;
+      background: rgba(18, 26, 47, 0.6);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #B4C7E7;
+      text-align: left;
+    }
+    .manual-section strong {
+      color: #00C3FF;
+    }
+    .version-info {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.8rem;
+      color: #6B7C99;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading .step-icon {
+      animation: spin 1s linear infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔄 强制刷新缓存</h1>
+
+    <div class="status-box warning" id="initialStatus">
+      <div class="status-title">⚠️ 检测到缓存问题</div>
+      <div class="status-content">
+        浏览器正在加载旧版本的文件，需要强制刷新缓存以获取最新版本。
+      </div>
+    </div>
+
+    <div id="progressArea" class="progress" style="display: none;"></div>
+
+    <button id="forceRefreshBtn" onclick="forceRefreshAll()">
+      🚀 立即强制刷新
+    </button>
+
+    <div id="versionArea" class="version-info" style="display: none;"></div>
+
+    <div class="manual-section">
+      <h3>📖 如果自动刷新失败，请手动操作：</h3>
+      <ul>
+        <li><strong>方法 1 - 硬刷新：</strong>
+          Windows/Linux: <kbd>Ctrl</kbd> + <kbd>F5</kbd> 或 <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>
+          <br>
+          Mac: <kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd>
+        </li>
+        <li><strong>方法 2 - 清除缓存：</strong>
+          <kbd>F12</kbd> 打开开发者工具 → 右键点击刷新按钮 → 选择"清空缓存并硬性重新加载"
+        </li>
+        <li><strong>方法 3 - 访问缓存页面：</strong>
+          <a href="/clear-cache.html" style="color: #00C3FF;">清除缓存页面</a>
+        </li>
+        <li><strong>方法 4 - 无痕模式：</strong>
+          使用无痕/隐私模式访问网站
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    async function forceRefreshAll() {
+      const btn = document.getElementById('forceRefreshBtn');
+      const progressArea = document.getElementById('progressArea');
+      const initialStatus = document.getElementById('initialStatus');
+      const versionArea = document.getElementById('versionArea');
+
+      btn.disabled = true;
+      progressArea.style.display = 'block';
+      initialStatus.style.display = 'none';
+
+      const steps = [
+        { id: 1, text: '注销 Service Worker...' },
+        { id: 2, text: '清除所有缓存...' },
+        { id: 3, text: '清除本地存储...' },
+        { id: 4, text: '刷新页面...' }
+      ];
+
+      // 显示进度
+      steps.forEach(step => {
+        const stepEl = document.createElement('div');
+        stepEl.className = 'step pending';
+        stepEl.id = `step-${step.id}`;
+        stepEl.innerHTML = `
+          <div class="step-icon">${step.id}</div>
+          <div class="step-text">${step.text}</div>
+        `;
+        progressArea.appendChild(stepEl);
+      });
+
+      try {
+        // 步骤 1: 注销 Service Worker
+        await updateStep(1, 'loading');
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+            console.log('[刷新] Service Worker 已注销');
+          }
+        }
+        await updateStep(1, 'success');
+
+        // 步骤 2: 清除缓存
+        await updateStep(2, 'loading');
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+          console.log('[刷新] 已清除缓存:', cacheNames);
+        }
+        await updateStep(2, 'success');
+
+        // 步骤 3: 清除本地存储
+        await updateStep(3, 'loading');
+        localStorage.clear();
+        sessionStorage.clear();
+        console.log('[刷新] 已清除本地存储');
+        await updateStep(3, 'success');
+
+        // 步骤 4: 刷新页面
+        await updateStep(4, 'loading');
+
+        // 获取当前版本信息
+        try {
+          const response = await fetch('/version.json?' + Date.now(), { cache: 'no-store' });
+          const versionData = await response.json();
+          versionArea.style.display = 'block';
+          versionArea.textContent = `当前版本: ${versionData.version} | 构建时间: ${versionData.buildTime}`;
+        } catch (e) {
+          console.warn('[刷新] 无法获取版本信息:', e);
+        }
+
+        await updateStep(4, 'success');
+
+        // 延迟后刷新
+        setTimeout(() => {
+          console.log('[刷新] 准备跳转到首页...');
+          // 使用带时间戳的 URL 强制刷新
+          const timestamp = Date.now();
+          window.location.href = '/?t=' + timestamp;
+        }, 2000);
+
+      } catch (error) {
+        console.error('[刷新] 失败:', error);
+        updateStep(1, 'error');
+        updateStep(2, 'error');
+        updateStep(3, 'error');
+        updateStep(4, 'error');
+
+        alert('自动刷新失败，请手动刷新页面（按 Ctrl+F5）');
+        btn.disabled = false;
+      }
+    }
+
+    async function updateStep(id, status) {
+      const stepEl = document.getElementById(`step-${id}`);
+      if (stepEl) {
+        stepEl.className = `step ${status}`;
+        if (status === 'loading') {
+          stepEl.innerHTML = `
+            <div class="step-icon">⟳</div>
+            <div class="step-text">${stepEl.querySelector('.step-text').textContent}</div>
+          `;
+        }
+      }
+      // 添加小延迟，让用户能看到进度
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    // 检测当前加载的文件版本
+    window.addEventListener('load', () => {
+      console.log('[刷新] 页面加载');
+      const scripts = document.querySelectorAll('script[src]');
+      scripts.forEach(script => {
+        console.log('[刷新] 加载的脚本:', script.src);
+      });
+    });
+  </script>
+</body>
+</html>

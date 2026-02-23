@@ -1,0 +1,202 @@
+# 灵值智能体 v8.1 - 文件同步清单
+# 日期: 2025年1月15日
+# 说明: 本文件列出了需要同步到云服务器的所有文件
+
+============================================================
+一、需要同步的文件（4个）
+============================================================
+
+【1】src/storage/database/shared/model.py
+  - 操作: 修改
+  - 说明: 添加情绪记录表和情绪日记表的ORM模型
+  - 新增内容:
+    * EmotionRecords 类
+    * EmotionDiaries 类
+
+【2】src/storage/database/emotion_manager.py
+  - 操作: 新增
+  - 说明: 情绪管理器，封装情绪数据的CRUD操作
+  - 主要功能:
+    * record_emotion() - 记录情绪
+    * get_emotion_statistics() - 获取情绪统计
+    * save_diary() - 保存日记
+    * get_diary_list() - 获取日记列表
+    * analyze_emotion_trend() - 分析情绪趋势
+
+【3】src/tools/emotion_tools.py
+  - 操作: 修改
+  - 说明: 集成数据库持久化，移除内存存储
+  - 修改内容:
+    * 所有工具改为调用 EmotionManager
+    * 移除内存字典存储逻辑
+
+【4】scripts/test_emotion_database.py
+  - 操作: 新增
+  - 说明: 数据库功能测试脚本
+  - 测试内容:
+    * 情绪记录功能
+    * 情绪统计功能
+    * 日记保存功能
+    * 日记查询功能
+    * 情绪趋势分析
+
+============================================================
+二、无需修改的文件（3个）
+============================================================
+
+【1】config/agent_llm_config.json
+  - 状态: 无需修改
+  - 说明: 已包含所有情绪工具（record_emotion, emotion_statistics, save_diary, get_diaries, analyze_emotion_trend）
+
+【2】requirements.txt
+  - 状态: 无需修改
+  - 说明: 已包含所有必要依赖（sqlalchemy, psycopg2-binary等）
+
+【3】src/agents/agent.py
+  - 状态: 无需修改
+  - 说明: 已导入所有情绪工具
+
+============================================================
+三、数据库迁移文件（1个）
+============================================================
+
+【1】scripts/create_emotion_tables.sql
+  - 操作: 新增
+  - 说明: 数据库表创建SQL脚本
+  - 包含内容:
+    * emotion_records 表创建
+    * emotion_diaries 表创建
+    * 所有必要的索引
+    * 表注释
+
+============================================================
+四、部署脚本（1个）
+============================================================
+
+【1】scripts/deploy_to_cloud.sh
+  - 操作: 新增
+  - 说明: 自动化部署脚本
+  - 功能:
+    * 上传文件到云服务器
+    * 执行数据库迁移
+    * 重启服务
+
+============================================================
+五、文档文件（2个）
+============================================================
+
+【1】docs/云服务器部署指南-情绪系统v8.1.md
+  - 说明: 详细的部署指南
+
+【2】docs/快速部署指南-情绪系统v8.1.md
+  - 说明: 快速部署指南
+
+============================================================
+六、数据库表结构
+============================================================
+
+【1】emotion_records (情绪记录表)
+  - 字段:
+    * id (主键)
+    * user_id (用户ID)
+    * emotion (情绪类型)
+    * emotion_name (情绪名称)
+    * intensity (情绪强度)
+    * context (上下文)
+    * created_at (创建时间)
+
+【2】emotion_diaries (情绪日记表)
+  - 字段:
+    * id (主键)
+    * user_id (用户ID)
+    * content (日记内容)
+    * emotion (情绪类型)
+    * emotion_name (情绪名称)
+    * intensity (情绪强度)
+    * tags (标签)
+    * created_at (创建时间)
+
+============================================================
+七、部署步骤（推荐）
+============================================================
+
+方式1: 使用自动化脚本（推荐）
+  1. 修改 scripts/deploy_to_cloud.sh 中的配置
+  2. 执行 ./scripts/deploy_to_cloud.sh
+  3. 验证部署结果
+
+方式2: 手动上传
+  1. 使用 scp 上传4个文件
+  2. SSH 登录服务器
+  3. 执行数据库表创建SQL
+  4. 重启服务
+
+方式3: 使用 Git
+  1. 提交并推送代码
+  2. 在服务器上拉取代码
+  3. 执行数据库表创建SQL
+  4. 重启服务
+
+============================================================
+八、验证步骤
+============================================================
+
+1. 检查服务状态
+   systemctl status lingzhi-backend
+
+2. 检查数据库表
+   psql -h localhost -U postgres -d lingzhi_db -c "\d emotion_records"
+   psql -h localhost -U postgres -d lingzhi_db -c "\d emotion_diaries"
+
+3. 运行测试脚本
+   cd /var/www/backend
+   python scripts/test_emotion_database.py
+
+4. 查看日志
+   tail -f /var/www/backend/logs/app.log
+
+============================================================
+九、回滚方案
+============================================================
+
+如果部署失败，按以下步骤回滚:
+
+1. 停止服务
+   sudo systemctl stop lingzhi-backend
+
+2. 恢复文件
+   cp backup/model.py.bak src/storage/database/shared/model.py
+   cp backup/emotion_tools.py.bak src/tools/emotion_tools.py
+
+3. 删除新增的表（可选）
+   psql -h localhost -U postgres -d lingzhi_db << EOF
+   DROP TABLE IF EXISTS emotion_diaries;
+   DROP TABLE IF EXISTS emotion_records;
+   EOF
+
+4. 删除新增的文件
+   rm src/storage/database/emotion_manager.py
+   rm scripts/test_emotion_database.py
+
+5. 重启服务
+   sudo systemctl start lingzhi-backend
+
+============================================================
+十、注意事项
+============================================================
+
+1. 部署前务必备份现有代码和数据库
+2. 建议先在测试环境验证后再部署到生产环境
+3. 部署建议在低峰期进行
+4. 保留备份文件至少3天
+5. 部署完成后进行全面测试
+
+============================================================
+十一、技术支持
+============================================================
+
+- 技术支持: 待定
+- 紧急联系: 待定
+- 部署前咨询: 请提前联系技术团队
+
+============================================================

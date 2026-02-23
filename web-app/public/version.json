@@ -1,0 +1,10 @@
+{
+  "version": "20260222-0105",
+  "buildTime": "2026-02-22T17:05:34.646Z",
+  "gitCommit": "719e419",
+  "gitBranch": "main",
+  "gitTag": "",
+  "gitMessage": "feat: 添加用户推荐码二维码生成接口，修复 404 错误",
+  "builder": "system",
+  "environment": "production"
+}

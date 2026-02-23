@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#4F46E5" />
+    <meta name="description" content="灵值生态园智能体应用 - 用户旅程管理、经济模型计算、智能对话" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="灵值生态园" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-TileColor" content="#4F46E5" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- 版本管理器 - 必须在 React 应用之前加载 -->
+    <script src="/version-manager.js"></script>
+
+    <title>灵值生态园 - 智能体APP</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker 注册 -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('[SW] Service Worker 注册成功:', registration.scope)
+
+              // 监听 Service Worker 更新
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // 新的 Service Worker 已就绪，通知用户刷新
+                    if (window.versionManager) {
+                      window.versionManager.handleServiceWorkerUpdate()
+                    } else {
+                      // 版本管理器未加载，手动刷新
+                      console.log('[SW] 新版本已就绪，准备刷新')
+                      setTimeout(() => {
+                        window.location.reload(true)
+                      }, 2000)
+                    }
+                  }
+                })
+              })
+
+              // 立即检查更新
+              registration.update()
+            })
+            .catch(error => {
+              console.error('[SW] Service Worker 注册失败:', error)
+            })
+        })
+      }
+    </script>
+  </body>
+</html>

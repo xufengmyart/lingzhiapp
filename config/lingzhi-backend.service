@@ -1,0 +1,56 @@
+[Unit]
+Description=Lingzhi Ecosystem Backend Service (Gunicorn)
+Documentation=https://meiyueart.com
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/lingzhi-ecosystem/backend
+
+# 环境变量
+Environment="PATH=/var/www/lingzhi-ecosystem/backend/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="FLASK_ENV=production"
+Environment="FLASK_DEBUG=0"
+Environment="PYTHONUNBUFFERED=1"
+
+# 启动命令 - 使用 Gunicorn
+ExecStart=/var/www/lingzhi-ecosystem/backend/venv/bin/gunicorn \
+    --config gunicorn_config.py \
+    --bind 0.0.0.0:8080 \
+    app:app
+
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+
+# 自动重启配置
+Restart=always
+RestartSec=10s
+StartLimitInterval=60s
+StartLimitBurst=5
+
+# 安全配置
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/lingzhi-ecosystem/backend
+ReadWritePaths=/var/log/lingzhi-backend
+ReadWritePaths=/var/run
+ReadWritePaths=/tmp
+
+# 资源限制
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=2G
+CPUQuota=200%
+
+# 日志配置
+StandardOutput=append:/var/log/lingzhi-backend/lingzhi-backend.log
+StandardError=append:/var/log/lingzhi-backend/lingzhi-backend-error.log
+SyslogIdentifier=lingzhi-backend
+
+[Install]
+WantedBy=multi-user.target

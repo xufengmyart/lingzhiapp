@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录测试 - 灵值生态园</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .result.loading {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e7f3ff;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #0066cc;
+        }
+        .info h3 {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .info ul {
+            margin-left: 20px;
+        }
+        .info li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 登录系统测试</h1>
+        
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" id="username" value="admin" placeholder="输入用户名">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" id="password" value="admin123" placeholder="输入密码">
+        </div>
+        
+        <button id="loginBtn" onclick="testLogin()">测试登录</button>
+        
+        <div id="result" class="result"></div>
+        
+        <div class="info">
+            <h3>测试账号</h3>
+            <ul>
+                <li><strong>admin</strong> / <strong>admin123</strong></li>
+                <li><strong>许锋</strong> / <strong>123456</strong></li>
+            </ul>
+        </div>
+        
+        <div class="info" style="margin-top: 10px; background: #fff0e0; color: #e65100;">
+            <h3>如果登录失败，请尝试：</h3>
+            <ul>
+                <li>按 Ctrl+F5 强制刷新页面</li>
+                <li>清除浏览器缓存和 Cookie</li>
+                <li>使用无痕/隐私模式打开</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            if (!username || !password) {
+                showResult('请输入用户名和密码', 'error');
+                return;
+            }
+            
+            loginBtn.disabled = true;
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result loading';
+            resultDiv.innerHTML = '⏳ 正在测试登录...';
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    const userInfo = data.data.user;
+                    showResult(`
+                        ✅ 登录成功！<br><br>
+                        用户 ID: ${userInfo.id}<br>
+                        用户名: ${userInfo.username}<br>
+                        邮箱: ${userInfo.email || '未设置'}<br>
+                        Token: ${data.data.token.substring(0, 30)}...<br><br>
+                        <strong>登录系统工作正常！</strong>
+                    `, 'success');
+                    
+                    // 保存 token 到 localStorage
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('user', JSON.stringify(userInfo));
+                } else {
+                    showResult(`❌ 登录失败<br><br>原因: ${data.message || '未知错误'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ 请求失败<br><br>错误: ${error.message}<br><br>请检查网络连接或联系管理员`, 'error');
+            }
+            
+            loginBtn.disabled = false;
+        }
+        
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = message;
+        }
+        
+        // 页面加载时显示版本信息
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/version.json?' + Date.now());
+                const version = await response.json();
+                console.log('当前版本:', version.version);
+            } catch (error) {
+                console.error('获取版本信息失败:', error);
+            }
+        });
+    </script>
+</body>
+</html>

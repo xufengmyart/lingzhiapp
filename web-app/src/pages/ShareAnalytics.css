@@ -1,0 +1,64 @@
+.share-analytics-container {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.share-analytics-container h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.share-analytics-container .ant-card {
+  margin-bottom: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  border-radius: 8px;
+}
+
+.share-analytics-container .ant-statistic-title {
+  font-size: 14px;
+  color: #8c8c8c;
+  margin-bottom: 8px;
+}
+
+.share-analytics-container .ant-statistic-content {
+  font-size: 30px;
+  font-weight: bold;
+}
+
+.share-analytics-container .ant-tabs-content {
+  padding-top: 16px;
+}
+
+.share-analytics-container .ant-table {
+  background: #fff;
+  border-radius: 8px;
+}
+
+/* 排行榜前三名样式 */
+.rank-1 {
+  font-size: 24px;
+  color: #FFD700;
+}
+
+.rank-2 {
+  font-size: 24px;
+  color: #C0C0C0;
+}
+
+.rank-3 {
+  font-size: 24px;
+  color: #CD7F32;
+}
+
+/* 转化率进度条 */
+.ant-progress-bg {
+  transition: width 0.3s ease;
+}
+
+/* 标签样式 */
+.ant-tag {
+  font-weight: 500;
+}

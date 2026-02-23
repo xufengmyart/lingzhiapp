@@ -1,0 +1,6 @@
+<!--pages/resources/create/create.wxml-->
+<view class="container">
+  <view class="empty">
+    <text>创建资源页开发中...</text>
+  </view>
+</view>

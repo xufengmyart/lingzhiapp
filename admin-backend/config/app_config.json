@@ -1,0 +1,29 @@
+{
+  "project_name": "灵值生态园智能体系统",
+  "version": "V9.24.0",
+  "environment": "production",
+  "database": {
+    "type": "sqlite",
+    "path": "./lingzhi_ecosystem.db"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 5000,
+    "workers": 4
+  },
+  "api": {
+    "prefix": "/api",
+    "version": "v9"
+  },
+  "cors": {
+    "enabled": true,
+    "origins": [
+      "*"
+    ]
+  },
+  "jwt": {
+    "secret_key": "your-secret-key-here",
+    "algorithm": "HS256",
+    "expiration_hours": 24
+  }
+}

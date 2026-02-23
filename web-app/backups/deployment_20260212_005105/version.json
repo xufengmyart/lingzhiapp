@@ -1,0 +1,10 @@
+{
+  "version": "20260211-0028",
+  "buildTime": "2026-02-11T16:28:05.429Z",
+  "gitCommit": "895a524",
+  "gitBranch": "main",
+  "gitTag": "",
+  "gitMessage": "fix: 全面修复登录系统并优化缓存策略",
+  "builder": "system",
+  "environment": "production"
+}

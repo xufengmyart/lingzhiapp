@@ -1,0 +1,6 @@
+<!--pages/resources/detail/detail.wxml-->
+<view class="container">
+  <view class="empty">
+    <text>资源详情页开发中...</text>
+  </view>
+</view>

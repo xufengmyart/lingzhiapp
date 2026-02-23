@@ -1,0 +1,9 @@
+<!--pages/auth/register/register.wxml-->
+<view class="container">
+  <view class="card">
+    <view class="empty">
+      <text>注册功能开发中...</text>
+      <text class="tips">请使用测试账号登录：admin / 123</text>
+    </view>
+  </view>
+</view>

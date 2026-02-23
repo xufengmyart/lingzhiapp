@@ -1,0 +1,93 @@
+<!--pages/index/index.wxml-->
+<view class="container">
+  <!-- 顶部Banner -->
+  <view class="banner">
+    <image class="banner-image" src="/images/banner.jpg" mode="aspectFill"></image>
+    <view class="banner-text">
+      <text class="banner-title">灵值生态园</text>
+      <text class="banner-subtitle">智能资源匹配与价值共享</text>
+    </view>
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="quick-actions">
+    <view class="action-item" bindtap="navigateToResources">
+      <image class="action-icon" src="/images/icon-resources.png"></image>
+      <text class="action-text">资源库</text>
+    </view>
+    <view class="action-item" bindtap="navigateToTasks">
+      <image class="action-icon" src="/images/icon-tasks.png"></image>
+      <text class="action-text">任务</text>
+    </view>
+    <view class="action-item" bindtap="navigateToProjects">
+      <image class="action-icon" src="/images/icon-projects.png"></image>
+      <text class="action-text">项目</text>
+    </view>
+    <view class="action-item" bindtap="navigateToNotifications">
+      <image class="action-icon" src="/images/icon-notifications.png"></image>
+      <text class="action-text">通知</text>
+    </view>
+  </view>
+
+  <!-- 我的灵值 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">我的灵值</text>
+      <text class="card-action" bindtap="navigateToProfile">查看详情</text>
+    </view>
+    <view class="card-body">
+      <view class="lingzhi-info">
+        <text class="lingzhi-value">{{userInfo ? userInfo.totalLingzhi : 0}}</text>
+        <text class="lingzhi-label">灵值</text>
+      </view>
+      <view class="lingzhi-tips">
+        <text>完成每日任务可获得灵值奖励</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 最新资源 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="card-title">最新资源</text>
+      <text class="card-action" bindtap="navigateToResources">更多</text>
+    </view>
+    <view class="card-body">
+      <view class="resource-list">
+        <block wx:for="{{recentResources}}" wx:key="id">
+          <view class="resource-item" bindtap="navigateToResourceDetail" data-id="{{item.id}}">
+            <view class="resource-header">
+              <text class="resource-name">{{item.resourceName}}</text>
+              <view class="resource-tag badge badge-primary">{{item.resourceType}}</view>
+            </view>
+            <view class="resource-desc">{{item.description}}</view>
+            <view class="resource-meta">
+              <text class="meta-text">估值: ¥{{item.estimatedValue}}</text>
+              <text class="meta-text">{{item.createdAt}}</text>
+            </view>
+          </view>
+        </block>
+        <view wx:if="{{!recentResources || recentResources.length === 0}}" class="empty">
+          <text>暂无资源</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 系统公告 -->
+  <view class="card" wx:if="{{notices.length > 0}}">
+    <view class="card-header">
+      <text class="card-title">系统公告</text>
+    </view>
+    <view class="card-body">
+      <view class="notice-list">
+        <block wx:for="{{notices}}" wx:key="id">
+          <view class="notice-item">
+            <text class="notice-title">{{item.title}}</text>
+            <text class="notice-time">{{item.time}}</text>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,30 @@
+# 生产环境SSH配置 - 绝密
+
+## 生产服务器信息
+```
+域名: meiyueart.com
+IP: 123.56.142.143
+端口: 22
+```
+
+## SSH认证信息
+```
+用户名: root
+密码: Meiyue@root123
+```
+
+## 生产环境路径
+```
+后端: /app/meiyueart-backend
+前端: /var/www/meiyueart.com
+日志: /var/log/meiyueart-backend/
+```
+
+## 全自动部署脚本
+```
+/workspace/projects/deploy_production.sh
+```
+
+## 最后更新
+- 时间: 2026-02-18
+- 状态: 已配置，准备部署

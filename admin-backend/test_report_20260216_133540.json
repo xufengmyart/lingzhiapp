@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-02-16T13:35:40.960808",
+  "total": 5,
+  "passed": 4,
+  "tests": {
+    "本地环境检查": {
+      "passed": true,
+      "error": null
+    },
+    "数据库一致性检查": {
+      "passed": true,
+      "error": null
+    },
+    "API接口测试": {
+      "passed": false,
+      "error": null
+    },
+    "代码一致性检查": {
+      "passed": true,
+      "error": null
+    },
+    "配置文件检查": {
+      "passed": true,
+      "error": null
+    }
+  }
+}

@@ -1,0 +1,163 @@
+✅ 配置加载成功: /workspace/projects/admin-backend/data/lingzhi_ecosystem.db
+✅ 环境变量已加载: /workspace/projects/admin-backend/.env
+[配置] 数据库路径: /workspace/projects/admin-backend/data/lingzhi_ecosystem.db
+[配置] JWT过期时间: 604800秒
+
+🔧 初始化中间件...
+✅ JWT 认证中间件已初始化
+✅ 错误处理器已注册
+✅ 请求日志中间件已注册
+
+📦 开始注册路由模块...
+✅ 认证系统 API 已注册
+✅ 管理员功能 API 已注册
+✅ 推荐系统 API 已注册
+✅ 签到系统 API 已注册
+✅ 充值系统 API 已注册
+⚠️  对话记忆系统模块加载失败: No module named 'conversation_memory'
+⚠️  用户旅程系统模块加载失败: No module named 'user_journey'
+⚠️  统一认证系统模块加载失败: No module named 'unified_auth'
+⚠️  商家服务系统模块加载失败: No module named 'merchant_service'
+✅ 用户资料编辑 API 已注册
+✅ 贡献值系统 API 已注册
+✅ 商家功能 API 已注册
+✅ 专家功能 API 已注册
+✅ 文化圣地 API 已注册
+✅ 美学侦探任务 API 已注册
+✅ 数字资产 API 已注册
+✅ 用户反馈 API 已注册
+✅ 数据分析 API 已注册
+✅ 导航配置 API 已注册
+✅ 用户引导文档 API 已注册
+⚠️  agent_enhanced 模块不可用
+✅ 智能体聊天 API 蓝图已加载
+✅ 智能体聊天 API 已注册
+✅ 知识库 API 蓝图已加载
+✅ 知识库 API 已注册
+✅ 用户系统 API 蓝图已加载
+✅ 用户系统 API 已注册
+✅ 综合功能 API 蓝图已加载
+✅ 综合功能 API 已注册
+✅ 微信小程序登录 API 已注册
+✅ 对话计费 API 已注册
+⚠️  动态资讯模块加载失败: No module named 'news_articles'
+⚠️  中视频项目模块加载失败: No module named 'medium_video_api'
+⚠️  推荐关系网络模块加载失败: No module named 'referral_network_api'
+⚠️  合伙人招募模块加载失败: No module named 'partner_api'
+
+✅ 所有路由模块注册完成！
+
+
+============================================================
+🚀 灵值生态园智能体系统 - V9.24.0
+============================================================
+
+📦 开始初始化数据库...
+✅ 数据库初始化完成！
+
+🌐 服务器启动: http://0.0.0.0:5000
+📝 调试模式: False
+🔧 工作目录: /workspace/projects/admin-backend
+
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://169.254.108.29:5000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [18/Feb/2026 12:40:43] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Feb/2026 12:40:49] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [18/Feb/2026 12:40:51] "GET /api/health HTTP/1.1" 200 -
+127.0.0.1 - - [18/Feb/2026 12:40:53] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [18/Feb/2026 12:40:56] "[31m[1mPOST /api/login HTTP/1.1[0m" 401 -
+127.0.0.1 - - [18/Feb/2026 12:41:00] "GET /api/recharge/tiers HTTP/1.1" 200 -
+127.0.0.1 - - [18/Feb/2026 12:54:16] "GET /api/health HTTP/1.1" 200 -
+[2026-02-19 13:30:42] [ERROR] [app] [app.py:875] - Exception on /uploads/avatars/675b37516ee74a31929b1ea3a8fcbfc1.png [HEAD]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 941, in finalize_request
+    response = self.process_response(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1319, in process_response
+    response = self.ensure_sync(func)(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/projects/admin-backend/middleware/request_logger.py", line 50, in after_request
+    f"Size: {len(response.get_data())} bytes"
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 281, in get_data
+    self._ensure_sequence()
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 329, in _ensure_sequence
+    raise RuntimeError(
+RuntimeError: Attempted implicit sequence conversion but the response object is in direct passthrough mode.
+[2026-02-19 13:30:50] [ERROR] [app] [app.py:875] - Exception on /uploads/avatars/675b37516ee74a31929b1ea3a8fcbfc1.png [GET]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 941, in finalize_request
+    response = self.process_response(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1319, in process_response
+    response = self.ensure_sync(func)(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/projects/admin-backend/middleware/request_logger.py", line 50, in after_request
+    f"Size: {len(response.get_data())} bytes"
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 281, in get_data
+    self._ensure_sequence()
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 329, in _ensure_sequence
+    raise RuntimeError(
+RuntimeError: Attempted implicit sequence conversion but the response object is in direct passthrough mode.
+[2026-02-19 13:30:52] [ERROR] [app] [app.py:875] - Exception on /uploads/avatars/675b37516ee74a31929b1ea3a8fcbfc1.png [GET]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 941, in finalize_request
+    response = self.process_response(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1319, in process_response
+    response = self.ensure_sync(func)(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/projects/admin-backend/middleware/request_logger.py", line 50, in after_request
+    f"Size: {len(response.get_data())} bytes"
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 281, in get_data
+    self._ensure_sequence()
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 329, in _ensure_sequence
+    raise RuntimeError(
+RuntimeError: Attempted implicit sequence conversion but the response object is in direct passthrough mode.
+[2026-02-19 13:30:53] [ERROR] [app] [app.py:875] - Exception on /uploads/avatars/675b37516ee74a31929b1ea3a8fcbfc1.png [GET]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 941, in finalize_request
+    response = self.process_response(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1319, in process_response
+    response = self.ensure_sync(func)(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/projects/admin-backend/middleware/request_logger.py", line 50, in after_request
+    f"Size: {len(response.get_data())} bytes"
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 281, in get_data
+    self._ensure_sequence()
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 329, in _ensure_sequence
+    raise RuntimeError(
+RuntimeError: Attempted implicit sequence conversion but the response object is in direct passthrough mode.

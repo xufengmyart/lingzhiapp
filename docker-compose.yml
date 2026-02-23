@@ -1,0 +1,186 @@
+version: '3.8'
+
+services:
+  # ==================== 后端服务 ====================
+  backend:
+    build:
+      context: ./admin-backend
+      dockerfile: Dockerfile
+    container_name: lingzhi-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./admin-backend/logs:/app/logs
+      - ./admin-backend/storage:/app/storage
+      - ./admin-backend/backups:/app/backups
+      - ./data/lingzhi_ecosystem.db:/app/lingzhi_ecosystem.db
+    environment:
+      - DATABASE_PATH=/app/lingzhi_ecosystem.db
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-meiyueart-production-secret-2026}
+      - JWT_EXPIRATION=86400
+      - COZE_WORKLOAD_IDENTITY_API_KEY=${COZE_API_KEY}
+      - COZE_INTEGRATION_MODEL_BASE_URL=${COZE_BASE_URL}
+      - COZE_PROJECT_ID=${COZE_PROJECT_ID}
+      - LLM_MODEL=doubao-seed-1-6-251015
+      - LOG_LEVEL=INFO
+    networks:
+      - lingzhi-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==================== Nginx 反向代理 ====================
+  nginx:
+    image: nginx:1.24-alpine
+    container_name: lingzhi-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/sites-available:/etc/nginx/sites-available:ro
+      - ./web-app/dist:/var/www/meiyueart-v2:ro
+      - ./data/ssl:/etc/nginx/ssl:ro
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - backend
+    networks:
+      - lingzhi-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==================== PostgreSQL 数据库（可选）====================
+  # 如果需要从 SQLite 迁移到 PostgreSQL，取消注释以下配置
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: lingzhi-postgres
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: lingzhi_ecosystem
+  #     POSTGRES_USER: lingzhi
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lingzhi_password}
+  #   volumes:
+  #     - ./data/postgres:/var/lib/postgresql/data
+  #   networks:
+  #     - lingzhi-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U lingzhi"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # ==================== Redis 缓存（可选）====================
+  # 如果需要缓存功能，取消注释以下配置
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: lingzhi-redis
+  #   restart: unless-stopped
+  #   command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password}
+  #   volumes:
+  #     - ./data/redis:/data
+  #   networks:
+  #     - lingzhi-network
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 5
+
+  # ==================== Prometheus 监控 ====================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: lingzhi-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    networks:
+      - lingzhi-network
+    profiles:
+      - monitoring
+
+  # ==================== Grafana 可视化 ====================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lingzhi-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      - prometheus
+    networks:
+      - lingzhi-network
+    profiles:
+      - monitoring
+
+  # ==================== Loki 日志收集 ====================
+  loki:
+    image: grafana/loki:latest
+    container_name: lingzhi-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki/config.yml:/etc/loki/local-config.yaml:ro
+      - ./monitoring/loki/data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - lingzhi-network
+    profiles:
+      - monitoring
+
+  # ==================== Promtail 日志采集 ====================
+  promtail:
+    image: grafana/promtail:latest
+    container_name: lingzhi-promtail
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/promtail/config.yml:/etc/promtail/config.yml:ro
+      - ./admin-backend/logs:/var/log/app:ro
+      - ./nginx/logs:/var/log/nginx:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    networks:
+      - lingzhi-network
+    profiles:
+      - monitoring
+
+# ==================== 网络配置 ====================
+networks:
+  lingzhi-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

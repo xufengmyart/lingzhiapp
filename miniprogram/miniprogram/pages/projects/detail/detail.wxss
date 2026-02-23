@@ -1,0 +1,7 @@
+/* pages/projects/detail/detail.wxss */
+.empty {
+  text-align: center;
+  padding: 120rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}

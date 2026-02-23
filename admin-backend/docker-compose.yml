@@ -1,0 +1,158 @@
+# ============================================
+# 灵值生态园 - Docker Compose 配置
+# Lingzhi Ecosystem - Docker Compose Configuration
+# ============================================
+
+version: '3.8'
+
+services:
+  # Flask 应用服务
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lingzhi-ecosystem-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      - FLASK_ENV=${FLASK_ENV:-production}
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - DATABASE_PATH=/app/data/lingzhi_ecosystem.db
+      - LOG_DIR=/app/logs
+      - COZE_WORKLOAD_IDENTITY_API_KEY=${COZE_WORKLOAD_IDENTITY_API_KEY}
+      - COZE_INTEGRATION_MODEL_BASE_URL=${COZE_INTEGRATION_MODEL_BASE_URL}
+      - COZE_INTEGRATION_BASE_URL=${COZE_INTEGRATION_BASE_URL}
+      - COZE_PROJECT_ID=${COZE_PROJECT_ID}
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    networks:
+      - lingzhi-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx 反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: lingzhi-ecosystem-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./public:/usr/share/nginx/html:ro
+    depends_on:
+      - app
+    networks:
+      - lingzhi-network
+
+  # Redis 缓存服务（可选）
+  redis:
+    image: redis:7-alpine
+    container_name: lingzhi-ecosystem-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - lingzhi-network
+    command: redis-server --appendonly yes
+
+  # PostgreSQL 数据库（可选，用于生产环境）
+  postgres:
+    image: postgres:15-alpine
+    container_name: lingzhi-ecosystem-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=lingzhi_ecosystem
+      - POSTGRES_USER=lingzhi_user
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - lingzhi-network
+
+  # 数据库备份服务（定时备份）
+  backup:
+    image: alpine:latest
+    container_name: lingzhi-ecosystem-backup
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data:ro
+      - ./backups:/app/backups
+    command: |
+      sh -c "
+      apk add --no-cache curl
+      while true; do
+        sleep 86400
+        echo 'Creating backup...'
+        cp /app/data/lingzhi_ecosystem.db /app/backups/backup_$$(date +%Y%m%d_%H%M%S).db
+        find /app/backups -name 'backup_*.db' -mtime +7 -delete
+      done
+      "
+    networks:
+      - lingzhi-network
+
+  # 监控服务 - Prometheus（可选）
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: lingzhi-ecosystem-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - lingzhi-network
+
+  # 监控服务 - Grafana（可选）
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lingzhi-ecosystem-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_SERVER_ROOT_URL=http://localhost:3001
+    depends_on:
+      - prometheus
+    networks:
+      - lingzhi-network
+
+networks:
+  lingzhi-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

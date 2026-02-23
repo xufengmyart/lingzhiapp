@@ -1,0 +1,51 @@
+[Unit]
+Description=Flask Application - MeiyueArt Ecosystem
+Documentation=https://meiyueart.com
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/var/www/meiyueart/backend
+
+# 环境变量
+Environment="PATH=/var/www/meiyueart/backend/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="FLASK_ENV=production"
+Environment="FLASK_DEBUG=0"
+Environment="PYTHONUNBUFFERED=1"
+
+# 启动命令
+ExecStart=/var/www/meiyueart/backend/venv/bin/python app.py
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s TERM $MAINPID
+
+# 自动重启配置
+Restart=always
+RestartSec=10s
+StartLimitInterval=60s
+StartLimitBurst=5
+
+# 安全配置
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/meiyueart/backend
+ReadWritePaths=/var/log
+ReadWritePaths=/tmp
+
+# 资源限制
+LimitNOFILE=65536
+LimitNPROC=4096
+MemoryMax=1G
+CPUQuota=100%
+
+# 日志配置
+StandardOutput=append:/var/log/flask-app.log
+StandardError=append:/var/log/flask-app-error.log
+SyslogIdentifier=flask-app
+
+[Install]
+WantedBy=multi-user.target

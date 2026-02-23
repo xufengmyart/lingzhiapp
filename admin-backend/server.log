@@ -1,0 +1,293 @@
+✅ 配置加载成功: ./lingzhi_ecosystem.db
+✅ 环境变量已加载: /workspace/projects/admin-backend/.env
+[配置] 数据库路径: ./lingzhi_ecosystem.db
+[配置] JWT过期时间: 86400秒
+✓ coze_coding_dev_sdk 已加载，智能对话功能可用
+[DEBUG] conversation_memory loaded: BASE_DIR=/workspace/projects/admin-backend, DB_PATH=/workspace/projects/admin-backend/lingzhi_ecosystem.db, exists=True
+✅ 对话记忆系统已加载
+✅ 记忆系统表初始化完成
+✅ 用户旅程系统已加载
+✅ 用户旅程表初始化完成
+✅ 环境变量已加载: /workspace/projects/admin-backend/.env
+✅ 统一认证系统已加载
+✅ 商家服务系统已加载
+✅ 商家相关表初始化成功
+✅ 商家表已有 10 条数据，跳过初始化
+✅ 对话记忆 API 已注册
+✅ 用户旅程 API 已注册
+✅ 统一认证 API 已注册
+✅ 用户资料编辑 API 已注册
+✅ 贡献值系统 API 已注册
+✅ 商家功能 API 已注册
+✅ 专家功能 API 已注册
+✅ 文化圣地 API 已注册
+✅ 美学侦探任务 API 已注册
+✅ 数字资产 API 已注册
+✅ 用户反馈 API 已注册
+✅ 数据分析 API 已注册
+✅ 导航配置 API 已注册
+✅ 用户引导文档 API 已注册
+⚠️  agent_enhanced 模块不可用
+✅ 智能体聊天 API 蓝图已加载
+✅ 智能体聊天 API 已注册
+✅ 知识库 API 蓝图已加载
+✅ 知识库 API 已注册
+✅ 用户系统 API 蓝图已加载
+✅ 用户系统 API 已注册
+✅ 综合功能 API 蓝图已加载
+✅ 综合功能 API 已注册
+✅ 微信小程序登录 API 已注册
+✅ 对话计费 API 已注册
+静态文件目录: /workspace/projects/admin-backend/../public
+[配置] BASE_DIR: /workspace/projects/admin-backend
+[数据库初始化] 数据库路径: ./lingzhi_ecosystem.db
+============================================================
+开始初始化数据库...
+============================================================
+[数据库初始化] 所有表已存在
+[数据库初始化] 默认数据初始化完成
+============================================================
+✅ 数据库初始化完成
+============================================================
+✅ 数据库初始化成功
+管理员账号密码已更新: admin / 123456
+用户登录账号密码已更新: admin / 123456
+旧数据库不存在，跳过迁移
+扩展功能表创建成功
+扩展功能初始化完成
+✅ 扩展功能初始化成功
+==================================================
+灵值生态园 API 服务启动中...
+==================================================
+服务地址: http://0.0.0.0:8080
+默认管理员账号: admin / admin123
+==================================================
+正在备份数据库...
+数据库备份成功: /workspace/projects/admin-backend/backups/lingzhi_ecosystem_backup_20260215_153332.db
+✅ 分红池 API 路由已注册
+✅ 商家资源池 API 已注册
+✅ 安全推荐码 API 路由已注册
+✅ 环境变量已加载: /workspace/projects/admin-backend/.env
+[配置] 数据库路径: ./lingzhi_ecosystem.db
+[配置] JWT过期时间: 86400秒
+✓ coze_coding_dev_sdk 已加载，智能对话功能可用
+✅ 对话记忆系统已加载
+✅ 用户旅程系统已加载
+✅ 用户旅程表初始化完成
+✅ 统一认证系统已加载
+✅ 商家服务系统已加载
+✅ 商家相关表初始化成功
+✅ 商家表已有 10 条数据，跳过初始化
+✅ 对话记忆 API 已注册
+✅ 用户旅程 API 已注册
+✅ 统一认证 API 已注册
+✅ 用户资料编辑 API 已注册
+✅ 贡献值系统 API 已注册
+✅ 商家功能 API 已注册
+✅ 专家功能 API 已注册
+✅ 文化圣地 API 已注册
+✅ 美学侦探任务 API 已注册
+✅ 数字资产 API 已注册
+✅ 用户反馈 API 已注册
+✅ 数据分析 API 已注册
+✅ 导航配置 API 已注册
+✅ 用户引导文档 API 已注册
+✅ 智能体聊天 API 已注册
+✅ 知识库 API 已注册
+✅ 用户系统 API 已注册
+✅ 综合功能 API 已注册
+✅ 微信小程序登录 API 已注册
+✅ 对话计费 API 已注册
+静态文件目录: /workspace/projects/admin-backend/../public
+[配置] BASE_DIR: /workspace/projects/admin-backend
+[数据库初始化] 数据库路径: ./lingzhi_ecosystem.db
+============================================================
+开始初始化数据库...
+============================================================
+[数据库初始化] 所有表已存在
+[数据库初始化] 默认数据初始化完成
+============================================================
+✅ 数据库初始化完成
+============================================================
+✅ 数据库初始化成功
+管理员账号密码已更新: admin / 123456
+用户登录账号密码已更新: admin / 123456
+旧数据库不存在，跳过迁移
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8080
+ * Running on http://169.254.99.37:8080
+[33mPress CTRL+C to quit[0m
+[LOGIN_DEBUG] 收到登录请求: 127.0.0.1, curl/8.5.0
+[LOGIN_DEBUG] 请求数据: {'username': 'admin', 'password': '123456'}
+[登录] 密码验证结果: 成功
+/workspace/projects/admin-backend/app.py:1172: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'exp': datetime.utcnow().timestamp() + JWT_EXPIRATION
+/workspace/projects/admin-backend/app.py:1727: DeprecationWarning: The default datetime adapter is deprecated as of Python 3.12; see the sqlite3 documentation for suggested replacement recipes
+  cursor.execute(
+127.0.0.1 - - [15/Feb/2026 15:36:41] "POST /api/login HTTP/1.1" 200 -
+[LOGIN_DEBUG] 收到登录请求: 127.0.0.1, curl/8.5.0
+[LOGIN_DEBUG] 请求数据: {'username': 'admin', 'password': '123456'}
+[登录] 密码验证结果: 成功
+127.0.0.1 - - [15/Feb/2026 15:36:50] "POST /api/login HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 15:36:54] "GET /api/admin/agents HTTP/1.1" 200 -
+╭──────────────────────────────── HTTP Request ────────────────────────────────╮
+│ POST https://integration.coze.cn/v1/knowledge_base/recall                    │
+│                                                                              │
+│ Headers:                                                                     │
+│   x-coze-token: Bearer                                                       │
+│ WU9RNGFQTmZTc3VnbnRCMmsyWUtDcDZHOWJMa0g5ZVk6NVN5cHNRbkNidjFzWHNEVnJ4UTZKQlN1 │
+│ SUxYMlU3ZEtidVRXbDYwWDFyZW9sdmhQbTU1QVdQaVJHcVo4b1BoWA==                     │
+│   Content-Type: application/json                                             │
+│   Authorization: Bearer WU9RNGFQ...WA==                                      │
+│   X-Client-Sdk: coze-coding-dev-sdk-python/0.5.0                             │
+│                                                                              │
+│ Body:                                                                        │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+{                                                                               
+  "query": "你好",                                                              
+  "top_k": 3,                                                                   
+  "min_score": 0.3                                                              
+}                                                                               
+
+╭─────────────────────────────── HTTP Response ────────────────────────────────╮
+│ Status: 200 OK                                                               │
+│                                                                              │
+│ Response Headers:                                                            │
+│   Server: volc-dcdn                                                          │
+│   Content-Type: application/json                                             │
+│   Transfer-Encoding: chunked                                                 │
+│   Connection: keep-alive                                                     │
+│   Date: Sun, 15 Feb 2026 07:37:01 GMT                                        │
+│   Vary: Accept-Encoding                                                      │
+│   X-Tt-Logid: 2026021515365900502B59E1D8356900D7                             │
+│   Server-Timing: inner; dur=2265, cdn-cache;desc=MISS, origin;dur=2297,      │
+│ edge;dur=0, tt_agw; dur=2253                                                 │
+│   x-envoy-response-flags: -                                                  │
+│   Strict-Transport-Security: max-age=31536000; includeSubDomains             │
+│   x-tt-trace-host:                                                           │
+│ 01e8ceb24e79a5140a1988c644decd1ef9b7fe25e69f69bf9281df03a35b494de0fa49039772 │
+│ be3c9773a82344dbf7a4ea7d94e5ac8ed6b07c73466b9c433299a56472e578e5788fa862f34f │
+│ c2e239b510f8939d80cfba7dc3cbeeeeb8c8982b74                                   │
+│   x-tt-trace-tag: id=5                                                       │
+│   x-tt-trace-id: 00-603b39c2030109433f9102b557dc0000-603b39c203010943-01     │
+│   X-TT-TIMESTAMP: 1771141021.969                                             │
+│   Content-Encoding: gzip                                                     │
+│   via: n36-150-033-036.lygcm02-container.Creative                            │
+│   x-request-ip: 115.190.218.237                                              │
+│   x-dsa-trace-id: 177114101901b2335cad7e4e3f96fbf00482357c64                 │
+│   X-Dsa-Origin-Status: 200                                                   │
+│                                                                              │
+│ Body:                                                                        │
+╰──────────────────────────────────────────────────────────────────────────────╯
+{                                                                               
+  "code": 0,                                                                    
+  "data": [                                                                     
+    {                                                                           
+      "chunk_id": "7597965239014981674",                                        
+      "doc_id": "7597853762991996954",                                          
+      "score": 0.4999062487320437,                                              
+      "slice": "---"                                                            
+    },                                                                          
+    {                                                                           
+      "chunk_id": "7597965239015096362",                                        
+      "doc_id": "7597853762991996954",                                          
+      "score": 0.4996856573557653,                                              
+      "slice": "---"                                                            
+    },                                                                          
+    {                                                                           
+      "chunk_id": "7597964248177704987",                                        
+      "doc_id": "7597943330432909366",                                          
+      "score": 0.49918791818492336,                                             
+      "slice": "---"                                                            
+    }                                                                           
+  ],                                                                            
+  "msg": ""                                                                     
+}                                                                               
+
+2026-02-15 15:37:02,007 cozeloop._noop _noop.py:67 [WARNING] [cozeloop] Noop client not supported. Invalid parameter. workspace_id is required.
+2026-02-15 15:37:02,008 cozeloop._noop _noop.py:67 [WARNING] [cozeloop] Noop client not supported. Invalid parameter. workspace_id is required.
+保存对话记录失败: table conversations has no column named messages
+127.0.0.1 - - [15/Feb/2026 15:37:53] "POST /api/agent/chat HTTP/1.1" 200 -
+╭──────────────────────────────── HTTP Request ────────────────────────────────╮
+│ POST https://integration.coze.cn/v1/knowledge_base/recall                    │
+│                                                                              │
+│ Headers:                                                                     │
+│   x-coze-token: Bearer                                                       │
+│ WU9RNGFQTmZTc3VnbnRCMmsyWUtDcDZHOWJMa0g5ZVk6NVN5cHNRbkNidjFzWHNEVnJ4UTZKQlN1 │
+│ SUxYMlU3ZEtidVRXbDYwWDFyZW9sdmhQbTU1QVdQaVJHcVo4b1BoWA==                     │
+│   Content-Type: application/json                                             │
+│   Authorization: Bearer WU9RNGFQ...WA==                                      │
+│   X-Client-Sdk: coze-coding-dev-sdk-python/0.5.0                             │
+│                                                                              │
+│ Body:                                                                        │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+{                                                                               
+  "query": "介绍你的公司",                                                      
+  "top_k": 3,                                                                   
+  "min_score": 0.3                                                              
+}                                                                               
+
+╭─────────────────────────────── HTTP Response ────────────────────────────────╮
+│ Status: 200 OK                                                               │
+│                                                                              │
+│ Response Headers:                                                            │
+│   Server: Tengine                                                            │
+│   Content-Type: application/json                                             │
+│   Transfer-Encoding: chunked                                                 │
+│   Connection: keep-alive                                                     │
+│   Date: Sun, 15 Feb 2026 07:37:59 GMT                                        │
+│   Vary: Accept-Encoding                                                      │
+│   X-Tt-Logid: 20260215153758E71EBA93274E4B7A030A                             │
+│   Server-Timing: inner; dur=213,tt_agw; dur=207,                             │
+│ cdn-cache;desc=MISS,edge;dur=69,origin;dur=227                               │
+│   x-envoy-response-flags: -                                                  │
+│   Strict-Transport-Security: max-age=31536000; includeSubDomains             │
+│   x-tt-trace-host:                                                           │
+│ 01047e6dcdbde7abbb1d6e10d3c575d75fd37b0fe623cc793eb1ba0662342fd39c3af14c578d │
+│ 78e8df766da12489d4a89437282741028f885cae0deb3dbb1e97b40a142b3f1e07c636ccbcc6 │
+│ 0eeecfd493df166dbccc8a85847bc2cc66266ae618                                   │
+│   x-tt-trace-tag: id=03;cdn-cache=miss;type=dyn                              │
+│   x-tt-trace-id: 00-260215153758E71EBA93274E4B7A030A-7015E44A87D6CD1C-00     │
+│   X-TT-TIMESTAMP: 1771141079.004                                             │
+│   Content-Encoding: gzip                                                     │
+│   Via: ens-cache16.l2nu20-20[227,0], cache18.cn7954[296,0]                   │
+│   Timing-Allow-Origin: *                                                     │
+│   EagleId: dcb5af2617711410787405779e                                        │
+│                                                                              │
+│ Body:                                                                        │
+╰──────────────────────────────────────────────────────────────────────────────╯
+{                                                                               
+  "code": 0,                                                                    
+  "data": [                                                                     
+    {                                                                           
+      "chunk_id": "7597953458599149618",                                        
+      "doc_id": "7597953458599116850",                                          
+      "score": 0.48247969292389437,                                             
+      "slice": "简      介"                                                     
+    },                                                                          
+    {                                                                           
+      "chunk_id": "7597904741087248422",                                        
+      "doc_id": "7597814285552631823",                                          
+      "score": 0.4821692479515023,                                              
+      "slice": "简      介"                                                     
+    },                                                                          
+    {                                                                           
+      "chunk_id": "7597953458599166002",                                        
+      "doc_id": "7597953458599116850",                                          
+      "score": 0.46302587283366814,                                             
+      "slice": "我们是谁"                                                       
+    }                                                                           
+  ],                                                                            
+  "msg": ""                                                                     
+}                                                                               
+
+2026-02-15 15:37:59,051 cozeloop._noop _noop.py:67 [WARNING] [cozeloop] Noop client not supported. Invalid parameter. workspace_id is required.
+2026-02-15 15:37:59,053 cozeloop._noop _noop.py:67 [WARNING] [cozeloop] Noop client not supported. Invalid parameter. workspace_id is required.
+保存对话记录失败: table conversations has no column named messages
+127.0.0.1 - - [15/Feb/2026 15:38:44] "POST /agent/chat HTTP/1.1" 200 -
+127.0.0.1 - - [15/Feb/2026 15:39:59] "GET /api/admin/agents HTTP/1.1" 200 -

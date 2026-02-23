@@ -1,0 +1,74 @@
+<!--pages/user/profile/profile.wxml-->
+<view class="container">
+  <!-- 用户头部信息 -->
+  <view class="user-header">
+    <view class="avatar-wrapper" bindtap="handleAvatarUpload">
+      <image
+        class="avatar"
+        src="{{userInfo.avatarUrl || '/images/default-avatar.png'}}"
+        mode="aspectFill"
+      ></image>
+      <view class="avatar-edit">
+        <image class="edit-icon" src="/images/icon-edit.png"></image>
+      </view>
+    </view>
+    <view class="user-info">
+      <text class="user-name">{{userInfo.username || '未登录'}}</text>
+      <text class="user-real-name" wx:if="{{userInfo.realName}}">{{userInfo.realName}}</text>
+    </view>
+  </view>
+
+  <!-- 灵值卡片 -->
+  <view class="lingzhi-card">
+    <view class="lingzhi-value">{{userInfo.totalLingzhi || 0}}</view>
+    <view class="lingzhi-label">我的灵值</view>
+  </view>
+
+  <!-- 菜单列表 -->
+  <view class="menu-list">
+    <view class="menu-item" bindtap="navigateToEditProfile">
+      <view class="menu-content">
+        <image class="menu-icon" src="/images/icon-user-info.png"></image>
+        <text class="menu-text">个人资料</text>
+      </view>
+      <image class="menu-arrow" src="/images/icon-arrow-right.png"></image>
+    </view>
+
+    <view class="menu-item" bindtap="navigateToChangePassword">
+      <view class="menu-content">
+        <image class="menu-icon" src="/images/icon-password.png"></image>
+        <text class="menu-text">修改密码</text>
+      </view>
+      <image class="menu-arrow" src="/images/icon-arrow-right.png"></image>
+    </view>
+
+    <view class="menu-item" bindtap="navigateToReferral">
+      <view class="menu-content">
+        <image class="menu-icon" src="/images/icon-referral.png"></image>
+        <text class="menu-text">推荐人信息</text>
+      </view>
+      <image class="menu-arrow" src="/images/icon-arrow-right.png"></image>
+    </view>
+
+    <view class="menu-item" bindtap="navigateToNotifications">
+      <view class="menu-content">
+        <image class="menu-icon" src="/images/icon-notification.png"></image>
+        <text class="menu-text">消息通知</text>
+      </view>
+      <image class="menu-arrow" src="/images/icon-arrow-right.png"></image>
+    </view>
+
+    <view class="menu-item" bindtap="navigateToAbout">
+      <view class="menu-content">
+        <image class="menu-icon" src="/images/icon-about.png"></image>
+        <text class="menu-text">关于我们</text>
+      </view>
+      <image class="menu-arrow" src="/images/icon-arrow-right.png"></image>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view class="logout-btn">
+    <button class="btn btn-danger btn-block" bindtap="handleLogout">退出登录</button>
+  </view>
+</view>

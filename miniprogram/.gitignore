@@ -1,0 +1,39 @@
+# 依赖
+node_modules/
+package-lock.json
+
+# 密钥文件（重要！）
+keys/
+*.key
+
+# 日志
+logs/
+*.log
+
+# 临时文件
+tmp/
+temp/
+*.tmp
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 微信开发者工具
+.project.config.json
+.project.private.config.json
+
+# 构建产物
+preview-qrcode.jpg
+preview-qrcode.png
+dist/
+
+# 调试文件
+*.cache

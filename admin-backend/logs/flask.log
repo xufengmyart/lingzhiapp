@@ -1,0 +1,73 @@
+✅ 配置加载成功: /workspace/projects/admin-backend/data/lingzhi_ecosystem.db
+✅ 环境变量已加载: /workspace/projects/admin-backend/.env
+[配置] 数据库路径: /workspace/projects/admin-backend/data/lingzhi_ecosystem.db
+[配置] JWT过期时间: 604800秒
+
+🔧 初始化中间件...
+✅ JWT 认证中间件已初始化
+✅ 错误处理器已注册
+✅ 请求日志中间件已注册
+✅ 响应转换中间件已注册
+上传文件目录: /workspace/projects/admin-backend/uploads
+
+📦 开始注册路由模块...
+✅ API路径兼容 已注册
+⚠️  认证系统模块加载失败: No module named 'bcrypt'
+⚠️  管理员功能模块加载失败: No module named 'bcrypt'
+✅ 推荐系统 API 已注册
+✅ 签到系统 API 已注册
+✅ 充值系统 API 已注册
+⚠️  对话记忆系统模块加载失败: No module named 'conversation_memory'
+⚠️  用户旅程系统模块加载失败: No module named 'user_journey'
+⚠️  统一认证系统模块加载失败: No module named 'unified_auth'
+⚠️  商家服务系统模块加载失败: No module named 'merchant_service'
+⚠️  用户资料编辑模块加载失败: No module named 'bcrypt'
+⚠️  贡献值系统模块加载失败: No module named 'bcrypt'
+⚠️  商家功能模块加载失败: No module named 'bcrypt'
+⚠️  专家功能模块加载失败: No module named 'bcrypt'
+✅ 文化圣地 API 已注册
+✅ 美学侦探任务 API 已注册
+✅ 数字资产 API 已注册
+✅ 用户反馈 API 已注册
+✅ 数据分析 API 已注册
+✅ 导航配置 API 已注册
+✅ 用户引导文档 API 已注册
+⚠️  agent_enhanced 模块不可用
+✅ 智能体聊天 API 蓝图已加载
+✅ 智能体聊天 API 已注册
+✅ 知识库 API 蓝图已加载
+✅ 知识库 API 已注册
+✅ 用户系统 API 蓝图已加载
+✅ 用户系统 API 已注册
+✅ 综合功能 API 蓝图已加载
+✅ 综合功能 API 已注册
+✅ 微信小程序登录 API 已注册
+✅ 对话计费 API 已注册
+✅ 动态资讯 API 已注册
+⚠️  中视频项目模块加载失败: No module named 'medium_video_api'
+⚠️  推荐关系网络模块加载失败: No module named 'referral_network_api'
+⚠️  合伙人招募模块加载失败: No module named 'partner_api'
+✅ API路径兼容 API 已注册
+✅ 综合功能 API 已注册
+⚠️  头像上传模块加载失败: No module named 'bcrypt'
+✅ 公司信息管理 API 已注册
+✅ 公司项目管理 API 已注册
+✅ 角色管理 API 已注册
+✅ 用户资源管理 API 已注册
+✅ 分红池管理 API 已注册
+✅ 管理员统计 API 已注册
+
+✅ 所有路由模块注册完成！
+
+ * Serving Flask app 'app.py'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://169.254.96.56:5000
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [19/Feb/2026 16:57:25] "GET /api/checkin/status HTTP/1.1" 200 -
+127.0.0.1 - - [19/Feb/2026 16:57:28] "[33mGET /api/checkin/history?days=7 HTTP/1.1[0m" 404 -
+127.0.0.1 - - [19/Feb/2026 16:57:28] "[33mGET /api/company/info HTTP/1.1[0m" 404 -
+127.0.0.1 - - [19/Feb/2026 16:57:28] "[33mGET /api/company/projects HTTP/1.1[0m" 404 -
+127.0.0.1 - - [19/Feb/2026 16:57:28] "[33mGET /api/user/info HTTP/1.1[0m" 404 -

@@ -1,0 +1,10 @@
+{
+  "version": "20260222-1121",
+  "buildTime": "2026-02-22T03:21:45.446Z",
+  "gitCommit": "4f37e40",
+  "gitBranch": "main",
+  "gitTag": "",
+  "gitMessage": "fix: 修复用户编辑500错误、添加身份证银行账号字段、验证充值功能并完成部署",
+  "builder": "system",
+  "environment": "production"
+}

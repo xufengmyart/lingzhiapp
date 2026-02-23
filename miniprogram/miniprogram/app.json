@@ -1,0 +1,57 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/auth/login/login",
+    "pages/auth/register/register",
+    "pages/resources/list/list",
+    "pages/resources/detail/detail",
+    "pages/resources/create/create",
+    "pages/user/profile/profile",
+    "pages/tasks/list/list",
+    "pages/tasks/detail/detail",
+    "pages/projects/list/list",
+    "pages/projects/detail/detail",
+    "pages/notifications/list/list"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#fff",
+    "navigationBarTitleText": "灵值生态园",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f5f5"
+  },
+  "tabBar": {
+    "color": "#666666",
+    "selectedColor": "#1890ff",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "images/home.png",
+        "selectedIconPath": "images/home-active.png"
+      },
+      {
+        "pagePath": "pages/resources/list/list",
+        "text": "资源",
+        "iconPath": "images/resources.png",
+        "selectedIconPath": "images/resources-active.png"
+      },
+      {
+        "pagePath": "pages/tasks/list/list",
+        "text": "任务",
+        "iconPath": "images/tasks.png",
+        "selectedIconPath": "images/tasks-active.png"
+      },
+      {
+        "pagePath": "pages/user/profile/profile",
+        "text": "我的",
+        "iconPath": "images/user.png",
+        "selectedIconPath": "images/user-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

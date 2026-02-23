@@ -1,0 +1,203 @@
+/* pages/index/index.wxss */
+
+.banner {
+  position: relative;
+  width: 100%;
+  height: 400rpx;
+  overflow: hidden;
+}
+
+.banner-image {
+  width: 100%;
+  height: 100%;
+}
+
+.banner-text {
+  position: absolute;
+  bottom: 40rpx;
+  left: 40rpx;
+  color: #fff;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.3);
+}
+
+.banner-title {
+  display: block;
+  font-size: 48rpx;
+  font-weight: bold;
+  margin-bottom: 16rpx;
+}
+
+.banner-subtitle {
+  display: block;
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+/* 快捷入口 */
+.quick-actions {
+  display: flex;
+  justify-content: space-around;
+  padding: 40rpx 20rpx;
+  background-color: #fff;
+  margin-bottom: 20rpx;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.action-icon {
+  width: 96rpx;
+  height: 96rpx;
+  margin-bottom: 16rpx;
+}
+
+.action-text {
+  font-size: 24rpx;
+  color: #333;
+}
+
+/* 卡片 */
+.card {
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.card-action {
+  font-size: 24rpx;
+  color: #1890ff;
+}
+
+.card-body {
+  padding: 0;
+}
+
+/* 灵值信息 */
+.lingzhi-info {
+  text-align: center;
+  padding: 20rpx 0;
+}
+
+.lingzhi-value {
+  display: block;
+  font-size: 64rpx;
+  font-weight: bold;
+  color: #1890ff;
+  margin-bottom: 8rpx;
+}
+
+.lingzhi-label {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+}
+
+.lingzhi-tips {
+  text-align: center;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.lingzhi-tips text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 资源列表 */
+.resource-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.resource-item {
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.resource-item:last-child {
+  border-bottom: none;
+}
+
+.resource-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.resource-name {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  flex: 1;
+}
+
+.resource-tag {
+  margin-left: 16rpx;
+}
+
+.resource-desc {
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 16rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resource-meta {
+  display: flex;
+  justify-content: space-between;
+}
+
+.meta-text {
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* 公告列表 */
+.notice-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.notice-item {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.notice-item:last-child {
+  border-bottom: none;
+}
+
+.notice-title {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 8rpx;
+}
+
+.notice-time {
+  display: block;
+  font-size: 22rpx;
+  color: #999;
+}

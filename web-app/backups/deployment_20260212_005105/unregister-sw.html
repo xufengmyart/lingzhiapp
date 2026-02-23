@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卸载 Service Worker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+        }
+        h1 {
+            color: #4F46E5;
+            margin-bottom: 20px;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        button {
+            background-color: #4F46E5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #3B82F6;
+        }
+        button:disabled {
+            background-color: #9CA3AF;
+            cursor: not-allowed;
+        }
+        .step {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f9fafb;
+            border-radius: 4px;
+            text-align: left;
+        }
+        .step strong {
+            color: #4F46E5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 卸载 Service Worker</h1>
+        <p>此页面将卸载所有 Service Worker 并清除所有缓存</p>
+
+        <div id="status" class="status">准备就绪</div>
+
+        <div class="steps">
+            <div class="step"><strong>步骤 1：</strong>清除所有缓存</div>
+            <div class="step"><strong>步骤 2：</strong>卸载所有 Service Worker</div>
+            <div class="step"><strong>步骤 3：</strong>清除本地存储</div>
+            <div class="step"><strong>步骤 4：</strong>重定向到主页</div>
+        </div>
+
+        <button id="unregisterBtn" onclick="unregisterAll()">立即卸载</button>
+        <button onclick="goHome()">返回主页</button>
+
+        <script>
+            const statusDiv = document.getElementById('status');
+            const unregisterBtn = document.getElementById('unregisterBtn');
+
+            function updateStatus(message, isError = false) {
+                statusDiv.textContent = message;
+                statusDiv.className = isError ? 'status error' : 'status';
+                console.log('[卸载 Service Worker]', message);
+            }
+
+            async function unregisterAll() {
+                unregisterBtn.disabled = true;
+                updateStatus('开始卸载...');
+
+                try {
+                    // 步骤 1: 清除所有缓存
+                    updateStatus('步骤 1: 清除所有缓存...');
+                    if ('caches' in window) {
+                        const cacheNames = await caches.keys();
+                        await Promise.all(
+                            cacheNames.map(cacheName => caches.delete(cacheName))
+                        );
+                        console.log('已清除缓存:', cacheNames);
+                    }
+
+                    // 步骤 2: 卸载所有 Service Worker
+                    updateStatus('步骤 2: 卸载所有 Service Worker...');
+                    if ('serviceWorker' in navigator) {
+                        const registrations = await navigator.serviceWorker.getRegistrations();
+                        for (const registration of registrations) {
+                            await registration.unregister();
+                            console.log('已卸载 Service Worker:', registration.scope);
+                        }
+                    }
+
+                    // 步骤 3: 清除本地存储
+                    updateStatus('步骤 3: 清除本地存储...');
+                    localStorage.clear();
+                    sessionStorage.clear();
+
+                    // 清除所有 cookies
+                    document.cookie.split(";").forEach(function(c) {
+                        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                    });
+
+                    // 步骤 4: 重定向到主页
+                    updateStatus('步骤 4: 正在跳转到主页...');
+                    console.log('所有清理完成，准备跳转');
+
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+
+                } catch (error) {
+                    console.error('卸载失败:', error);
+                    updateStatus('卸载失败: ' + error.message, true);
+                    unregisterBtn.disabled = false;
+                }
+            }
+
+            function goHome() {
+                window.location.href = '/';
+            }
+
+            // 自动检测是否需要卸载
+            window.addEventListener('load', async () => {
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    if (registrations.length > 0) {
+                        updateStatus(`发现 ${registrations.length} 个 Service Worker，建议卸载`);
+                    } else {
+                        updateStatus('未发现 Service Worker，可以直接使用');
+                    }
+                } else {
+                    updateStatus('浏览器不支持 Service Worker');
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>

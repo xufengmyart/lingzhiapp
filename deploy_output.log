@@ -1,0 +1,218 @@
+=========================================
+🚀 灵值生态园 - 一键全自动部署
+=========================================
+
+📋 步骤 1/6: 清理云服务器垃圾...
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Warning: Permanently added 'meiyueart.com' (ED25519) to the list of known hosts.
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-88-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Feb 22 04:08:09 PM CST 2026
+
+  System load:  0.0                Processes:             120
+  Usage of /:   56.0% of 39.01GB   Users logged in:       0
+  Memory usage: 31%                IPv4 address for eth0: 172.16.107.129
+  Swap usage:   0%
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+42 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+2 updates could not be installed automatically. For more details,
+see /var/log/unattended-upgrades/unattended-upgrades.log
+
+
+Welcome to Alibaba Cloud Elastic Compute Service !
+
+✅ 云服务器垃圾清理完成
+[0;32m✅ 云服务器垃圾清理完成[0m
+
+📋 步骤 2/6: 备份生产环境...
+✅ 备份完成
+[0;32m✅ 生产环境备份完成[0m
+
+📋 步骤 3/6: 上传后端代码...
+✅ .env 文件已更新为生产路径
+✅ 生产数据库已备份到 /tmp/production_database_backup.db
+✅ 生产数据库已恢复
+✅ 代码上传完成
+[0;32m✅ 后端代码上传完成[0m
+
+📋 步骤 4/6: 保留生产环境数据库...
+[0;32m✅ 保留生产环境数据库（不覆盖）[0m
+
+📋 步骤 5/7: 部署前端代码...
+✅ 前端部署完成
+[0;32m✅ 前端代码部署完成[0m
+
+📋 步骤 6/7: 更新Nginx配置并重启后端服务...
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Welcome to Ubuntu 24.04.3 LTS (GNU/Linux 6.8.0-88-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Feb 22 04:08:09 PM CST 2026
+
+  System load:  0.0                Processes:             120
+  Usage of /:   56.0% of 39.01GB   Users logged in:       0
+  Memory usage: 31%                IPv4 address for eth0: 172.16.107.129
+  Swap usage:   0%
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+42 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+2 updates could not be installed automatically. For more details,
+see /var/log/unattended-upgrades/unattended-upgrades.log
+
+
+Welcome to Alibaba Cloud Elastic Compute Service !
+
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "meiyueart.com" on 0.0.0.0:80, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "meiyueart.com" on 0.0.0.0:80, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "www.meiyueart.com" on 0.0.0.0:80, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "123.56.142.143" on 0.0.0.0:80, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "meiyueart.com" on 0.0.0.0:80, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "123.56.142.143" on 0.0.0.0:80, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "meiyueart.com" on 0.0.0.0:80, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "www.meiyueart.com" on 0.0.0.0:80, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "meiyueart.com" on 0.0.0.0:80, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "123.56.142.143" on 0.0.0.0:80, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "meiyueart.com" on 0.0.0.0:443, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "www.meiyueart.com" on 0.0.0.0:443, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "123.56.142.143" on 0.0.0.0:443, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "meiyueart.com" on 0.0.0.0:443, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "www.meiyueart.com" on 0.0.0.0:443, ignored
+2026/02/22 16:08:34 [warn] 316498#316498: conflicting server name "123.56.142.143" on 0.0.0.0:443, ignored
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+🔧 开始彻底清理数据库锁定...
+停止所有Python进程...
+清理残留进程...
+清理数据库锁定文件...
+修复数据库文件权限...
+✅ 数据库锁定文件清理完成
+最终检查并清理残留进程...
+等待数据库完全释放锁定...
+🔧 执行紧急密码修复...
+⚠️  警告: 备份目录不存在，将自动创建: /app/meiyueart-backend/data/backups
+✅ 配置加载成功: /app/meiyueart-backend/data/lingzhi_ecosystem.db
+=== 紧急修复用户密码 ===
+
+步骤 1: 查询所有用户...
+找到 11 个用户
+
+步骤 2: 生成密码123的哈希...
+密码哈希: scrypt:32768:8:1$xGse40TH7BluirlW$ac5cfc94f40b4e63...
+哈希长度: 162
+
+步骤 3: 重置所有用户密码为123...
+  ✓ 重置用户 许锋 (ID: 1)
+  ✓ 重置用户 admin (ID: 10)
+  ✓ 重置用户 许蓝月 (ID: 1024)
+  ✓ 重置用户 许韩玲 (ID: 1028)
+  ✓ 重置用户 黄爱莉 (ID: 1031)
+  ✓ 重置用户 许武勤 (ID: 1032)
+  ✓ 重置用户 弓俊芳 (ID: 1033)
+  ✓ 重置用户 许芳侠 (ID: 1034)
+  ✓ 重置用户 许明芳 (ID: 1035)
+  ✓ 重置用户 许秀芳 (ID: 1036)
+  ✓ 重置用户 马伟娟 (ID: 1037)
+
+已重置 11 个用户的密码
+
+步骤 4: 验证密码哈希...
+
+修复后的用户列表:
+------------------------------------------------------------
+ID    用户名            哈希长度      
+------------------------------------------------------------
+1     许锋             162       
+10    admin          162       
+1024  许蓝月            162       
+1028  许韩玲            162       
+1031  黄爱莉            162       
+1032  许武勤            162       
+1033  弓俊芳            162       
+1034  许芳侠            162       
+1035  许明芳            162       
+1036  许秀芳            162       
+1037  马伟娟            162       
+------------------------------------------------------------
+
+验证密码哈希:
+  许锋: ✅ 正确 (哈希长度: 162)
+  admin: ✅ 正确 (哈希长度: 162)
+  许蓝月: ✅ 正确 (哈希长度: 162)
+  许韩玲: ✅ 正确 (哈希长度: 162)
+  黄爱莉: ✅ 正确 (哈希长度: 162)
+  许武勤: ✅ 正确 (哈希长度: 162)
+  弓俊芳: ✅ 正确 (哈希长度: 162)
+  许芳侠: ✅ 正确 (哈希长度: 162)
+  许明芳: ✅ 正确 (哈希长度: 162)
+  许秀芳: ✅ 正确 (哈希长度: 162)
+  马伟娟: ✅ 正确 (哈希长度: 162)
+
+检查重复哈希:
+  ✓ 所有用户密码哈希正常
+
+✅ 紧急修复完成！
+
+测试账号:
+  - 所有用户密码: 123
+  - 总用户数: 11
+✅ 密码修复完成
+启动后端服务...
+✅ 后端服务启动成功 (端口 5000)
+[0;32m✅ Nginx配置更新完成[0m
+[0;32m✅ 后端服务重启完成[0m
+
+📋 步骤 7/7: 验证部署...
+[0;32m✅ 健康检查通过[0m
+[0;32m✅ 管理员登录测试通过[0m
+[0;32m✅ 用户登录测试通过[0m
+
+=========================================
+[0;32m✅ 部署完成！[0m
+=========================================
+
+📊 部署信息：
+  - 服务器: meiyueart.com
+  - 后端: /app/meiyueart-backend
+  - 备份: /var/www/backups/backend_backup_20260222_160809.tar.gz
+  - 时间: Sun Feb 22 16:09:53 CST 2026
+
+🔗 访问地址：
+  - 前端: https://meiyueart.com
+  - API: https://meiyueart.com/api
+
+👤 测试账号：
+  - 管理员: admin / 123
+  - 用户: 马伟娟 / 123
+

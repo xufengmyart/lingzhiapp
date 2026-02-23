@@ -1,0 +1,2 @@
+[2026-02-18 11:38:35,204] ERROR in __init__: 数据库初始化失败: (sqlite3.OperationalError) unable to open database file
+(Background on this error at: https://sqlalche.me/e/20/e3q8)

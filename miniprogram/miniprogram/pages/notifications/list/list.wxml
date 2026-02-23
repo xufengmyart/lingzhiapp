@@ -1,0 +1,6 @@
+<!--pages/notifications/list/list.wxml-->
+<view class="container">
+  <view class="empty">
+    <text>通知列表页开发中...</text>
+  </view>
+</view>

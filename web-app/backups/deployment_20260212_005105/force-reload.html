@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>强制刷新 - 灵值生态园</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 { color: #333; margin-bottom: 20px; }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 6px;
+            background: #f0f0f0;
+            text-align: left;
+            font-size: 14px;
+        }
+        .status-item {
+            margin: 8px 0;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 4px;
+        }
+        .status-item.done { color: #155724; }
+        .status-item.error { color: #721c24; }
+        .status-item.processing { color: #856404; }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        button:hover { opacity: 0.9; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #856404;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 强制刷新系统</h1>
+        <p style="color: #666; margin-bottom: 20px;">清除所有缓存并重新加载应用</p>
+        
+        <div id="status" class="status">
+            <div class="status-item processing">⏳ 等待开始...</div>
+        </div>
+        
+        <button id="refreshBtn" onclick="forceRefresh()">开始强制刷新</button>
+        
+        <div class="info">
+            <strong>说明：</strong><br>
+            此操作将清除：<br>
+            • 所有 Service Worker<br>
+            • 所有浏览器缓存<br>
+            • localStorage 和 sessionStorage<br>
+            • Cookies<br>
+            <br>
+            然后重新加载最新版本的应用。
+        </div>
+    </div>
+
+    <script>
+        function addStatus(message, type = 'processing') {
+            const statusDiv = document.getElementById('status');
+            const item = document.createElement('div');
+            item.className = `status-item ${type}`;
+            item.innerHTML = message;
+            statusDiv.appendChild(item);
+        }
+
+        async function forceRefresh() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            const statusDiv = document.getElementById('status');
+            
+            refreshBtn.disabled = true;
+            statusDiv.innerHTML = '';
+            
+            try {
+                // 1. 注销所有 Service Worker
+                addStatus('🔍 查找 Service Worker...', 'processing');
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    addStatus(`找到 ${registrations.length} 个 Service Worker`, 'processing');
+                    
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                        addStatus(`✅ 已注销 Service Worker: ${registration.scope}`, 'done');
+                    }
+                } else {
+                    addStatus('⚠️ 浏览器不支持 Service Worker', 'error');
+                }
+                
+                // 2. 清除 localStorage
+                addStatus('🗑️ 清除 localStorage...', 'processing');
+                localStorage.clear();
+                addStatus('✅ localStorage 已清空', 'done');
+                
+                // 3. 清除 sessionStorage
+                addStatus('🗑️ 清除 sessionStorage...', 'processing');
+                sessionStorage.clear();
+                addStatus('✅ sessionStorage 已清空', 'done');
+                
+                // 4. 清除 Cookies
+                addStatus('🗑️ 清除 Cookies...', 'processing');
+                document.cookie.split(";").forEach(function(c) {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+                addStatus('✅ Cookies 已清空', 'done');
+                
+                // 5. 清除缓存存储
+                addStatus('🗑️ 清除缓存存储...', 'processing');
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    addStatus(`找到 ${cacheNames.length} 个缓存`, 'processing');
+                    await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+                    addStatus('✅ 所有缓存已清空', 'done');
+                }
+                
+                // 6. 添加版本号避免缓存
+                addStatus('📝 准备加载新版本...', 'processing');
+                const version = Date.now();
+                const newUrl = window.location.origin + '/?v=' + version;
+                
+                addStatus('✅ 所有缓存已清除！', 'done');
+                addStatus('🚀 即将跳转到新版本...', 'processing');
+                
+                // 7. 延迟后跳转
+                setTimeout(() => {
+                    window.location.href = newUrl;
+                }, 2000);
+                
+            } catch (error) {
+                addStatus(`❌ 错误: ${error.message}`, 'error');
+                addStatus('💡 建议：请手动清除浏览器缓存后重试', 'processing');
+                refreshBtn.disabled = false;
+            }
+        }
+        
+        // 页面加载时自动执行
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromRefresh = urlParams.get('from') === 'refresh';
+            
+            if (!fromRefresh) {
+                // 自动开始刷新
+                setTimeout(() => {
+                    forceRefresh();
+                }, 1000);
+            } else {
+                addStatus('✅ 强制刷新已完成', 'done');
+                addStatus('👆 请点击上方按钮返回首页', 'processing');
+                document.getElementById('refreshBtn').textContent = '返回首页';
+                document.getElementById('refreshBtn').onclick = () => {
+                    window.location.href = '/?v=' + Date.now();
+                };
+            }
+        });
+    </script>
+</body>
+</html>

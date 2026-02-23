@@ -1,0 +1,88 @@
+[2026-02-19 13:30:42] [ERROR] [app] [app.py:875] - Exception on /uploads/avatars/675b37516ee74a31929b1ea3a8fcbfc1.png [HEAD]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 941, in finalize_request
+    response = self.process_response(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1319, in process_response
+    response = self.ensure_sync(func)(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/projects/admin-backend/middleware/request_logger.py", line 50, in after_request
+    f"Size: {len(response.get_data())} bytes"
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 281, in get_data
+    self._ensure_sequence()
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 329, in _ensure_sequence
+    raise RuntimeError(
+RuntimeError: Attempted implicit sequence conversion but the response object is in direct passthrough mode.
+[2026-02-19 13:30:50] [ERROR] [app] [app.py:875] - Exception on /uploads/avatars/675b37516ee74a31929b1ea3a8fcbfc1.png [GET]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 941, in finalize_request
+    response = self.process_response(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1319, in process_response
+    response = self.ensure_sync(func)(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/projects/admin-backend/middleware/request_logger.py", line 50, in after_request
+    f"Size: {len(response.get_data())} bytes"
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 281, in get_data
+    self._ensure_sequence()
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 329, in _ensure_sequence
+    raise RuntimeError(
+RuntimeError: Attempted implicit sequence conversion but the response object is in direct passthrough mode.
+[2026-02-19 13:30:52] [ERROR] [app] [app.py:875] - Exception on /uploads/avatars/675b37516ee74a31929b1ea3a8fcbfc1.png [GET]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 941, in finalize_request
+    response = self.process_response(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1319, in process_response
+    response = self.ensure_sync(func)(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/projects/admin-backend/middleware/request_logger.py", line 50, in after_request
+    f"Size: {len(response.get_data())} bytes"
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 281, in get_data
+    self._ensure_sequence()
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 329, in _ensure_sequence
+    raise RuntimeError(
+RuntimeError: Attempted implicit sequence conversion but the response object is in direct passthrough mode.
+[2026-02-19 13:30:53] [ERROR] [app] [app.py:875] - Exception on /uploads/avatars/675b37516ee74a31929b1ea3a8fcbfc1.png [GET]
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 920, in full_dispatch_request
+    return self.finalize_request(rv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 941, in finalize_request
+    response = self.process_response(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/flask/app.py", line 1319, in process_response
+    response = self.ensure_sync(func)(response)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/projects/admin-backend/middleware/request_logger.py", line 50, in after_request
+    f"Size: {len(response.get_data())} bytes"
+                 ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 281, in get_data
+    self._ensure_sequence()
+  File "/usr/local/lib/python3.12/dist-packages/werkzeug/wrappers/response.py", line 329, in _ensure_sequence
+    raise RuntimeError(
+RuntimeError: Attempted implicit sequence conversion but the response object is in direct passthrough mode.

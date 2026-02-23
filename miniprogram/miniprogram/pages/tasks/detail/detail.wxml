@@ -1,0 +1,6 @@
+<!--pages/tasks/detail/detail.wxml-->
+<view class="container">
+  <view class="empty">
+    <text>任务详情页开发中...</text>
+  </view>
+</view>

@@ -1,0 +1,22 @@
+[Unit]
+Description=Lingzhi Ecosystem Backend Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/workspace/projects/admin-backend
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+Environment="ENV=production"
+Environment="PYTHONPATH=/workspace/projects"
+ExecStart=/usr/bin/python3 /workspace/projects/admin-backend/app.py
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/lingzhi-backend.log
+StandardError=append:/var/log/lingzhi-backend-error.log
+LimitNOFILE=65536
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,6 @@
+<!--pages/projects/list/list.wxml-->
+<view class="container">
+  <view class="empty">
+    <text>项目推荐页开发中...</text>
+  </view>
+</view>

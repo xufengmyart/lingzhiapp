@@ -1,0 +1,10 @@
+{
+  "version": "20260220-0048",
+  "buildTime": "2026-02-20T16:48:54.374Z",
+  "gitCommit": "edee978",
+  "gitBranch": "main",
+  "gitTag": "",
+  "gitMessage": "fix: 修复后台用户资料编辑权限和token问题",
+  "builder": "system",
+  "environment": "production"
+}

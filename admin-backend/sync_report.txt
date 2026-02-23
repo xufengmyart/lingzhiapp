@@ -1,0 +1,25 @@
+
+生成时间: 2026-02-01 16:55:21
+
+数据同步状态: 已完成
+
+重要说明:
+  1. 用户基础数据已同步
+  2. 用户角色和权限已同步
+  3. 用户贡献数据已同步
+  4. 会员等级数据已同步
+  5. 待奖励数据已同步
+  6. 审计日志已同步
+
+数据迁移统计:
+  - roles: 7 条
+  - permissions: 43 条
+  - role_permissions: 155 条
+  - user_roles: 5 条
+  - member_levels: 4 条
+  - user_member_levels: 2 条
+  - user_contributions: 19 条
+  - pending_rewards: 18 条
+  - audit_logs: 45 条
+
+总计: 298 条记录

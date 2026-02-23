@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>缓存诊断工具</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <style>
+    body {
+      font-family: monospace;
+      background: #0A0D18;
+      color: #00C3FF;
+      padding: 20px;
+      margin: 0;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #fff;
+      border-bottom: 2px solid #00C3FF;
+      padding-bottom: 10px;
+    }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(18, 26, 47, 0.8);
+      border: 1px solid rgba(0, 195, 255, 0.2);
+      border-radius: 8px;
+    }
+    .section-title {
+      font-weight: bold;
+      color: #47D1FF;
+      margin-bottom: 10px;
+    }
+    .ok {
+      color: #00ff88;
+    }
+    .error {
+      color: #ff4444;
+    }
+    .warning {
+      color: #ffc107;
+    }
+    .info {
+      color: #B4C7E7;
+    }
+    code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .action-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: linear-gradient(90deg, #00C3FF, #00E0FF);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .action-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 195, 255, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 缓存诊断工具</h1>
+
+    <div class="section">
+      <div class="section-title">1. 当前页面信息</div>
+      <div id="pageInfo"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">2. 加载的静态资源</div>
+      <div id="resources"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">3. Service Worker 状态</div>
+      <div id="swStatus"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">4. 缓存状态</div>
+      <div id="cacheStatus"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">5. 版本信息</div>
+      <div id="versionInfo"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">6. 诊断建议</div>
+      <div id="suggestions"></div>
+    </div>
+
+    <button class="action-btn" onclick="window.location.href='/force-refresh.html'">
+      🚀 前往强制刷新页面
+    </button>
+  </div>
+
+  <script>
+    // 诊断信息
+    async function diagnose() {
+      const pageInfo = document.getElementById('pageInfo');
+      const resources = document.getElementById('resources');
+      const swStatus = document.getElementById('swStatus');
+      const cacheStatus = document.getElementById('cacheStatus');
+      const versionInfo = document.getElementById('versionInfo');
+      const suggestions = document.getElementById('suggestions');
+
+      // 1. 页面信息
+      pageInfo.innerHTML = `
+        <div>URL: <code>${window.location.href}</code></div>
+        <div>时间: <code>${new Date().toLocaleString()}</code></div>
+        <div>User Agent: <code>${navigator.userAgent.substring(0, 100)}...</code></div>
+      `;
+
+      // 2. 静态资源
+      let resourcesHtml = '';
+      document.querySelectorAll('script[src], link[rel="stylesheet"]').forEach(el => {
+        const src = el.src || el.href;
+        const fileName = src.split('/').pop();
+        resourcesHtml += `
+          <div>
+            <span class="info">${fileName}</span>
+            <br>
+            <small>${src}</small>
+          </div>
+        `;
+      });
+      resources.innerHTML = resourcesHtml || '<div class="info">无静态资源</div>';
+
+      // 3. Service Worker
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        if (registrations.length > 0) {
+          swStatus.innerHTML = `
+            <div class="warning">已注册 ${registrations.length} 个 Service Worker</div>
+            ${registrations.map(reg => `
+              <div class="info">
+                Scope: ${reg.scope}<br>
+                Active: ${reg.active ? 'Yes' : 'No'}<br>
+                Installing: ${reg.installing ? 'Yes' : 'No'}<br>
+                Waiting: ${reg.waiting ? 'Yes' : 'No'}
+              </div>
+            `).join('')}
+          `;
+        } else {
+          swStatus.innerHTML = '<div class="ok">未注册 Service Worker</div>';
+        }
+      } else {
+        swStatus.innerHTML = '<div class="info">浏览器不支持 Service Worker</div>';
+      }
+
+      // 4. 缓存
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        if (cacheNames.length > 0) {
+          cacheStatus.innerHTML = `
+            <div class="warning">存在 ${cacheNames.length} 个缓存</div>
+            ${cacheNames.map(name => `<div class="info">${name}</div>`).join('')}
+          `;
+        } else {
+          cacheStatus.innerHTML = '<div class="ok">无缓存</div>';
+        }
+      } else {
+        cacheStatus.innerHTML = '<div class="info">浏览器不支持 Cache API</div>';
+      }
+
+      // 5. 版本信息
+      try {
+        const response = await fetch('/version.json?' + Date.now(), { cache: 'no-store' });
+        if (response.ok) {
+          const versionData = await response.json();
+          versionInfo.innerHTML = `
+            <div class="ok">服务器版本: ${versionData.version}</div>
+            <div class="info">构建时间: ${versionData.buildTime}</div>
+            <div class="info">Git 提交: ${versionData.gitCommit}</div>
+          `;
+        } else {
+          versionInfo.innerHTML = '<div class="error">无法获取版本信息</div>';
+        }
+      } catch (e) {
+        versionInfo.innerHTML = `<div class="error">获取版本信息失败: ${e.message}</div>`;
+      }
+
+      // 6. 建议
+      const suggestionsList = [];
+
+      // 检查 JS 文件版本
+      const currentJs = document.querySelector('script[src*="index-"]')?.src || '';
+      const match = currentJs.match(/index-([A-Z0-9]+)\.js/);
+      if (match) {
+        const hash = match[1];
+        if (hash === 'KGT10jHb' || hash === 'CiAneXUA') {
+          suggestionsList.push('<div class="error">❌ 检测到旧版本文件！请强制刷新缓存</div>');
+        } else {
+          suggestionsList.push(`<div class="ok">✓ 加载正确版本的文件</div>`);
+        }
+      }
+
+      // 检查 Service Worker
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        if (registrations.length > 0) {
+          suggestionsList.push('<div class="warning">⚠️ 建议清除 Service Worker</div>');
+        }
+      }
+
+      // 检查缓存
+      if ('caches' in window) {
+        const cacheNames = await caches.keys();
+        if (cacheNames.length > 0) {
+          suggestionsList.push('<div class="warning">⚠️ 建议清除浏览器缓存</div>');
+        }
+      }
+
+      // 最终建议
+      if (suggestionsList.some(s => s.includes('error'))) {
+        suggestionsList.push('<div class="error"><strong>🚨 立即操作：</strong>访问 <a href="/force-refresh.html" style="color: #00C3FF;">强制刷新页面</a></div>');
+      } else if (suggestionsList.some(s => s.includes('warning'))) {
+        suggestionsList.push('<div class="warning"><strong>建议：</strong>访问 <a href="/force-refresh.html" style="color: #00C3FF;">强制刷新页面</a> 以确保获取最新版本</div>');
+      } else {
+        suggestionsList.push('<div class="ok">✓ 一切正常！</div>');
+      }
+
+      suggestions.innerHTML = suggestionsList.join('');
+    }
+
+    // 页面加载时执行诊断
+    window.addEventListener('load', diagnose);
+  </script>
+</body>
+</html>

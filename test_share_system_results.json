@@ -1,0 +1,32 @@
+[
+  {
+    "test": "分享统计表检查",
+    "status": "❌ 失败",
+    "message": "share_stats 表不存在",
+    "timestamp": "2026-02-23T16:41:33.735457"
+  },
+  {
+    "test": "获取推荐关系",
+    "status": "❌ 失败",
+    "message": "HTTP 401",
+    "timestamp": "2026-02-23T16:41:34.174122"
+  },
+  {
+    "test": "获取分享统计摘要",
+    "status": "❌ 失败",
+    "message": "HTTP 401",
+    "timestamp": "2026-02-23T16:41:34.244166"
+  },
+  {
+    "test": "文章分享接口",
+    "status": "❌ 失败",
+    "message": "HTTP 404",
+    "timestamp": "2026-02-23T16:41:34.660886"
+  },
+  {
+    "test": "文章审核通知",
+    "status": "❌ 失败",
+    "message": "创建文章失败: HTTP 405",
+    "timestamp": "2026-02-23T16:41:35.076108"
+  }
+]
